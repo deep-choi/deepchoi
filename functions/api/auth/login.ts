@@ -6,12 +6,18 @@ interface Env {
 export const onRequestPost: PagesFunction<Env> = async (context) => {
     try {
         const { email, password } = await context.request.json() as any;
+        const requestUrl = new URL(context.request.url);
+        const isLocalRequest = ['localhost', '127.0.0.1', '0.0.0.0'].includes(requestUrl.hostname);
 
         // Admin allowlist logic (can be kept or moved to DB role)
         const ADMIN_EMAILS = ['admin@example.com', 'dongjun.choi@example.com', 'cryingonion77@gmail.com'];
 
         // Simulate Google Login Mock
         if (password === 'google-auth-mock-token') {
+            if (!isLocalRequest) {
+                return Response.json({ error: "Local mock login is not allowed here" }, { status: 403 });
+            }
+
             let user: any = await context.env.DB.prepare("SELECT * FROM User WHERE email = ?").bind(email).first();
 
             if (!user) {

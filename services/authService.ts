@@ -20,12 +20,12 @@ export const authService = {
             return null;
         }
     },
-    googleLogin: async (userInfo: any): Promise<User | null> => {
+    googleLogin: async (accessToken: string): Promise<User | null> => {
         try {
             const res = await fetch(`${API_Auth}/google`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(userInfo)
+                body: JSON.stringify({ accessToken })
             });
             if (!res.ok) return null;
             const user: User = await res.json();

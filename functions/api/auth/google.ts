@@ -5,7 +5,20 @@ interface Env {
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {
     try {
-        const userInfo = await context.request.json() as any;
+        const { accessToken } = await context.request.json() as any;
+        if (!accessToken) {
+            return Response.json({ error: "Missing Google access token" }, { status: 400 });
+        }
+
+        const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        });
+
+        if (!userInfoResponse.ok) {
+            return Response.json({ error: "Invalid Google access token" }, { status: 401 });
+        }
+
+        const userInfo = await userInfoResponse.json() as any;
         const { email, name, picture } = userInfo;
 
         // Admin allowlist logic (Production)
