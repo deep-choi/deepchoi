@@ -21,7 +21,7 @@ type ParticleState = {
     phase: number;
 };
 
-const COLORS = ['#4169E1', '#4169E1', '#111111', '#8ea2f5', '#d7dcff'];
+const COLORS = ['#4169E1', '#4169E1', '#111111', '#8ea2f5'];
 
 const createDotTexture = () => {
     const canvas = document.createElement('canvas');
@@ -66,13 +66,13 @@ export const HeroParticleField: React.FC = () => {
         const group = new Group();
         scene.add(group);
 
-        const particleCount = window.innerWidth < 768 ? 220 : 760;
+        const particleCount = window.innerWidth < 768 ? 58 : 180;
         const geometry = new BufferGeometry();
         const positions = new Float32Array(particleCount * 3);
         const colors = new Float32Array(particleCount * 3);
         const dotTexture = createDotTexture();
         const material = new PointsMaterial({
-            size: window.innerWidth < 768 ? 3.4 : 4.2,
+            size: window.innerWidth < 768 ? 3 : 3.7,
             sizeAttenuation: true,
             map: dotTexture || undefined,
             alphaTest: 0.5,
@@ -89,7 +89,7 @@ export const HeroParticleField: React.FC = () => {
             particles.push({
                 x: (Math.random() - 0.5) * 2,
                 y: (Math.random() - 0.5) * 2,
-                z: (Math.random() - 0.5) * 440,
+                z: 30 + Math.random() * 260,
                 speed: 0.16 + Math.random() * 0.48,
                 phase: Math.random() * Math.PI * 2,
             });
@@ -133,7 +133,7 @@ export const HeroParticleField: React.FC = () => {
 
         const render = (now: number) => {
             const elapsed = (now - start) * 0.001;
-            pointer.lerp(targetPointer, prefersReducedMotion ? 0.04 : 0.075);
+            pointer.lerp(targetPointer, prefersReducedMotion ? 0.018 : 0.032);
 
             group.rotation.y = elapsed * 0.055 + pointer.x * 0.24;
             group.rotation.x = -pointer.y * 0.12;
