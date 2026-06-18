@@ -6,10 +6,10 @@ import { Project } from '../types';
 
 const Hero: React.FC = () => {
     return (
-        <section className="relative w-full overflow-hidden bg-[#0d1117] px-4 pb-12 pt-28 md:px-6 md:pb-16 md:pt-36">
+        <section className="relative w-full overflow-hidden bg-[#0d1117] px-4 pb-10 pt-24 md:px-6 md:pb-14 md:pt-32">
             <div className="mx-auto flex w-full max-w-[1120px] justify-center">
-                <h1 className="max-w-[920px] text-center text-[42px] font-medium leading-[1.08] text-[#f0f6fc] tracking-normal md:text-[70px] lg:text-[82px]">
-                    안녕하세요, 저는 사용자와 운영자를 위한 디지털 제품을 만드는 최동준입니다.
+                <h1 className="max-w-[760px] text-center text-[34px] font-medium leading-[1.12] text-[#f0f6fc] tracking-normal md:text-[52px] lg:text-[60px]">
+                    디자인과 개발로 더 나은 제품 경험을 만듭니다.
                 </h1>
             </div>
         </section>
@@ -34,7 +34,7 @@ const WorkShowcase: React.FC = () => {
     useEffect(() => {
         projectService.getAllProjects()
             .then((data) => {
-                setProjects(data.filter((project) => !project.type || project.type === 'work').slice(0, 3));
+                setProjects(data.filter((project) => !project.type || project.type === 'work'));
             })
             .finally(() => setIsLoading(false));
     }, []);
@@ -89,16 +89,6 @@ const WorkShowcase: React.FC = () => {
     );
 };
 
-const ClosingStatement: React.FC = () => (
-    <section className="bg-[#0d1117] px-4 py-16 md:px-6 md:py-24">
-        <div className="mx-auto max-w-[1440px] border-t border-[#30363d] pt-8">
-            <h2 className="max-w-[900px] text-4xl font-semibold leading-[1.08] text-[#f0f6fc] md:text-6xl">
-                Making digital products clear, useful, and easy to operate.
-            </h2>
-        </div>
-    </section>
-);
-
 const AdminCreateButton: React.FC = () => {
     const navigate = useNavigate();
     const isAdmin = authService.isAuthenticated();
@@ -123,7 +113,6 @@ export const Home: React.FC = () => {
         <main className="relative bg-[#0d1117]">
             <Hero />
             <WorkShowcase />
-            <ClosingStatement />
             <AdminCreateButton />
         </main>
     );
