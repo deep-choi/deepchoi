@@ -6,9 +6,9 @@ import { Project } from '../types';
 
 const Hero: React.FC = () => {
     return (
-        <section className="relative w-full overflow-hidden bg-[#f8f7f3] px-4 pb-12 pt-28 md:px-6 md:pb-16 md:pt-36">
+        <section className="relative w-full overflow-hidden bg-[#0d1117] px-4 pb-12 pt-28 md:px-6 md:pb-16 md:pt-36">
             <div className="mx-auto flex w-full max-w-[1120px] justify-center">
-                <h1 className="max-w-[920px] text-center text-[42px] font-medium leading-[1.08] text-[#4f443a] tracking-normal md:text-[70px] lg:text-[82px]">
+                <h1 className="max-w-[920px] text-center text-[42px] font-medium leading-[1.08] text-[#f0f6fc] tracking-normal md:text-[70px] lg:text-[82px]">
                     안녕하세요, 저는 사용자와 운영자를 위한 디지털 제품을 만드는 최동준입니다.
                 </h1>
             </div>
@@ -40,7 +40,7 @@ const WorkShowcase: React.FC = () => {
     }, []);
 
     return (
-        <section id="projects" className="bg-[#f8f7f3] px-4 pb-12 pt-0 md:px-6 md:pb-20">
+        <section id="projects" className="bg-[#0d1117] px-4 pb-12 pt-0 md:px-6 md:pb-20">
             <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-16 md:gap-24">
                 {isLoading ? (
                     <div className="flex min-h-[360px] items-center justify-center">
@@ -71,10 +71,10 @@ const WorkShowcase: React.FC = () => {
                                     </div>
 
                                     <div className="mt-4 grid gap-2 md:grid-cols-[1fr_auto] md:items-start">
-                                        <h3 className="text-lg font-medium leading-tight text-[#4f443a] md:text-xl">
+                                        <h3 className="text-lg font-medium leading-tight text-[#f0f6fc] md:text-xl">
                                             {project.title}
                                         </h3>
-                                        <div className="flex flex-col gap-1 text-[12px] font-medium uppercase text-[#9a8f84] md:items-end md:text-right">
+                                        <div className="flex flex-col gap-1 text-[12px] font-medium uppercase text-[#8b949e] md:items-end md:text-right">
                                             <span>{meta}</span>
                                             <span>{project.date}</span>
                                         </div>
@@ -90,9 +90,9 @@ const WorkShowcase: React.FC = () => {
 };
 
 const ClosingStatement: React.FC = () => (
-    <section className="bg-[#f8f7f3] px-4 py-16 md:px-6 md:py-24">
-        <div className="mx-auto max-w-[1440px] border-t border-[#d8d2c8] pt-8">
-            <h2 className="max-w-[900px] text-4xl font-semibold leading-[1.08] text-[#4f443a] md:text-6xl">
+    <section className="bg-[#0d1117] px-4 py-16 md:px-6 md:py-24">
+        <div className="mx-auto max-w-[1440px] border-t border-[#30363d] pt-8">
+            <h2 className="max-w-[900px] text-4xl font-semibold leading-[1.08] text-[#f0f6fc] md:text-6xl">
                 Making digital products clear, useful, and easy to operate.
             </h2>
         </div>
@@ -120,7 +120,7 @@ const AdminCreateButton: React.FC = () => {
 
 export const Home: React.FC = () => {
     return (
-        <main className="relative bg-[#f8f7f3]">
+        <main className="relative bg-[#0d1117]">
             <Hero />
             <WorkShowcase />
             <ClosingStatement />
