@@ -1,0 +1,8 @@
+# General Rules
+1. 모든 대화, 계획서(Plan), 리뷰(Review), 아티팩트(Artifacts)는 반드시 '한국어(Korean)'로 작성하세요.
+2. 주석(Comment)을 작성할 때도 '한국어'를 사용하세요.
+3. 기술적인 용어(예: React, Next.js)는 영어를 유지하되, 설명은 한국어로 하세요.
+
+# Artifact Style
+- 구현 계획(Implementation Plan)을 작성할 때는 한국어 존댓말을 사용하세요.
+- 파일 이름이나 코드는 영어로 유지하세요.

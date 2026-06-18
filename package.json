@@ -1,0 +1,38 @@
+{
+  "name": "nexbot-ui-ux-portfolio",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"npm run vite\" \"npm run pages\"",
+    "vite": "vite --port 3000",
+    "pages": "wrangler pages dev --proxy 3000",
+    "build": "vite build",
+    "preview": "vite preview",
+    "sync:live": "node scripts/sync-live-data.mjs",
+    "sync:live:d1": "npm run sync:live && wrangler d1 execute portfolio-db --local --file .generated/live-data.sql"
+  },
+  "dependencies": {
+    "@react-oauth/google": "^0.13.4",
+    "@types/react-router-dom": "^5.3.3",
+    "jwt-decode": "^4.0.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "react-markdown": "^10.1.0",
+    "react-router-dom": "^7.11.0",
+    "recharts": "^3.6.0",
+    "remark-gfm": "^4.0.1"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20251229.0",
+    "@types/node": "^22.14.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "autoprefixer": "^10.4.23",
+    "concurrently": "^9.2.1",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.18",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0",
+    "wrangler": "^4.54.0"
+  }
+}
