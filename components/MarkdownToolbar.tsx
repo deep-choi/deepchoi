@@ -340,13 +340,13 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
         }
     };
 
-    const editorColors = ['#f0f6fc', '#c9d1d9', '#8b949e', '#58a6ff', '#3fb950'];
-    const groupClass = "flex gap-1 pr-2 border-r border-[#30363d] items-center";
-    const textButtonClass = "min-h-9 px-2.5 py-1.5 text-[#c9d1d9] hover:text-white hover:bg-[#21262d] rounded-lg font-semibold transition-colors";
-    const mediaButtonClass = "min-h-9 px-2.5 py-1.5 hover:bg-[#21262d] rounded-lg font-semibold transition-colors flex items-center gap-1.5";
+    const editorColors = ['#111111', '#2b2b2b', '#666666', '#4169E1', '#3fb950'];
+    const groupClass = "flex gap-1 pr-2 border-r border-[#e5e5e5] items-center";
+    const textButtonClass = "min-h-9 px-2.5 py-1.5 text-[#2b2b2b] hover:text-[#111111] hover:bg-[#f5f5f5] rounded-lg font-semibold transition-colors";
+    const mediaButtonClass = "min-h-9 px-2.5 py-1.5 hover:bg-[#f5f5f5] rounded-lg font-semibold transition-colors flex items-center gap-1.5";
 
     return (
-        <div className="flex flex-wrap gap-2 mb-3 p-2 bg-[#161b22]/95 rounded-2xl border border-[#30363d] backdrop-blur-xl">
+        <div className="flex flex-wrap gap-2 mb-3 p-2 bg-[#ffffff]/95 rounded-2xl border border-[#e5e5e5] backdrop-blur-xl">
             <input
                 type="file"
                 ref={fileInputRef}
@@ -424,13 +424,13 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
 
             {/* Line Height */}
             <div className={groupClass}>
-                <span className="text-[10px] text-[#8b949e] font-bold uppercase mr-1">줄간격</span>
+                <span className="text-[10px] text-[#666666] font-bold uppercase mr-1">줄간격</span>
                 {['1.5', '1.6', '1.8', '2.0', '2.5'].map(val => (
                     <button
                         key={val}
                         type="button"
                         onMouseDown={(e) => { e.preventDefault(); applyLineHeight(val); }}
-                        className="px-2 py-1.5 text-[11px] font-semibold text-[#c9d1d9] hover:text-white hover:bg-[#21262d] rounded-md transition-colors"
+                        className="px-2 py-1.5 text-[11px] font-semibold text-[#2b2b2b] hover:text-[#111111] hover:bg-[#f5f5f5] rounded-md transition-colors"
                         title={`줄간격 ${val}`}
                     >
                         {val}
@@ -440,13 +440,13 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
 
             {/* Color - applies to the current block (p, h1, h2, h3) */}
             <div className={groupClass}>
-                <span className="text-[10px] text-[#8b949e] font-bold uppercase mr-1">색상</span>
+                <span className="text-[10px] text-[#666666] font-bold uppercase mr-1">색상</span>
                 {editorColors.map(color => (
                     <button
                         key={color}
                         type="button"
                         onMouseDown={(e) => { e.preventDefault(); applyColorToBlock(color); }}
-                        className="w-6 h-6 rounded-full border border-[#30363d] ring-1 ring-white/10 hover:scale-110 transition-transform"
+                        className="w-6 h-6 rounded-full border border-[#e5e5e5] ring-1 ring-white/10 hover:scale-110 transition-transform"
                         style={{ backgroundColor: color }}
                         title={`색상 ${color}`}
                     />
@@ -454,7 +454,7 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
                 <input
                     type="color"
                     onChange={(e) => applyColorToBlock(e.target.value)}
-                    className="w-7 h-7 p-1 bg-[#0d1117] cursor-pointer rounded-full border border-[#30363d] hover:bg-[#21262d] transition-colors"
+                    className="w-7 h-7 p-1 bg-white cursor-pointer rounded-full border border-[#e5e5e5] hover:bg-[#f5f5f5] transition-colors"
                     title="색상 선택"
                 />
             </div>
@@ -464,7 +464,7 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
                 <button
                     type="button"
                     onMouseDown={(e) => { e.preventDefault(); handleImageClick(); }}
-                    className={`${mediaButtonClass} text-[#58a6ff]`}
+                    className={`${mediaButtonClass} text-[#111111]`}
                     title="이미지"
                 >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
@@ -521,7 +521,7 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
                         const url = prompt('링크 URL 입력:');
                         if (url) document.execCommand('createLink', false, url);
                     }}
-                    className={`${mediaButtonClass} text-[#58a6ff]`}
+                    className={`${mediaButtonClass} text-[#111111]`}
                     title="링크"
                 >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>

@@ -17,7 +17,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, index }) => {
             className={`group cursor-pointer animate-in fade-in slide-in-from-bottom-10 duration-1000 fill-mode-both`}
             style={{ animationDelay: `${index * 150}ms` }}
         >
-            <div className="relative aspect-[16/9] rounded-lg overflow-hidden bg-[#161b22] mb-3 md:mb-4 transition-all duration-700 ease-[cubic-bezier(0.2,0,0,1)] group-hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)]">
+            <div className="relative aspect-[16/9] rounded-lg overflow-hidden bg-[#f5f5f5] mb-3 md:mb-4 transition-all duration-700 ease-[cubic-bezier(0.2,0,0,1)] group-hover:shadow-[0_18px_44px_rgba(0,0,0,0.08)]">
                 <img
                     src={project.imageUrl}
                     alt={project.title}
@@ -33,13 +33,13 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, index }) => {
             </div>
 
             <div>
-                <h3 className="text-lg md:text-xl font-medium text-[#f0f6fc] tracking-tight leading-[1.2] transition-colors duration-500">
+                <h3 className="text-lg md:text-xl font-medium text-[#111111] tracking-tight leading-[1.2] transition-colors duration-500">
                     {project.title}
                 </h3>
-                <p className="text-[#8b949e] text-[14px] md:text-[15px] leading-[1.2] line-clamp-2 mt-[6px]">
+                <p className="text-[#666666] text-[14px] md:text-[15px] leading-[1.2] line-clamp-2 mt-[6px]">
                     {project.subtitle}
                 </p>
-                <p className="text-[13px] text-[#6e7681] font-medium mt-3">
+                <p className="text-[13px] text-[#888888] font-medium mt-3">
                     {project.date}
                 </p>
             </div>

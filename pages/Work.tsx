@@ -3,7 +3,7 @@ import { ProjectGrid } from '../components/ProjectGrid';
 
 export const Work: React.FC = () => {
     return (
-        <div className="bg-white min-h-screen">
+        <div className="min-h-screen bg-white">
             <ProjectGrid isPage={true} />
         </div>
     );

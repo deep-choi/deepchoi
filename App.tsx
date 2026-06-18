@@ -45,57 +45,41 @@ const Navbar: React.FC<{ isScrolled: boolean }> = ({ isScrolled }) => {
 
   return (
     <>
-      <nav className="fixed left-0 top-3 z-50 w-full px-4 text-white pointer-events-none md:top-4 md:px-6">
-        <div className="mx-auto flex h-[56px] max-w-[1180px] items-center justify-between rounded-full border border-white/10 bg-[#0d1117]/70 px-4 shadow-[0_18px_50px_rgba(0,0,0,0.28)] ring-1 ring-white/[0.03] backdrop-blur-2xl pointer-events-auto md:h-[58px] md:px-6">
+      <nav className="fixed left-0 top-0 z-50 w-full bg-white text-[#111111]">
+        <div className="mx-auto flex h-[72px] w-full max-w-[1440px] items-center justify-between px-[20px]">
 
           {/* Left Side: Logo & Navigation */}
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-8">
             <Link to="/" className="flex items-center gap-2" onClick={closeMobileMenu}>
-              <span className="font-semibold text-[16px] tracking-tight">Choi Portfolio</span>
+              <span className="h-3 w-3 rounded-full bg-[#4169E1]"></span>
+              <span className="font-semibold text-[18px] tracking-tight">Choi Portfolio</span>
             </Link>
 
             {/* Desktop Navigation Links */}
-            <div className="hidden md:flex gap-5 items-center">
-              <Link to="/about" className="text-[14px] font-medium text-white/80 hover:text-white transition-colors">About</Link>
-              <Link to="/work" className="text-[14px] font-medium text-white/80 hover:text-white transition-colors">Work</Link>
-              <Link to="/blog" className="text-[14px] font-medium text-white/80 hover:text-white transition-colors">Blog</Link>
-              <Link to="/contact" className="text-[14px] font-medium text-white/80 hover:text-white transition-colors">Contact</Link>
+            <div className="hidden md:flex gap-7 items-center">
+              <Link to="/about" className="text-[14px] font-medium text-[#111111] hover:text-[#4169E1] transition-colors">About</Link>
+              <Link to="/work" className="text-[14px] font-medium text-[#111111] hover:text-[#4169E1] transition-colors">Work</Link>
+              <Link to="/blog" className="text-[14px] font-medium text-[#111111] hover:text-[#4169E1] transition-colors">Blog</Link>
+              <Link to="/contact" className="text-[14px] font-medium text-[#111111] hover:text-[#4169E1] transition-colors">Contact</Link>
+              <button className="flex h-9 w-9 items-center justify-center rounded-full text-[#111111] transition-colors hover:bg-[#f5f5f5] hover:text-[#4169E1]" aria-label="Search">
+                <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
             </div>
           </div>
 
           {/* Right Side: Search & Auth */}
           <div className="hidden md:flex items-center gap-3">
-            {/* Search Bar */}
-            <div className="relative group">
-              <div className="flex h-[38px] min-w-[260px] items-center rounded-full border border-white/10 bg-white/[0.06] px-4 transition-colors focus-within:border-white/25 focus-within:bg-white/[0.09]">
-                <svg className="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <input
-                  type="text"
-                  placeholder="Search or jump to..."
-                  className="bg-transparent border-none text-white text-[13px] outline-none w-full placeholder-gray-500"
-                />
-              </div>
-            </div>
-
             {/* Auth Buttons */}
             <div className="flex items-center gap-3">
               {isLoggedIn ? (
                 <>
-                  <span className="text-[14px] font-medium text-white">{authService.getCurrentUser()?.name}님</span>
-                  <button onClick={handleLogout} className="text-[14px] font-medium text-white/70 hover:text-white transition-colors">로그아웃</button>
+                  <span className="text-[14px] font-medium text-[#111111]">{authService.getCurrentUser()?.name}님</span>
+                  <button onClick={handleLogout} className="rounded-full bg-[#f5f5f5] px-5 py-2.5 text-[14px] font-medium text-[#111111] transition-colors hover:bg-[#ededed]">로그아웃</button>
                 </>
               ) : (
-                <>
-                  <Link to="/login" className="text-[14px] font-medium text-white hover:text-white/70 transition-colors">로그인</Link>
-                  <Link
-                    to="/signup"
-                    className="text-[14px] font-medium text-white border border-white/10 rounded-full px-3.5 py-1.5 bg-white/[0.04] hover:border-white/25 hover:bg-white/[0.1] transition-all"
-                  >
-                    회원가입
-                  </Link>
-                </>
+                <Link to="/login" className="rounded-full bg-[#f5f5f5] px-5 py-2.5 text-[14px] font-medium text-[#111111] transition-colors hover:bg-[#ededed]">로그인</Link>
               )}
             </div>
           </div>
@@ -103,7 +87,7 @@ const Navbar: React.FC<{ isScrolled: boolean }> = ({ isScrolled }) => {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 text-white"
+            className="md:hidden p-2 text-[#111111]"
             aria-label="Menu"
           >
             {isMobileMenuOpen ? (
@@ -121,20 +105,20 @@ const Navbar: React.FC<{ isScrolled: boolean }> = ({ isScrolled }) => {
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-40 bg-[#0d1117] pt-[84px] md:hidden overscroll-none text-white">
+        <div className="fixed inset-0 z-40 bg-[#ffffff] pt-[84px] md:hidden overscroll-none text-[#111111]">
           <div className="flex flex-col items-start gap-6 pt-8 px-6">
             <div className="w-full relative">
               <input
                 type="text"
                 placeholder="검색..."
-                className="w-full bg-[#0d1117] border border-[#30363d] rounded-md px-3 py-2 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none"
+                className="w-full bg-white border border-[#e5e5e5] rounded-md px-3 py-2 text-[#111111] placeholder-[#888888] focus:border-[#4169E1] focus:outline-none"
               />
             </div>
 
-            <Link to="/about" onClick={closeMobileMenu} className="text-xl font-semibold border-b border-[#30363d] w-full pb-3">About</Link>
-            <Link to="/work" onClick={closeMobileMenu} className="text-xl font-semibold border-b border-[#30363d] w-full pb-3">Work</Link>
-            <Link to="/blog" onClick={closeMobileMenu} className="text-xl font-semibold border-b border-[#30363d] w-full pb-3">Blog</Link>
-            <Link to="/contact" onClick={closeMobileMenu} className="text-xl font-semibold border-b border-[#30363d] w-full pb-3">Contact</Link>
+            <Link to="/about" onClick={closeMobileMenu} className="text-xl font-semibold border-b border-[#e5e5e5] w-full pb-3">About</Link>
+            <Link to="/work" onClick={closeMobileMenu} className="text-xl font-semibold border-b border-[#e5e5e5] w-full pb-3">Work</Link>
+            <Link to="/blog" onClick={closeMobileMenu} className="text-xl font-semibold border-b border-[#e5e5e5] w-full pb-3">Blog</Link>
+            <Link to="/contact" onClick={closeMobileMenu} className="text-xl font-semibold border-b border-[#e5e5e5] w-full pb-3">Contact</Link>
 
             <div className="flex flex-col gap-4 mt-2 w-full">
               {isLoggedIn ? (
@@ -148,7 +132,6 @@ const Navbar: React.FC<{ isScrolled: boolean }> = ({ isScrolled }) => {
               ) : (
                 <>
                   <Link to="/login" onClick={closeMobileMenu} className="text-xl font-semibold">로그인</Link>
-                  <Link to="/signup" onClick={closeMobileMenu} className="text-xl font-semibold text-blue-400">회원가입</Link>
                 </>
               )}
             </div>
@@ -173,40 +156,37 @@ const ScrollToTop: React.FC = () => {
 // Experience component removed as it is migrated to About page
 
 const Footer: React.FC = () => (
-  <footer className="relative py-32 bg-[#0d1117] overflow-hidden border-t border-[#30363d]/50">
-    {/* Sunset Gradient Glow */}
-    <div className="absolute bottom-0 left-0 right-0 h-[300px] bg-gradient-to-t from-[#ff6b2b]/20 via-[#ff6b2b]/5 to-transparent pointer-events-none" />
-
+  <footer className="relative py-24 bg-white overflow-hidden border-t border-[#e5e5e5]">
     <div className="max-w-[1200px] mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-8 relative z-10">
 
       {/* Column 1: Main */}
       <div className="flex flex-col">
-        <h4 className="text-[11px] font-bold text-[#8b949e] uppercase tracking-widest mb-6">Main</h4>
-        <Link to="/" className="text-[14px] text-[#f0f6fc] mb-3 hover:text-white hover:underline transition-all w-fit">Home</Link>
-        <Link to="/about" className="text-[14px] text-[#f0f6fc] mb-3 hover:text-white hover:underline transition-all w-fit">About</Link>
+        <h4 className="text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-6">Main</h4>
+        <Link to="/" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">Home</Link>
+        <Link to="/about" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">About</Link>
       </div>
 
       {/* Column 2: Project */}
       <div className="flex flex-col">
-        <h4 className="text-[11px] font-bold text-[#8b949e] uppercase tracking-widest mb-6">Project</h4>
-        <Link to="/work" className="text-[14px] text-[#f0f6fc] mb-3 hover:text-white hover:underline transition-all w-fit">전체보기</Link>
-        <Link to="/work?category=uiux" className="text-[14px] text-[#f0f6fc] mb-3 hover:text-white hover:underline transition-all w-fit">UI/UX</Link>
-        <Link to="/work?category=vibecoding" className="text-[14px] text-[#f0f6fc] mb-3 hover:text-white hover:underline transition-all w-fit">바이브코딩</Link>
+        <h4 className="text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-6">Project</h4>
+        <Link to="/work" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">전체보기</Link>
+        <Link to="/work?category=uiux" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">UI/UX</Link>
+        <Link to="/work?category=vibecoding" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">바이브코딩</Link>
       </div>
 
       {/* Column 3: Blog */}
       <div className="flex flex-col">
-        <h4 className="text-[11px] font-bold text-[#8b949e] uppercase tracking-widest mb-6">Blog</h4>
-        <Link to="/blog" className="text-[14px] text-[#f0f6fc] mb-3 hover:text-white hover:underline transition-all w-fit">전체보기</Link>
-        <Link to="/blog?category=ai" className="text-[14px] text-[#f0f6fc] mb-3 hover:text-white hover:underline transition-all w-fit">AI</Link>
-        <Link to="/blog?category=uiux" className="text-[14px] text-[#f0f6fc] mb-3 hover:text-white hover:underline transition-all w-fit">UI UX</Link>
+        <h4 className="text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-6">Blog</h4>
+        <Link to="/blog" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">전체보기</Link>
+        <Link to="/blog?category=ai" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">AI</Link>
+        <Link to="/blog?category=uiux" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">UI UX</Link>
       </div>
 
       {/* Column 4: Connect */}
       <div className="flex flex-col">
-        <h4 className="text-[11px] font-bold text-[#8b949e] uppercase tracking-widest mb-6">Connect</h4>
-        <a href="mailto:contact@example.com" className="text-[14px] text-[#f0f6fc] mb-3 hover:text-white hover:underline transition-all w-fit">Email</a>
-        <a href="https://github.com" target="_blank" rel="noreferrer" className="text-[14px] text-[#f0f6fc] mb-3 hover:text-white hover:underline transition-all w-fit">GitHub</a>
+        <h4 className="text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-6">Connect</h4>
+        <a href="mailto:contact@example.com" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">Email</a>
+        <a href="https://github.com" target="_blank" rel="noreferrer" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">GitHub</a>
       </div>
     </div>
   </footer>
@@ -224,7 +204,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   }, []);
 
   return (
-    <div className="relative min-h-screen bg-[#0d1117] selection:bg-[#1983FC] selection:text-white font-sans flex flex-col">
+    <div className="relative min-h-screen bg-[#ffffff] selection:bg-[#4169E1] selection:text-white font-sans flex flex-col">
       <ScrollToTop />
       <Navbar isScrolled={isScrolled} />
       <div className="flex-grow">

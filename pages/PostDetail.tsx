@@ -223,7 +223,7 @@ export const PostDetail: React.FC = () => {
     if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <div className="w-8 h-8 border-4 border-[#1983FC] border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-8 h-8 border-4 border-[#4169E1] border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
     }
@@ -234,7 +234,7 @@ export const PostDetail: React.FC = () => {
                 <p className="text-[#86868b] text-xl font-medium tracking-tight">Project not found.</p>
                 <button
                     onClick={() => navigate('/')}
-                    className="px-6 py-2 bg-[#1983FC] text-white rounded-full font-semibold hover:bg-[#1570d9] transition-all"
+                    className="px-6 py-2 bg-[#4169E1] text-white rounded-full font-semibold hover:bg-[#3458c7] transition-all"
                 >
                     Go back home
                 </button>
@@ -243,7 +243,7 @@ export const PostDetail: React.FC = () => {
     }
 
     return (
-        <div className="bg-[#0d1117] min-h-screen pt-32 pb-20 px-4 animate-in fade-in duration-700" onClick={() => setIsMenuOpen(false)}>
+        <div className="bg-[#ffffff] min-h-screen pt-32 pb-20 px-4 animate-in fade-in duration-700" onClick={() => setIsMenuOpen(false)}>
             {/* Image Lightbox Modal */}
             {selectedImage && (
                 <div
@@ -289,14 +289,14 @@ export const PostDetail: React.FC = () => {
                                 setZoomLevel(newZoom);
                                 if (newZoom <= 1.5) setPanPosition({ x: 0, y: 0 })
                             }}
-                            className="text-white hover:text-[#1983FC] transition-colors"
+                            className="text-white hover:text-[#111111] transition-colors"
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" /></svg>
                         </button>
                         <span className="text-white font-medium min-w-[4ch] text-center">{Math.round(zoomLevel * 100)}%</span>
                         <button
                             onClick={() => setZoomLevel(Math.min(4, zoomLevel * 2))}
-                            className="text-white hover:text-[#1983FC] transition-colors"
+                            className="text-white hover:text-[#111111] transition-colors"
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
                         </button>
@@ -314,20 +314,20 @@ export const PostDetail: React.FC = () => {
             {/* Custom Delete Confirmation Modal */}
             {isDeleteModalOpen && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center animate-in fade-in duration-200" onClick={() => setIsDeleteModalOpen(false)}>
-                    <div className="bg-[#161b22] rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl border border-[#30363d] animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+                    <div className="bg-[#ffffff] rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl border border-[#e5e5e5] animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
                         <div className="text-center mb-6">
                             <div className="w-16 h-16 bg-[#ff3b30]/10 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <svg className="w-8 h-8 text-[#ff3b30]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                 </svg>
                             </div>
-                            <h3 className="text-xl font-bold text-[#f0f6fc] mb-2">게시글 삭제</h3>
+                            <h3 className="text-xl font-bold text-[#111111] mb-2">게시글 삭제</h3>
                             <p className="text-[#86868b]">정말로 이 게시글을 삭제하시겠습니까?<br />이 작업은 되돌릴 수 없습니다.</p>
                         </div>
                         <div className="flex gap-3">
                             <button
                                 onClick={() => setIsDeleteModalOpen(false)}
-                                className="flex-1 py-3 bg-[#21262d] text-[#f0f6fc] rounded-xl font-semibold hover:bg-[#30363d] transition-colors"
+                                className="flex-1 py-3 bg-[#f5f5f5] text-[#111111] rounded-xl font-semibold hover:bg-[#e5e5e5] transition-colors"
                             >
                                 취소
                             </button>
@@ -344,7 +344,7 @@ export const PostDetail: React.FC = () => {
 
             <div className="max-w-[1200px] mx-auto relative group/page">
                 {isEditing && (
-                    <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-[#21262d] px-1 py-4">
+                    <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-[#f5f5f5] px-1 py-4">
                         <div className="flex items-center gap-3">
                             <button
                                 type="button"
@@ -354,20 +354,20 @@ export const PostDetail: React.FC = () => {
                                     setEditForm(project);
                                     setTagDraft('');
                                 }}
-                                className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#30363d] bg-[#161b22] text-[#c9d1d9] hover:bg-[#21262d] hover:text-white transition-colors"
+                                className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#e5e5e5] bg-[#ffffff] text-[#2b2b2b] hover:bg-[#f5f5f5] hover:text-[#111111] transition-colors"
                                 aria-label="편집 종료"
                             >
                                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
                             </button>
                             <div>
                                 <div className="flex flex-wrap items-center gap-2">
-                                    <h2 className="text-xl font-bold tracking-tight text-[#f0f6fc]">포스트 편집</h2>
+                                    <h2 className="text-xl font-bold tracking-tight text-[#111111]">포스트 편집</h2>
                                     <span className="inline-flex items-center gap-1 rounded-lg border border-[#164b63] bg-[#0f2530] px-2.5 py-1 text-xs font-bold text-[#39c5cf]">
                                         <span className="h-1.5 w-1.5 rounded-full bg-[#39c5cf]"></span>
                                         수정 중
                                     </span>
                                 </div>
-                                <p className="mt-1 text-xs font-medium text-[#8b949e]">마지막 변경: 방금 전</p>
+                                <p className="mt-1 text-xs font-medium text-[#666666]">마지막 변경: 방금 전</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -376,7 +376,7 @@ export const PostDetail: React.FC = () => {
                                     e.stopPropagation();
                                     handleSave();
                                 }}
-                                className="h-10 px-4 bg-[#1983FC] rounded-lg shadow-lg shadow-[#1983FC]/20 flex items-center gap-2 justify-center text-white font-bold text-sm hover:bg-[#2f8cff] active:scale-95 transition-all"
+                                className="h-10 px-4 bg-[#4169E1] rounded-lg shadow-lg shadow-[#4169E1]/20 flex items-center gap-2 justify-center text-white font-bold text-sm hover:bg-[#3458c7] active:scale-95 transition-all"
                             >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                                 저장
@@ -395,7 +395,7 @@ export const PostDetail: React.FC = () => {
                                     e.stopPropagation();
                                     setIsMenuOpen(!isMenuOpen);
                                 }}
-                                className="p-2 text-[#8b949e] hover:bg-[#161b22] hover:text-[#f0f6fc] rounded-full transition-colors"
+                                className="p-2 text-[#666666] hover:bg-[#ffffff] hover:text-[#111111] rounded-full transition-colors"
                             >
                                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
@@ -403,7 +403,7 @@ export const PostDetail: React.FC = () => {
                             </button>
 
                             {isMenuOpen && (
-                                <div className="absolute right-0 top-full mt-2 w-48 bg-[#161b22] rounded-xl shadow-xl shadow-black/30 border border-[#30363d] overflow-hidden z-20 animate-in fade-in zoom-in-95 duration-200 text-left">
+                                <div className="absolute right-0 top-full mt-2 w-48 bg-[#ffffff] rounded-xl shadow-xl shadow-black/30 border border-[#e5e5e5] overflow-hidden z-20 animate-in fade-in zoom-in-95 duration-200 text-left">
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
@@ -412,12 +412,12 @@ export const PostDetail: React.FC = () => {
                                             setEditForm(project);
                                             setIsMenuOpen(false);
                                         }}
-                                        className="w-full text-left px-4 py-3 text-[14px] font-medium text-[#f0f6fc] hover:bg-[#21262d] flex items-center justify-between group"
+                                        className="w-full text-left px-4 py-3 text-[14px] font-medium text-[#111111] hover:bg-[#f5f5f5] flex items-center justify-between group"
                                     >
                                         수정하기
-                                        <svg className="w-4 h-4 text-[#8b949e] group-hover:text-[#58a6ff]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                        <svg className="w-4 h-4 text-[#666666] group-hover:text-[#111111]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                                     </button>
-                                    <div className="h-[1px] bg-[#30363d] mx-4"></div>
+                                    <div className="h-[1px] bg-[#e5e5e5] mx-4"></div>
                                     <button
                                         type="button"
                                         onClick={(e) => {
@@ -440,20 +440,20 @@ export const PostDetail: React.FC = () => {
                             <div className="space-y-6">
                                 <section className="space-y-2">
                                     <div className="flex items-center justify-between">
-                                        <label className="text-sm font-bold text-[#f0f6fc]">커버 이미지</label>
+                                        <label className="text-sm font-bold text-[#111111]">커버 이미지</label>
                                     </div>
-                                    <div className="group relative overflow-hidden rounded-xl bg-[#161b22] aspect-[16/3] min-h-[150px] ring-1 ring-white/5">
+                                    <div className="group relative overflow-hidden rounded-xl bg-[#ffffff] aspect-[16/3] min-h-[150px] ring-1 ring-white/5">
                                         {editForm.imageUrl ? (
                                             <img src={editForm.imageUrl} alt="" className="h-full w-full object-cover" />
                                         ) : (
-                                            <div className="flex h-full items-center justify-center text-sm font-semibold text-[#8b949e]">
+                                            <div className="flex h-full items-center justify-center text-sm font-semibold text-[#666666]">
                                                 커버 이미지를 추가하세요
                                             </div>
                                         )}
                                         <button
                                             type="button"
                                             onClick={() => coverInputRef.current?.click()}
-                                            className="absolute right-4 top-4 inline-flex items-center gap-2 rounded-lg bg-[#161b22]/85 px-3 py-2 text-sm font-bold text-[#f0f6fc] backdrop-blur-md ring-1 ring-white/10 hover:bg-[#21262d] transition-colors"
+                                            className="absolute right-4 top-4 inline-flex items-center gap-2 rounded-lg bg-[#ffffff]/85 px-3 py-2 text-sm font-bold text-[#111111] backdrop-blur-md ring-1 ring-white/10 hover:bg-[#f5f5f5] transition-colors"
                                         >
                                             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4-4a2 2 0 012.8 0L14 15m-1-1l1-1a2 2 0 012.8 0L20 16M5 20h14a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v14a1 1 0 001 1z" /></svg>
                                             커버 변경
@@ -462,15 +462,15 @@ export const PostDetail: React.FC = () => {
                                             <button
                                                 type="button"
                                                 onClick={() => setEditForm(prev => ({ ...prev, imageUrl: '' }))}
-                                                className="absolute bottom-4 right-4 flex h-9 w-9 items-center justify-center rounded-lg bg-[#161b22]/85 text-[#c9d1d9] backdrop-blur-md ring-1 ring-white/10 hover:bg-[#2d1418] hover:text-[#ff7b72] transition-colors"
+                                                className="absolute bottom-4 right-4 flex h-9 w-9 items-center justify-center rounded-lg bg-[#ffffff]/85 text-[#2b2b2b] backdrop-blur-md ring-1 ring-white/10 hover:bg-[#2d1418] hover:text-[#ff7b72] transition-colors"
                                                 aria-label="커버 삭제"
                                             >
                                                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M4 7h16m-9-3h2a1 1 0 011 1v2h-4V5a1 1 0 011-1z" /></svg>
                                             </button>
                                         )}
                                         {isCoverUploading && (
-                                            <div className="absolute inset-0 flex items-center justify-center bg-[#0d1117]/70 backdrop-blur-sm">
-                                                <div className="h-7 w-7 animate-spin rounded-full border-4 border-[#1983FC] border-t-transparent"></div>
+                                            <div className="absolute inset-0 flex items-center justify-center bg-[#ffffff]/70 backdrop-blur-sm">
+                                                <div className="h-7 w-7 animate-spin rounded-full border-4 border-[#4169E1] border-t-transparent"></div>
                                             </div>
                                         )}
                                     </div>
@@ -479,48 +479,48 @@ export const PostDetail: React.FC = () => {
 
                                 <section className="space-y-2">
                                     <div className="flex items-end justify-between gap-3">
-                                        <label className="text-sm font-bold text-[#f0f6fc]">제목</label>
-                                        <span className="text-xs font-medium text-[#8b949e]">{(editForm.title || '').length}/100</span>
+                                        <label className="text-sm font-bold text-[#111111]">제목</label>
+                                        <span className="text-xs font-medium text-[#666666]">{(editForm.title || '').length}/100</span>
                                     </div>
                                     <input
                                         value={editForm.title || ''}
                                         maxLength={100}
                                         onChange={e => setEditForm(prev => ({ ...prev, title: e.target.value }))}
-                                        className="h-14 w-full rounded-lg border border-[#30363d]/70 bg-[#0d1117]/85 px-4 text-[24px] font-bold tracking-tight text-[#f0f6fc] placeholder:text-[#6e7681] outline-none focus:border-[#58a6ff] focus:ring-2 focus:ring-[#58a6ff]/20 transition-all"
+                                        className="h-14 w-full rounded-lg border border-[#e5e5e5]/70 bg-[#ffffff]/85 px-4 text-[24px] font-bold tracking-tight text-[#111111] placeholder:text-[#888888] outline-none focus:border-[#4169E1] focus:ring-2 focus:ring-[#4169E1]/20 transition-all"
                                         placeholder="제목"
                                     />
                                 </section>
 
                                 <section className="space-y-2">
                                     <div className="flex items-end justify-between gap-3">
-                                        <label className="text-sm font-bold text-[#f0f6fc]">설명 <span className="text-[#8b949e]">(선택)</span></label>
-                                        <span className="text-xs font-medium text-[#8b949e]">{(editForm.subtitle || '').length}/200</span>
+                                        <label className="text-sm font-bold text-[#111111]">설명 <span className="text-[#666666]">(선택)</span></label>
+                                        <span className="text-xs font-medium text-[#666666]">{(editForm.subtitle || '').length}/200</span>
                                     </div>
                                     <textarea
                                         value={editForm.subtitle || ''}
                                         maxLength={200}
                                         onChange={e => setEditForm(prev => ({ ...prev, subtitle: e.target.value }))}
-                                        className="min-h-[78px] w-full resize-none rounded-lg border border-[#30363d]/70 bg-[#0d1117]/85 px-4 py-3 text-[15px] leading-relaxed text-[#f0f6fc] placeholder:text-[#6e7681] outline-none focus:border-[#58a6ff] focus:ring-2 focus:ring-[#58a6ff]/20 transition-all"
+                                        className="min-h-[78px] w-full resize-none rounded-lg border border-[#e5e5e5]/70 bg-[#ffffff]/85 px-4 py-3 text-[15px] leading-relaxed text-[#111111] placeholder:text-[#888888] outline-none focus:border-[#4169E1] focus:ring-2 focus:ring-[#4169E1]/20 transition-all"
                                         placeholder="설명"
                                     />
                                 </section>
 
                                 <section className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px_minmax(260px,1fr)]">
                                     <div className="space-y-2">
-                                        <label className="text-sm font-bold text-[#f0f6fc]">카테고리</label>
-                                        <div className="flex h-12 items-center gap-2 rounded-lg border border-[#30363d]/70 bg-[#0d1117]/85 px-2">
+                                        <label className="text-sm font-bold text-[#111111]">카테고리</label>
+                                        <div className="flex h-12 items-center gap-2 rounded-lg border border-[#e5e5e5]/70 bg-[#ffffff]/85 px-2">
                                             <div className="flex bg-transparent">
                                                 <button
                                                     type="button"
                                                     onClick={() => setEditForm(prev => ({ ...prev, type: 'work', category: 'UI UX' }))}
-                                                    className={`h-9 px-4 rounded-lg text-sm font-bold transition-all ${editForm.type === 'work' ? 'bg-[#1983FC] text-white shadow-sm' : 'text-[#8b949e] hover:text-[#f0f6fc]'}`}
+                                                    className={`h-9 px-4 rounded-lg text-sm font-bold transition-all ${editForm.type === 'work' ? 'bg-[#4169E1] text-white shadow-sm' : 'text-[#666666] hover:text-[#111111]'}`}
                                                 >
                                                     Work
                                                 </button>
                                                 <button
                                                     type="button"
                                                     onClick={() => setEditForm(prev => ({ ...prev, type: 'blog', category: 'AI' }))}
-                                                    className={`h-9 px-4 rounded-lg text-sm font-bold transition-all ${editForm.type === 'blog' ? 'bg-[#1983FC] text-white shadow-sm' : 'text-[#8b949e] hover:text-[#f0f6fc]'}`}
+                                                    className={`h-9 px-4 rounded-lg text-sm font-bold transition-all ${editForm.type === 'blog' ? 'bg-[#4169E1] text-white shadow-sm' : 'text-[#666666] hover:text-[#111111]'}`}
                                                 >
                                                     Blog
                                                 </button>
@@ -528,7 +528,7 @@ export const PostDetail: React.FC = () => {
                                             <select
                                                 value={editForm.category || 'UI UX'}
                                                 onChange={e => setEditForm(prev => ({ ...prev, category: e.target.value as any }))}
-                                                className="ml-auto h-9 min-w-[120px] rounded-lg border border-[#30363d]/70 bg-[#161b22] px-3 text-sm font-bold text-[#f0f6fc] outline-none focus:ring-2 focus:ring-[#58a6ff]/30"
+                                                className="ml-auto h-9 min-w-[120px] rounded-lg border border-[#e5e5e5]/70 bg-[#ffffff] px-3 text-sm font-bold text-[#111111] outline-none focus:ring-2 focus:ring-[#4169E1]/30"
                                             >
                                                 {editForm.type === 'blog' ? (
                                                     <>
@@ -546,27 +546,27 @@ export const PostDetail: React.FC = () => {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-sm font-bold text-[#f0f6fc]">공개일</label>
+                                        <label className="text-sm font-bold text-[#111111]">공개일</label>
                                         <div className="relative">
                                             <input
                                                 type="date"
                                                 value={editForm.date}
                                                 onChange={e => setEditForm(prev => ({ ...prev, date: e.target.value }))}
-                                                className="dark-date-input h-12 w-full rounded-lg border border-[#30363d]/70 bg-[#0d1117]/85 px-4 pr-11 text-sm font-bold text-[#f0f6fc] outline-none focus:border-[#58a6ff] focus:ring-2 focus:ring-[#58a6ff]/20 transition-all"
+                                                className="dark-date-input h-12 w-full rounded-lg border border-[#e5e5e5]/70 bg-[#ffffff]/85 px-4 pr-11 text-sm font-bold text-[#111111] outline-none focus:border-[#4169E1] focus:ring-2 focus:ring-[#4169E1]/20 transition-all"
                                             />
-                                            <svg className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#f0f6fc]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <svg className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#111111]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3M5 11h14M6 5h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2z" />
                                             </svg>
                                         </div>
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-sm font-bold text-[#f0f6fc]">태그</label>
-                                        <div className="flex min-h-12 flex-wrap items-center gap-2 rounded-lg border border-[#30363d]/70 bg-[#0d1117]/85 px-3 py-2">
+                                        <label className="text-sm font-bold text-[#111111]">태그</label>
+                                        <div className="flex min-h-12 flex-wrap items-center gap-2 rounded-lg border border-[#e5e5e5]/70 bg-[#ffffff]/85 px-3 py-2">
                                             {(editForm.tags || []).map(tag => (
-                                                <span key={tag} className="inline-flex items-center gap-2 rounded-lg border border-[#30363d] bg-[#21262d] px-3 py-1.5 text-xs font-bold text-[#f0f6fc]">
+                                                <span key={tag} className="inline-flex items-center gap-2 rounded-lg border border-[#e5e5e5] bg-[#f5f5f5] px-3 py-1.5 text-xs font-bold text-[#111111]">
                                                     {tag}
-                                                    <button type="button" onClick={() => removeTag(tag)} className="text-[#8b949e] hover:text-[#ff7b72]" aria-label={`${tag} 태그 삭제`}>
+                                                    <button type="button" onClick={() => removeTag(tag)} className="text-[#666666] hover:text-[#ff7b72]" aria-label={`${tag} 태그 삭제`}>
                                                         <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                                                     </button>
                                                 </span>
@@ -581,7 +581,7 @@ export const PostDetail: React.FC = () => {
                                                         addTagsFromDraft();
                                                     }
                                                 }}
-                                                className="h-7 min-w-[110px] flex-1 bg-transparent text-sm font-medium text-[#f0f6fc] placeholder:text-[#6e7681] outline-none"
+                                                className="h-7 min-w-[110px] flex-1 bg-transparent text-sm font-medium text-[#111111] placeholder:text-[#888888] outline-none"
                                                 placeholder="+ 태그 추가"
                                             />
                                         </div>
@@ -591,15 +591,15 @@ export const PostDetail: React.FC = () => {
                         </div>
                     ) : (
                         <div className="flex flex-col items-center">
-                            <h1 className="text-[28px] md:text-[40px] font-bold text-[#f0f6fc] tracking-tightest leading-[1.2] mb-3">
+                            <h1 className="text-[28px] md:text-[40px] font-bold text-[#111111] tracking-tightest leading-[1.2] mb-3">
                                 {project.title}
                             </h1>
                             {project.subtitle && (
-                                <p className="text-[18px] md:text-[22px] text-[#8b949e] font-medium tracking-tightest leading-[1.4] mb-4">
+                                <p className="text-[18px] md:text-[22px] text-[#666666] font-medium tracking-tightest leading-[1.4] mb-4">
                                     {project.subtitle}
                                 </p>
                             )}
-                            <p className="text-[15px] text-[#8b949e] font-medium tracking-tightest">{project.date}</p>
+                            <p className="text-[15px] text-[#666666] font-medium tracking-tightest">{project.date}</p>
                         </div>
                     )}
                 </div>
@@ -607,7 +607,7 @@ export const PostDetail: React.FC = () => {
                 {/* Cover Image */}
                 {!isEditing && project.imageUrl && (
                     <div
-                        className="cover-image-container mb-16 w-full max-w-[1200px] mx-auto bg-[#161b22] rounded-[16px] md:rounded-[16px] overflow-hidden shadow-sm cursor-zoom-in"
+                        className="cover-image-container mb-16 w-full max-w-[1200px] mx-auto bg-[#ffffff] rounded-[16px] md:rounded-[16px] overflow-hidden shadow-sm cursor-zoom-in"
                         onClick={() => setSelectedImage(project.imageUrl)}
                     >
                         <img
@@ -640,14 +640,14 @@ export const PostDetail: React.FC = () => {
                             </div>
                         </div>
                     ) : (
-                        <div className="markdown-body dual-prose prose prose-lg max-w-none prose-headings:text-white prose-p:text-[#e6edf3] prose-strong:text-white prose-ul:text-[#e6edf3] prose-ol:text-[#e6edf3] prose-li:text-[#e6edf3] prose-blockquote:text-[#e6edf3] prose-a:text-[#1983FC] prose-img:rounded-[16px] prose-headings:m-0 prose-p:m-0 prose-ul:m-0 prose-ol:m-0 prose-li:m-0 prose-blockquote:m-0 prose-pre:m-0" dangerouslySetInnerHTML={{ __html: linkifyHtml(project.content) }} />
+                        <div className="markdown-body dual-prose prose prose-lg max-w-none prose-headings:text-[#111111] prose-p:text-[#2b2b2b] prose-strong:text-[#111111] prose-ul:text-[#2b2b2b] prose-ol:text-[#2b2b2b] prose-li:text-[#2b2b2b] prose-blockquote:text-[#2b2b2b] prose-a:text-[#4169E1] prose-img:rounded-[16px] prose-headings:m-0 prose-p:m-0 prose-ul:m-0 prose-ol:m-0 prose-li:m-0 prose-blockquote:m-0 prose-pre:m-0" dangerouslySetInnerHTML={{ __html: linkifyHtml(project.content) }} />
                     )}
                 </div>
 
                 {/* Comments Section */}
-                <div className="mt-32 max-w-[1200px] mx-auto border-t border-[#30363d] pt-20">
+                <div className="mt-32 max-w-[1200px] mx-auto border-t border-[#e5e5e5] pt-20">
                     {/* ... (existing comments code) ... */}
-                    <h3 className="text-2xl font-bold text-[#f0f6fc] mb-8">Comments <span className="text-[#8b949e] text-lg font-normal ml-2">{comments.length}</span></h3>
+                    <h3 className="text-2xl font-bold text-[#111111] mb-8">Comments <span className="text-[#666666] text-lg font-normal ml-2">{comments.length}</span></h3>
 
                     {/* Input Form - Isolated component to prevent re-renders */}
                     <CommentInput
@@ -668,8 +668,8 @@ export const PostDetail: React.FC = () => {
                                 <div className="flex-1">
                                     <div className="flex items-center justify-between mb-1">
                                         <div className="flex items-center gap-2">
-                                            <span className="font-bold text-[#f0f6fc] text-[15px]">{comment.author.name}</span>
-                                            {comment.author.role === 'admin' && <span className="text-[10px] bg-[#f0f6fc] text-[#0d1117] px-2 py-0.5 rounded-full font-bold tracking-wider">AUTHOR</span>}
+                                            <span className="font-bold text-[#111111] text-[15px]">{comment.author.name}</span>
+                                            {comment.author.role === 'admin' && <span className="text-[10px] bg-[#111111] text-[#ffffff] px-2 py-0.5 rounded-full font-bold tracking-wider">AUTHOR</span>}
                                         </div>
                                         {isAdmin && (
                                             <button onClick={() => handleDeleteComment(comment.id)} className="text-[#ff3b30] text-xs font-bold opacity-0 group-hover/comment:opacity-100 transition-all hover:bg-[#ff3b30]/10 px-3 py-1 rounded-full">
@@ -678,9 +678,9 @@ export const PostDetail: React.FC = () => {
                                         )}
                                     </div>
                                     <div className="mb-3">
-                                        <span className="text-[12px] text-[#8b949e] font-medium whitespace-nowrap">{new Date(comment.date).toLocaleDateString()}</span>
+                                        <span className="text-[12px] text-[#666666] font-medium whitespace-nowrap">{new Date(comment.date).toLocaleDateString()}</span>
                                     </div>
-                                    <p className="text-[#e6edf3] leading-relaxed text-[15px]">{comment.content}</p>
+                                    <p className="text-[#2b2b2b] leading-relaxed text-[15px]">{comment.content}</p>
                                 </div>
                             </div>
                         ))}

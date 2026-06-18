@@ -18,7 +18,7 @@ img {
 }
 
 .dark-date-input {
-    color-scheme: dark;
+    color-scheme: light;
 }
 
 .dark-date-input::-webkit-calendar-picker-indicator {
@@ -41,7 +41,7 @@ img {
     border-radius: 16px;
     margin: 2rem auto;
     display: block;
-    background: #161b22;
+    background: #ffffff;
     content-visibility: auto;
 }
 
@@ -110,7 +110,7 @@ img {
     font-size: 28px;
     font-weight: 600;
     line-height: 1.5;
-    color: #f0f6fc;
+    color: #111111;
     margin-top: 16px;
     margin-bottom: 16px;
 }
@@ -120,7 +120,7 @@ img {
     font-size: 24px;
     font-weight: 600;
     line-height: 1.5;
-    color: #f0f6fc;
+    color: #111111;
     margin-top: 16px;
     margin-bottom: 16px;
 }
@@ -136,7 +136,7 @@ img {
     font-size: 20px;
     font-weight: 600;
     line-height: 1.5;
-    color: #f0f6fc;
+    color: #111111;
     margin-top: 16px;
     margin-bottom: 16px;
 }
@@ -150,7 +150,7 @@ img {
 .prose div {
     font-size: 16px;
     line-height: 1.5;
-    color: #e6edf3;
+    color: #2b2b2b;
     margin-top: 0;
     margin-bottom: 0;
 }
@@ -190,7 +190,7 @@ img {
 .dual-prose hr {
     width: 100% !important;
     border: 0 !important;
-    border-top: 1px solid #30363d !important;
+    border-top: 1px solid #e5e5e5 !important;
     margin-top: 32px !important;
     margin-bottom: 32px !important;
     background: transparent !important;
@@ -204,7 +204,7 @@ img {
     width: 100% !important;
     max-width: 700px !important;
     margin: 32px auto !important;
-    border-color: #30363d !important;
+    border-color: #e5e5e5 !important;
     border-top-width: 1px !important;
     border-bottom-width: 1px !important;
     background: transparent !important;
@@ -219,21 +219,21 @@ img {
     width: 100%;
 }
 
-/* Dark editor surface: separated from the published post renderer */
+/* Editor surface: separated from the published post renderer */
 .editor-prose {
     max-width: 1200px;
     margin-left: auto;
     margin-right: auto;
-    color: #e6edf3;
-    caret-color: #58a6ff;
-    background: #0f141b;
+    color: #2b2b2b;
+    caret-color: #111111;
+    background: #ffffff;
 }
 
 .editor-prose h1 {
     font-size: 28px;
     font-weight: 600;
     line-height: 1.5;
-    color: #f0f6fc;
+    color: #111111;
     margin: 16px auto;
     max-width: 700px;
 }
@@ -242,7 +242,7 @@ img {
     font-size: 24px;
     font-weight: 600;
     line-height: 1.5;
-    color: #f0f6fc;
+    color: #111111;
     margin: 16px auto;
     max-width: 700px;
 }
@@ -254,7 +254,7 @@ img {
     font-size: 20px;
     font-weight: 600;
     line-height: 1.5;
-    color: #f0f6fc;
+    color: #111111;
     margin: 16px auto;
     max-width: 700px;
 }
@@ -297,29 +297,29 @@ img {
     height: auto;
     border-radius: 16px;
     margin: 2rem auto;
-    background: #161b22;
+    background: #ffffff;
 }
 
 .editor-prose a {
-    color: #58a6ff;
+    color: #4169E1;
 }
 
 .editor-prose strong,
 .editor-prose b {
-    color: #ffffff;
+    color: #111111;
 }
 
 .editor-prose blockquote {
-    border-left: 3px solid #30363d;
+    border-left: 3px solid #e5e5e5;
     padding-left: 16px;
-    color: #c9d1d9;
+    color: #2b2b2b;
 }
 
 .editor-prose hr {
     width: 100%;
     max-width: 700px;
     border: 0;
-    border-top: 1px solid #30363d;
+    border-top: 1px solid #e5e5e5;
     margin: 32px auto;
     background: transparent;
 }
@@ -332,7 +332,7 @@ img {
     width: 100% !important;
     max-width: 700px !important;
     margin: 32px auto !important;
-    border-color: #30363d !important;
+    border-color: #e5e5e5 !important;
     border-top-width: 1px !important;
     border-bottom-width: 1px !important;
     background: transparent !important;
@@ -343,10 +343,10 @@ img {
 }
 
 .editor-prose [style*="color: rgb(29, 29, 31)"],
-.editor-prose [style*="color:#1d1d1f"],
-.editor-prose [style*="color: #1d1d1f"],
+.editor-prose [style*="color:#111111"],
+.editor-prose [style*="color: #111111"],
 .editor-prose [style*="color: black"] {
-    color: #e6edf3 !important;
+    color: #2b2b2b !important;
 }
 
 @media (min-width: 768px) {
@@ -455,7 +455,7 @@ img {
     width: 100% !important;
     max-width: 700px !important;
     border: 0 !important;
-    border-top: 1px solid #30363d !important;
+    border-top: 1px solid #e5e5e5 !important;
     margin: 32px auto !important;
     background: transparent !important;
 }

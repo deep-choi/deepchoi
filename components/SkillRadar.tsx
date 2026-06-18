@@ -27,8 +27,8 @@ export const SkillRadar: React.FC = () => {
           <Radar
             name="Skills"
             dataKey="A"
-            stroke="#1d1d1f"
-            fill="#1d1d1f"
+            stroke="#4169E1"
+            fill="#4169E1"
             fillOpacity={0.1}
           />
         </RadarChart>

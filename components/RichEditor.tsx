@@ -174,7 +174,7 @@ export const RichEditor: React.FC<RichEditorProps> = ({
                         document.execCommand('insertParagraph', false);
                     }
                 }}
-                className={`editor-prose w-full min-h-[620px] p-5 md:p-8 rounded-2xl border border-[#30363d] bg-[#0f141b] focus:outline-none focus:border-[#58a6ff] focus:ring-2 focus:ring-[#58a6ff]/20 transition-all ${className}`}
+                className={`editor-prose w-full min-h-[620px] p-5 md:p-8 rounded-2xl border border-[#e5e5e5] bg-[#ffffff] focus:outline-none focus:border-[#4169E1] focus:ring-2 focus:ring-[#4169E1]/20 transition-all ${className}`}
             />
 
             {/* Delete button overlay for selected media */}
@@ -202,7 +202,7 @@ export const RichEditor: React.FC<RichEditorProps> = ({
             <style>{`
                 [contenteditable] img.selected-media,
                 [contenteditable] video.selected-media {
-                    outline: 3px solid #006ffd;
+                    outline: 3px solid #4169E1;
                     outline-offset: 2px;
                 }
             `}</style>

@@ -121,13 +121,13 @@ export const Editor: React.FC = () => {
     ];
 
     return (
-        <div className="pt-32 pb-20 px-6 bg-[#0d1117] min-h-screen font-sans">
-            <div className="max-w-[1200px] mx-auto bg-[#0f141b] rounded-[24px] p-6 md:p-10 border border-[#30363d] shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
+        <div className="pt-32 pb-20 px-6 bg-[#ffffff] min-h-screen font-sans">
+            <div className="max-w-[1200px] mx-auto bg-[#ffffff] rounded-[24px] p-6 md:p-10 border border-[#e5e5e5] shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
                 <div className="flex justify-between items-center mb-12">
-                    <h1 className="text-3xl font-bold tracking-tight text-[#f0f6fc]">
+                    <h1 className="text-3xl font-bold tracking-tight text-[#111111]">
                         {isEdit ? 'Post Edit' : 'New CMS Entry'}
                     </h1>
-                    <button onClick={() => navigate('/admin')} className="text-[#8b949e] hover:text-[#f0f6fc] font-medium transition-colors">
+                    <button onClick={() => navigate('/admin')} className="text-[#666666] hover:text-[#111111] font-medium transition-colors">
                         Cancel
                     </button>
                 </div>
@@ -151,7 +151,7 @@ export const Editor: React.FC = () => {
                                 type="text"
                                 value={formData.title}
                                 onChange={e => setFormData({ ...formData, title: e.target.value })}
-                                className="w-full px-6 py-4 bg-[#161b22] rounded-2xl border border-[#30363d] text-[#f0f6fc] focus:ring-2 focus:ring-[#58a6ff]/30 transition-all outline-none"
+                                className="w-full px-6 py-4 bg-[#ffffff] rounded-2xl border border-[#e5e5e5] text-[#111111] focus:ring-2 focus:ring-[#4169E1]/30 transition-all outline-none"
                                 required
                             />
                         </div>
@@ -161,7 +161,7 @@ export const Editor: React.FC = () => {
                                 type="text"
                                 value={formData.subtitle}
                                 onChange={e => setFormData({ ...formData, subtitle: e.target.value })}
-                                className="w-full px-6 py-4 bg-[#161b22] rounded-2xl border border-[#30363d] text-[#f0f6fc] focus:ring-2 focus:ring-[#58a6ff]/30 transition-all outline-none"
+                                className="w-full px-6 py-4 bg-[#ffffff] rounded-2xl border border-[#e5e5e5] text-[#111111] focus:ring-2 focus:ring-[#4169E1]/30 transition-all outline-none"
                             />
                         </div>
                     </div>
@@ -173,7 +173,7 @@ export const Editor: React.FC = () => {
                                 <select
                                     value={formData.category}
                                     onChange={e => setFormData({ ...formData, category: e.target.value as any })}
-                                    className="w-full px-6 py-4 bg-[#161b22] rounded-2xl border border-[#30363d] text-[#f0f6fc] focus:ring-2 focus:ring-[#58a6ff]/30 transition-all outline-none"
+                                    className="w-full px-6 py-4 bg-[#ffffff] rounded-2xl border border-[#e5e5e5] text-[#111111] focus:ring-2 focus:ring-[#4169E1]/30 transition-all outline-none"
                                 >
                                     {formData.type === 'blog' ? (
                                         <>
@@ -190,18 +190,18 @@ export const Editor: React.FC = () => {
                             </div>
                             <div className="space-y-2">
                                 <label className="text-[12px] font-bold text-[#86868b] uppercase tracking-tightest pl-1">Content Type</label>
-                                <div className="flex bg-[#161b22] p-1 rounded-2xl border border-[#30363d]">
+                                <div className="flex bg-[#ffffff] p-1 rounded-2xl border border-[#e5e5e5]">
                                     <button
                                         type="button"
                                         onClick={() => setFormData({ ...formData, type: 'work', category: 'UI UX' })}
-                                        className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${formData.type === 'work' ? 'bg-[#1983FC] text-white shadow-sm' : 'text-[#8b949e] hover:text-[#f0f6fc]'}`}
+                                        className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${formData.type === 'work' ? 'bg-[#4169E1] text-white shadow-sm' : 'text-[#666666] hover:text-[#111111]'}`}
                                     >
                                         Work
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setFormData({ ...formData, type: 'blog', category: 'AI' })}
-                                        className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${formData.type === 'blog' ? 'bg-[#1983FC] text-white shadow-sm' : 'text-[#8b949e] hover:text-[#f0f6fc]'}`}
+                                        className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${formData.type === 'blog' ? 'bg-[#4169E1] text-white shadow-sm' : 'text-[#666666] hover:text-[#111111]'}`}
                                     >
                                         Blog
                                     </button>
@@ -213,7 +213,7 @@ export const Editor: React.FC = () => {
                                     type="date"
                                     value={formData.date}
                                     onChange={e => setFormData({ ...formData, date: e.target.value })}
-                                    className="w-full px-6 py-4 bg-[#161b22] rounded-2xl border border-[#30363d] text-[#f0f6fc] focus:ring-2 focus:ring-[#58a6ff]/30 transition-all outline-none"
+                                    className="w-full px-6 py-4 bg-[#ffffff] rounded-2xl border border-[#e5e5e5] text-[#111111] focus:ring-2 focus:ring-[#4169E1]/30 transition-all outline-none"
                                     required
                                 />
                             </div>
@@ -228,7 +228,7 @@ export const Editor: React.FC = () => {
                                     type="text"
                                     value={techInput}
                                     onChange={e => setTechInput(e.target.value)}
-                                    className="w-full px-6 py-4 bg-[#161b22] rounded-2xl border border-[#30363d] text-[#f0f6fc] placeholder:text-[#6e7681] focus:ring-2 focus:ring-[#58a6ff]/30 transition-all outline-none"
+                                    className="w-full px-6 py-4 bg-[#ffffff] rounded-2xl border border-[#e5e5e5] text-[#111111] placeholder:text-[#888888] focus:ring-2 focus:ring-[#4169E1]/30 transition-all outline-none"
                                     placeholder="Figma, React, Tailwind"
                                 />
                             </div>
@@ -238,7 +238,7 @@ export const Editor: React.FC = () => {
                                     type="text"
                                     value={tagInput}
                                     onChange={e => setTagInput(e.target.value)}
-                                    className="w-full px-6 py-4 bg-[#161b22] rounded-2xl border border-[#30363d] text-[#f0f6fc] placeholder:text-[#6e7681] focus:ring-2 focus:ring-[#58a6ff]/30 transition-all outline-none"
+                                    className="w-full px-6 py-4 bg-[#ffffff] rounded-2xl border border-[#e5e5e5] text-[#111111] placeholder:text-[#888888] focus:ring-2 focus:ring-[#4169E1]/30 transition-all outline-none"
                                     placeholder="App, Web, Case Study"
                                 />
                             </div>
@@ -277,7 +277,7 @@ export const Editor: React.FC = () => {
                                     }
                                 }
                             }}
-                            className="editor-prose w-full min-h-[620px] p-5 md:p-8 rounded-2xl border border-[#30363d] bg-[#0f141b] shadow-[0_24px_80px_rgba(0,0,0,0.18)] focus:outline-none focus:border-[#58a6ff] focus:ring-2 focus:ring-[#58a6ff]/20 transition-all"
+                            className="editor-prose w-full min-h-[620px] p-5 md:p-8 rounded-2xl border border-[#e5e5e5] bg-[#ffffff] shadow-[0_24px_80px_rgba(0,0,0,0.18)] focus:outline-none focus:border-[#4169E1] focus:ring-2 focus:ring-[#4169E1]/20 transition-all"
                         />
                         <p className="text-center text-xs text-[#86868b] mt-2">
                             * Click outside the editor to save changes. Editor supports rich text and inline images.
@@ -286,7 +286,7 @@ export const Editor: React.FC = () => {
 
                     <button
                         type="submit"
-                        className="w-full py-4 bg-[#1983FC] text-white rounded-2xl font-bold text-[17px] hover:bg-[#1570d9] transition-all shadow-lg shadow-[#1983FC]/20 active:scale-[0.98]"
+                        className="w-full py-4 bg-[#4169E1] text-white rounded-2xl font-bold text-[17px] hover:bg-[#3458c7] transition-all shadow-lg shadow-[#4169E1]/20 active:scale-[0.98]"
                     >
                         {isEdit ? 'Update Entry' : 'Publish Entry'}
                     </button>

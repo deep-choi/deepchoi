@@ -67,15 +67,15 @@ export const Login: React.FC = () => {
     });
 
     return (
-        <div className="min-h-screen bg-[#0d1117] flex items-center justify-center px-4 md:px-6 selection:bg-[#1983FC] selection:text-white">
-            <div className="w-full max-w-[400px] bg-[#161b22] rounded-[40px] p-8 md:p-12 shadow-sm animate-in fade-in zoom-in duration-700">
+        <div className="min-h-screen bg-[#ffffff] flex items-center justify-center px-4 md:px-6 selection:bg-[#4169E1] selection:text-white">
+            <div className="w-full max-w-[400px] bg-white rounded-[32px] border border-[#e5e5e5] p-8 md:p-12 shadow-[0_18px_60px_rgba(0,0,0,0.06)] animate-in fade-in zoom-in duration-700">
                 <div className="text-center mb-10 space-y-4">
-                    <div className="w-20 h-20 bg-[#0d1117] rounded-3xl mx-auto flex items-center justify-center">
-                        <span className="text-3xl font-bold text-[#f0f6fc]">C.</span>
+                    <div className="w-20 h-20 bg-[#f5f5f5] rounded-3xl mx-auto flex items-center justify-center">
+                        <span className="text-3xl font-bold text-[#111111]">C.</span>
                     </div>
                     <div className="space-y-2">
-                        <h1 className="text-2xl font-bold tracking-tight text-[#f0f6fc]">Welcome Back</h1>
-                        <p className="text-[15px] text-[#8b949e] font-medium tracking-tight">계정에 로그인하세요.</p>
+                        <h1 className="text-2xl font-bold tracking-tight text-[#111111]">Welcome Back</h1>
+                        <p className="text-[15px] text-[#666666] font-medium tracking-tight">계정에 로그인하세요.</p>
                     </div>
                 </div>
 
@@ -90,7 +90,7 @@ export const Login: React.FC = () => {
                                     setError(false);
                                 }}
                                 placeholder="Email"
-                                className="w-full px-6 py-4 bg-[#0d1117] rounded-2xl border-2 border-transparent transition-all outline-none font-medium text-[#f0f6fc] focus:bg-[#0d1117] focus:border-[#1983FC]"
+                                className="w-full px-6 py-4 bg-[#f7f7f7] rounded-2xl border border-[#e5e5e5] transition-all outline-none font-medium text-[#111111] focus:bg-white focus:border-[#4169E1]"
                                 required
                                 autoFocus
                             />
@@ -104,7 +104,7 @@ export const Login: React.FC = () => {
                                     setError(false);
                                 }}
                                 placeholder="Password"
-                                className={`w-full px-6 py-4 bg-[#0d1117] rounded-2xl border-2 transition-all outline-none font-medium text-[#f0f6fc] focus:bg-[#0d1117] ${error ? 'border-[#ff3b30] bg-[#0d1117] animate-shake' : 'border-transparent focus:border-[#1983FC]'
+                                className={`w-full px-6 py-4 bg-[#f7f7f7] rounded-2xl border transition-all outline-none font-medium text-[#111111] focus:bg-white ${error ? 'border-[#ff3b30] bg-white animate-shake' : 'border-[#e5e5e5] focus:border-[#4169E1]'
                                     }`}
                                 required
                             />
@@ -120,7 +120,7 @@ export const Login: React.FC = () => {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full py-4 bg-[#1983FC] text-white rounded-full font-bold text-[15px] hover:bg-[#1570d9] transition-all active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
+                            className="w-full py-4 bg-[#4169E1] text-white rounded-full font-bold text-[15px] hover:bg-[#3458c7] transition-all active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
                         >
                             {isLoading ? (
                                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -131,7 +131,7 @@ export const Login: React.FC = () => {
                         <button
                             type="button"
                             onClick={() => googleLogin()}
-                            className="w-full py-4 bg-white text-[#1d1d1f] border border-[#d2d2d7] rounded-full font-bold text-[15px] hover:bg-[#f5f5f7] transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                            className="w-full py-4 bg-white text-[#111111] border border-[#d2d2d7] rounded-full font-bold text-[15px] hover:bg-[#f5f5f7] transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                         >
                             <svg className="w-5 h-5" viewBox="0 0 24 24">
                                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -144,12 +144,12 @@ export const Login: React.FC = () => {
                     </div>
 
                     <div className="text-center space-y-4 pt-4">
-                        <p className="text-[14px] text-[#8b949e]">
+                        <p className="text-[14px] text-[#666666]">
                             계정이 없으신가요?{' '}
                             <button
                                 type="button"
                                 onClick={() => navigate('/signup')}
-                                className="text-[#1983FC] font-semibold hover:underline"
+                                className="text-[#111111] font-semibold hover:underline"
                             >
                                 회원가입
                             </button>
@@ -157,7 +157,7 @@ export const Login: React.FC = () => {
                         <button
                             type="button"
                             onClick={() => navigate('/')}
-                            className="text-[13px] text-[#8b949e] font-medium hover:text-[#f0f6fc] transition-colors"
+                            className="text-[13px] text-[#666666] font-medium hover:text-[#111111] transition-colors"
                         >
                             홈으로 돌아가기
                         </button>

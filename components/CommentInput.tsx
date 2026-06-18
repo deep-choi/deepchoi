@@ -31,10 +31,10 @@ export const CommentInput: React.FC<CommentInputProps> = memo(({
 
     if (!currentUser) {
         return (
-            <div className="bg-[#161b22] border border-[#30363d] p-10 rounded-[30px] text-center mb-16">
-                <h4 className="text-lg font-bold text-[#f0f6fc] mb-2">Join the conversation</h4>
-                <p className="text-[#8b949e] font-medium mb-6">Sign in to share your thoughts.</p>
-                <button onClick={onNavigateLogin} className="px-8 py-3 bg-white text-black rounded-full font-bold hover:scale-105 transition-all">
+            <div className="bg-[#ffffff] border border-[#e5e5e5] p-10 rounded-[30px] text-center mb-16">
+                <h4 className="text-lg font-bold text-[#111111] mb-2">Join the conversation</h4>
+                <p className="text-[#666666] font-medium mb-6">Sign in to share your thoughts.</p>
+                <button onClick={onNavigateLogin} className="px-8 py-3 bg-[#4169E1] text-white rounded-full font-bold hover:bg-[#3458c7] transition-all">
                     Sign In
                 </button>
             </div>
@@ -44,20 +44,20 @@ export const CommentInput: React.FC<CommentInputProps> = memo(({
     return (
         <form onSubmit={handleSubmit} className="mb-16">
             <div className="flex gap-4">
-                <img src={currentUser.avatarUrl || 'https://ui-avatars.com/api/?name=' + currentUser.name} className="w-10 h-10 rounded-full bg-[#161b22] object-cover" alt="" />
+                <img src={currentUser.avatarUrl || 'https://ui-avatars.com/api/?name=' + currentUser.name} className="w-10 h-10 rounded-full bg-[#ffffff] object-cover" alt="" />
                 <div className="flex-1 space-y-4">
                     <div className="relative">
                         <textarea
                             value={newComment}
                             onChange={e => setNewComment(e.target.value)}
                             placeholder="Add to the discussion..."
-                            className="w-full p-4 bg-[#161b22] border border-[#30363d] rounded-3xl resize-none outline-none focus:border-[#1983FC] focus:ring-1 focus:ring-[#1983FC] transition-all font-medium text-[15px] text-[#f0f6fc] min-h-[120px] placeholder-[#8b949e]"
+                            className="w-full p-4 bg-[#ffffff] border border-[#e5e5e5] rounded-3xl resize-none outline-none focus:border-[#4169E1] focus:ring-1 focus:ring-[#4169E1] transition-all font-medium text-[15px] text-[#111111] min-h-[120px] placeholder-[#666666]"
                         />
                         <div className="absolute bottom-4 right-4">
                             <button
                                 type="submit"
                                 disabled={!newComment.trim()}
-                                className="px-6 py-2 bg-[#006ffd] text-white rounded-full text-sm font-bold hover:bg-[#005bc4] transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100 disabled:hover:bg-[#006ffd]"
+                                className="px-6 py-2 bg-[#4169E1] text-white rounded-full text-sm font-bold hover:bg-[#3458c7] transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100 disabled:hover:bg-[#4169E1]"
                             >
                                 Post
                             </button>
