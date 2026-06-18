@@ -40,8 +40,8 @@ const WorkShowcase: React.FC = () => {
     }, []);
 
     return (
-        <section id="projects" className="bg-[#ffffff] px-[20px] pb-12 pt-0 md:pb-20">
-            <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-16 md:gap-24">
+        <section id="projects" className="bg-[#ffffff] pb-12 pt-0 md:pb-20">
+            <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-16 px-[20px] md:gap-24">
                 {isLoading ? (
                     <div className="flex min-h-[360px] items-center justify-center">
                         <div className="h-8 w-8 rounded-full border-4 border-[#4169E1] border-t-transparent animate-spin" />
@@ -58,9 +58,9 @@ const WorkShowcase: React.FC = () => {
                                 <Link
                                     key={project.id}
                                     to={`/post/${project.id}`}
-                                    className="group mx-auto block w-full max-w-[1440px]"
+                                    className="group mx-auto block w-full"
                                 >
-                                    <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-[#ffffff] md:aspect-[16/7]">
+                                    <div className="relative aspect-[16/9] overflow-hidden rounded-lg bg-[#ffffff]">
                                         <img
                                             src={visual}
                                             alt={project.title}
