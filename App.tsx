@@ -45,36 +45,36 @@ const Navbar: React.FC<{ isScrolled: boolean }> = ({ isScrolled }) => {
 
   return (
     <>
-      <nav className={`fixed top-0 left-0 w-full z-50 transition-colors duration-200 bg-gradient-to-b from-black/80 to-transparent backdrop-blur-md border-none text-white`}>
-        <div className="max-w-[1440px] mx-auto px-4 md:px-[24px] h-[64px] flex justify-between items-center relative">
+      <nav className="fixed left-0 top-3 z-50 w-full px-4 text-white pointer-events-none md:top-4 md:px-6">
+        <div className="mx-auto flex h-[56px] max-w-[1180px] items-center justify-between rounded-full border border-white/10 bg-[#0d1117]/70 px-4 shadow-[0_18px_50px_rgba(0,0,0,0.28)] ring-1 ring-white/[0.03] backdrop-blur-2xl pointer-events-auto md:h-[58px] md:px-6">
 
           {/* Left Side: Logo & Navigation */}
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-6">
             <Link to="/" className="flex items-center gap-2" onClick={closeMobileMenu}>
-              <span className="font-semibold text-[18px] tracking-tight">Choi Portfolio</span>
+              <span className="font-semibold text-[16px] tracking-tight">Choi Portfolio</span>
             </Link>
 
             {/* Desktop Navigation Links */}
-            <div className="hidden md:flex gap-4 items-center">
-              <Link to="/about" className="text-[16px] font-medium text-white/90 hover:text-white/70 transition-colors">About</Link>
-              <Link to="/work" className="text-[16px] font-medium text-white/90 hover:text-white/70 transition-colors">Work</Link>
-              <Link to="/blog" className="text-[16px] font-medium text-white/90 hover:text-white/70 transition-colors">Blog</Link>
-              <Link to="/contact" className="text-[16px] font-medium text-white/90 hover:text-white/70 transition-colors">Contact</Link>
+            <div className="hidden md:flex gap-5 items-center">
+              <Link to="/about" className="text-[14px] font-medium text-white/80 hover:text-white transition-colors">About</Link>
+              <Link to="/work" className="text-[14px] font-medium text-white/80 hover:text-white transition-colors">Work</Link>
+              <Link to="/blog" className="text-[14px] font-medium text-white/80 hover:text-white transition-colors">Blog</Link>
+              <Link to="/contact" className="text-[14px] font-medium text-white/80 hover:text-white transition-colors">Contact</Link>
             </div>
           </div>
 
           {/* Right Side: Search & Auth */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-3">
             {/* Search Bar */}
             <div className="relative group">
-              <div className="flex items-center bg-white/5 border border-white/10 rounded-full px-4 py-2.5 min-w-[300px] transition-colors focus-within:border-blue-500 focus-within:bg-black/40">
+              <div className="flex h-[38px] min-w-[260px] items-center rounded-full border border-white/10 bg-white/[0.06] px-4 transition-colors focus-within:border-white/25 focus-within:bg-white/[0.09]">
                 <svg className="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 <input
                   type="text"
                   placeholder="Search or jump to..."
-                  className="bg-transparent border-none text-white text-[14px] outline-none w-full placeholder-gray-500"
+                  className="bg-transparent border-none text-white text-[13px] outline-none w-full placeholder-gray-500"
                 />
               </div>
             </div>
@@ -91,7 +91,7 @@ const Navbar: React.FC<{ isScrolled: boolean }> = ({ isScrolled }) => {
                   <Link to="/login" className="text-[14px] font-medium text-white hover:text-white/70 transition-colors">로그인</Link>
                   <Link
                     to="/signup"
-                    className="text-[14px] font-medium text-white border border-[rgba(240,246,252,0.1)] rounded-md px-3 py-1.5 hover:border-[#8b949e] hover:bg-[rgba(177,186,196,0.12)] transition-all"
+                    className="text-[14px] font-medium text-white border border-white/10 rounded-full px-3.5 py-1.5 bg-white/[0.04] hover:border-white/25 hover:bg-white/[0.1] transition-all"
                   >
                     회원가입
                   </Link>
@@ -121,7 +121,7 @@ const Navbar: React.FC<{ isScrolled: boolean }> = ({ isScrolled }) => {
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-40 bg-[#0d1117] pt-[64px] md:hidden overscroll-none text-white">
+        <div className="fixed inset-0 z-40 bg-[#0d1117] pt-[84px] md:hidden overscroll-none text-white">
           <div className="flex flex-col items-start gap-6 pt-8 px-6">
             <div className="w-full relative">
               <input
