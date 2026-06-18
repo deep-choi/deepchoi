@@ -45,16 +45,8 @@ const FALLBACK_VISUALS = [
     '/captures/company-projects/miceday-home-desktop.png',
 ];
 
-const getProjectVisuals = (project: Project, index: number): string[] => {
-    const visuals = [
-        project.imageUrl,
-        FALLBACK_VISUALS[index % FALLBACK_VISUALS.length],
-        FALLBACK_VISUALS[(index + 1) % FALLBACK_VISUALS.length],
-        FALLBACK_VISUALS[(index + 2) % FALLBACK_VISUALS.length],
-    ].filter((src): src is string => Boolean(src));
-
-    return visuals.length > 0 ? visuals : FALLBACK_VISUALS.slice(0, 4);
-};
+const getProjectVisual = (project: Project, index: number): string =>
+    project.imageUrl || FALLBACK_VISUALS[index % FALLBACK_VISUALS.length];
 
 const WorkShowcase: React.FC = () => {
     const [projects, setProjects] = useState<Project[]>([]);
@@ -87,7 +79,7 @@ const WorkShowcase: React.FC = () => {
                 ) : (
                     <div className="flex flex-col gap-20 md:gap-28">
                         {projects.map((project, index) => {
-                            const visuals = getProjectVisuals(project, index);
+                            const visual = getProjectVisual(project, index);
                             const meta = project.tags.length > 0
                                 ? project.tags.slice(0, 3).join(', ')
                                 : project.category;
@@ -96,41 +88,23 @@ const WorkShowcase: React.FC = () => {
                                 <Link
                                     key={project.id}
                                     to={`/post/${project.id}`}
-                                    className="group block"
+                                    className="group mx-auto block w-full max-w-[1200px]"
                                 >
-                                    <div className="grid gap-3 md:grid-cols-[1.25fr_0.75fr] md:gap-4">
-                                        <div className="relative aspect-[16/10] overflow-hidden rounded-lg bg-[#161b22]">
-                                            <img
-                                                src={visuals[0]}
-                                                alt={project.title}
-                                                loading={index === 0 ? 'eager' : 'lazy'}
-                                                decoding="async"
-                                                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-                                            />
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-3 md:grid-cols-1 md:gap-4">
-                                            {visuals.slice(1, 3).map((src, visualIndex) => (
-                                                <div
-                                                    key={`${project.id}-${visualIndex}`}
-                                                    className="relative aspect-[16/10] overflow-hidden rounded-lg bg-[#161b22]"
-                                                >
-                                                    <img
-                                                        src={src}
-                                                        alt={`${project.title} preview ${visualIndex + 1}`}
-                                                        loading="lazy"
-                                                        decoding="async"
-                                                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-                                                    />
-                                                </div>
-                                            ))}
-                                        </div>
+                                    <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-[#161b22] md:aspect-[16/7]">
+                                        <img
+                                            src={visual}
+                                            alt={project.title}
+                                            loading={index === 0 ? 'eager' : 'lazy'}
+                                            decoding="async"
+                                            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
+                                        />
                                     </div>
 
-                                    <div className="mt-5 grid gap-3 md:grid-cols-[1.25fr_0.75fr] md:items-start">
-                                        <h3 className="text-2xl font-medium leading-tight text-[#f0f6fc] md:text-4xl">
+                                    <div className="mt-4 grid gap-2 md:grid-cols-[1fr_auto] md:items-start">
+                                        <h3 className="text-lg font-medium leading-tight text-[#f0f6fc] md:text-xl">
                                             {project.title}
                                         </h3>
-                                        <div className="flex flex-col gap-2 text-[13px] font-medium uppercase text-[#8b949e] md:items-end md:text-right">
+                                        <div className="flex flex-col gap-1 text-[12px] font-medium uppercase text-[#8b949e] md:items-end md:text-right">
                                             <span>{meta}</span>
                                             <span>{project.date}</span>
                                         </div>
