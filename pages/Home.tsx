@@ -9,6 +9,84 @@ const HeroParticleField = React.lazy(() =>
     import('../components/HeroParticleField').then((module) => ({ default: module.HeroParticleField }))
 );
 
+const HERO_TEXT = '디자인과 개발로 더 나은 제품 경험을 만듭니다.';
+
+const TypewriterHeadline: React.FC = () => {
+    const [visibleLength, setVisibleLength] = useState(0);
+
+    useEffect(() => {
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (prefersReducedMotion) {
+            setVisibleLength(HERO_TEXT.length);
+            return;
+        }
+
+        let frameId = 0;
+        const startDelay = 500;
+        const typingDuration = 7500;
+        const delayWeights = HERO_TEXT.split('').map((character) => {
+            if (character === ' ') return 1.35;
+            if (character === '.') return 1.7;
+            return 1;
+        });
+        const totalDelayWeight = delayWeights.reduce((total, weight) => total + weight, 0);
+
+        const startedAt = performance.now();
+        const render = (now: number) => {
+            const elapsed = now - startedAt - startDelay;
+
+            if (elapsed <= 0) {
+                setVisibleLength(0);
+                frameId = window.requestAnimationFrame(render);
+                return;
+            }
+
+            if (elapsed >= typingDuration) {
+                setVisibleLength(HERO_TEXT.length);
+                return;
+            }
+
+            const targetWeight = (elapsed / typingDuration) * totalDelayWeight;
+            let accumulatedWeight = 0;
+            let nextLength = 0;
+
+            for (let i = 0; i < delayWeights.length; i += 1) {
+                accumulatedWeight += delayWeights[i];
+                if (accumulatedWeight > targetWeight) {
+                    break;
+                }
+                nextLength = i + 1;
+            }
+
+            setVisibleLength(nextLength);
+            frameId = window.requestAnimationFrame(render);
+        };
+
+        frameId = window.requestAnimationFrame(render);
+        return () => window.cancelAnimationFrame(frameId);
+    }, []);
+
+    const visibleText = HERO_TEXT.slice(0, visibleLength);
+    const isTyping = visibleLength < HERO_TEXT.length;
+
+    return (
+        <h1
+            className="relative max-w-[760px] text-center text-[34px] font-medium leading-[1.12] text-[#111111] tracking-normal md:text-[52px] lg:text-[60px]"
+            aria-label={HERO_TEXT}
+        >
+            <span className="invisible" aria-hidden="true">
+                {HERO_TEXT}
+            </span>
+            <span className="absolute inset-0" aria-hidden="true">
+                {visibleText}
+                <span
+                    className={`ml-[0.08em] inline-block h-[0.82em] w-[0.055em] translate-y-[0.08em] rounded-full bg-[#4169E1] ${isTyping ? 'animate-pulse' : 'opacity-0'}`}
+                />
+            </span>
+        </h1>
+    );
+};
+
 const Hero: React.FC = () => {
     return (
         <section className="relative flex min-h-[100svh] w-full items-center overflow-hidden bg-[#ffffff] px-[20px] pb-16 pt-[72px]">
@@ -16,9 +94,7 @@ const Hero: React.FC = () => {
                 <HeroParticleField />
             </React.Suspense>
             <div className="relative z-10 mx-auto flex w-full max-w-[1120px] justify-center">
-                <h1 className="max-w-[760px] text-center text-[34px] font-medium leading-[1.12] text-[#111111] tracking-normal md:text-[52px] lg:text-[60px]">
-                    디자인과 개발로 더 나은 제품 경험을 만듭니다.
-                </h1>
+                <TypewriterHeadline />
             </div>
         </section>
     );
