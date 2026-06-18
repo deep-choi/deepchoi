@@ -57,16 +57,14 @@ export const ScrollReveal: React.FC<ScrollRevealProps> = ({
     const easedProgress = progress * progress * (3 - 2 * progress);
     const translateY = (1 - easedProgress) * 72;
     const scale = 0.88 + easedProgress * 0.12;
-    const opacity = 0.2 + easedProgress * 0.8;
 
     return (
         <div
             ref={ref}
-            className={`${className} transform-gpu will-change-[transform,opacity]`}
+            className={`${className} transform-gpu will-change-transform`}
             data-scroll-reveal
             style={{
                 ...style,
-                opacity,
                 transform: `translate3d(0, ${translateY}px, 0) scale(${scale})`,
             }}
             {...props}
