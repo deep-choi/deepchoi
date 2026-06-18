@@ -23,6 +23,18 @@ type ParticleState = {
 
 const COLORS = ['#4169E1', '#4169E1', '#111111', '#8ea2f5'];
 
+const createSeededRandom = (seed: number) => {
+    let value = seed;
+
+    return () => {
+        value += 0x6D2B79F5;
+        let result = value;
+        result = Math.imul(result ^ (result >>> 15), result | 1);
+        result ^= result + Math.imul(result ^ (result >>> 7), result | 61);
+        return ((result ^ (result >>> 14)) >>> 0) / 4294967296;
+    };
+};
+
 const createDotTexture = () => {
     const canvas = document.createElement('canvas');
     canvas.width = 48;
@@ -66,13 +78,15 @@ export const HeroParticleField: React.FC = () => {
         const group = new Group();
         scene.add(group);
 
-        const particleCount = window.innerWidth < 768 ? 58 : 180;
+        const isMobile = window.innerWidth < 768;
+        const particleCount = isMobile ? 58 : 180;
+        const random = createSeededRandom(isMobile ? 20260618 : 20260619);
         const geometry = new BufferGeometry();
         const positions = new Float32Array(particleCount * 3);
         const colors = new Float32Array(particleCount * 3);
         const dotTexture = createDotTexture();
         const material = new PointsMaterial({
-            size: window.innerWidth < 768 ? 4.2 : 5.4,
+            size: isMobile ? 4.2 : 5.4,
             sizeAttenuation: true,
             map: dotTexture || undefined,
             alphaTest: 0.5,
@@ -84,18 +98,29 @@ export const HeroParticleField: React.FC = () => {
 
         const particles: ParticleState[] = [];
         const palette = COLORS.map((color) => new Color(color));
+        const columnCount = isMobile ? 6 : 12;
+        const rowCount = Math.ceil(particleCount / columnCount);
 
         for (let i = 0; i < particleCount; i += 1) {
+            const column = i % columnCount;
+            const row = Math.floor(i / columnCount);
+            const xJitter = (random() - 0.5) * 0.62;
+            const yJitter = (random() - 0.5) * 0.7;
+            const xPosition = -1 + ((column + 0.5 + xJitter) / columnCount) * 2;
+            const yPosition = -1 + ((row + 0.5 + yJitter) / rowCount) * 2;
+            const zDepth = 30 + random() * 260;
+            const phase = random() * Math.PI * 2;
+
             particles.push({
-                x: (Math.random() - 0.5) * 2,
-                y: (Math.random() - 0.5) * 2,
-                z: 30 + Math.random() * 260,
-                speed: 0.16 + Math.random() * 0.48,
-                phase: Math.random() * Math.PI * 2,
+                x: xPosition,
+                y: yPosition,
+                z: zDepth,
+                speed: 0.16 + random() * 0.48,
+                phase: phase + i * 0.015,
             });
 
             const color = palette[i % palette.length].clone();
-            color.offsetHSL(0, 0, (Math.random() - 0.5) * 0.08);
+            color.offsetHSL(0, 0, (random() - 0.5) * 0.08);
             colors[i * 3] = color.r;
             colors[i * 3 + 1] = color.g;
             colors[i * 3 + 2] = color.b;
@@ -135,9 +160,9 @@ export const HeroParticleField: React.FC = () => {
             const elapsed = (now - start) * 0.001;
             pointer.lerp(targetPointer, prefersReducedMotion ? 0.018 : 0.032);
 
-            group.rotation.y = elapsed * 0.055 + pointer.x * 0.24;
-            group.rotation.x = -pointer.y * 0.12;
-            group.rotation.z = pointer.x * 0.045;
+            group.rotation.y = Math.sin(elapsed * 0.08) * 0.025 + pointer.x * 0.18;
+            group.rotation.x = -pointer.y * 0.1;
+            group.rotation.z = pointer.x * 0.035;
             camera.position.x = pointer.x * 32;
             camera.position.y = -pointer.y * 20;
             camera.lookAt(0, 42, 0);
