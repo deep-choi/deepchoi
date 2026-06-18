@@ -11,6 +11,7 @@ import { Work } from './pages/Work';
 import { Blog } from './pages/Blog';
 import { Contact } from './pages/Contact';
 import { authService } from './services/authService';
+import { SmoothScroll } from './components/SmoothScroll';
 
 const Navbar: React.FC<{ isScrolled: boolean }> = ({ isScrolled }) => {
   const isLoggedIn = authService.isAuthenticated();
@@ -181,6 +182,10 @@ const Footer: React.FC = () => (
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isScrolled, setIsScrolled] = useState(false);
+  const location = useLocation();
+  const shouldDisableSmoothScroll = location.pathname === '/login'
+    || location.pathname === '/signup'
+    || location.pathname.startsWith('/admin');
 
   useEffect(() => {
     const handleScroll = () => {
@@ -194,10 +199,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     <div className="relative min-h-screen bg-[#ffffff] selection:bg-[#4169E1] selection:text-white font-sans flex flex-col">
       <ScrollToTop />
       <Navbar isScrolled={isScrolled} />
-      <div className="flex-grow">
-        {children}
-      </div>
-      <Footer />
+      <SmoothScroll disabled={shouldDisableSmoothScroll}>
+        <div className="flex-grow">
+          {children}
+        </div>
+        <Footer />
+      </SmoothScroll>
     </div>
   );
 };

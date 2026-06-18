@@ -2,6 +2,50 @@
 @tailwind components;
 @tailwind utilities;
 
+html.smooth-scroll-enabled,
+html.smooth-scroll-enabled body {
+    min-height: 100%;
+    background: #ffffff;
+}
+
+html.smooth-scroll-enabled body {
+    overflow-y: scroll;
+    overscroll-behavior-y: none;
+}
+
+.smooth-scroll-spacer {
+    width: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.smooth-scroll-content {
+    position: relative;
+    width: 100%;
+}
+
+html.smooth-scroll-enabled .smooth-scroll-content {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    min-height: 100vh;
+    will-change: transform;
+    backface-visibility: hidden;
+    transform: translate3d(0, 0, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html.smooth-scroll-enabled .smooth-scroll-content {
+        position: relative;
+        transform: none !important;
+    }
+
+    html.smooth-scroll-enabled .smooth-scroll-spacer {
+        display: none;
+    }
+}
+
 /* Image Fade-in Animation */
 @keyframes fadeIn {
     from {
