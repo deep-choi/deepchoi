@@ -1,37 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
 import { projectService } from '../services/projectService';
 import { Project } from '../types';
 
 const Hero: React.FC = () => {
     return (
-        <section className="relative w-full min-h-[78vh] flex items-end overflow-hidden bg-[#0d1117] px-4 pb-12 pt-32 md:px-6 md:pb-16">
-            <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-10">
-                <div className="flex flex-col gap-6">
-                    <p className="text-[13px] font-medium uppercase text-[#8b949e] tracking-normal">
-                        Deepchoi Portfolio
-                    </p>
-                    <h1 className="max-w-[1180px] text-5xl font-semibold leading-[1.02] text-[#f0f6fc] tracking-normal md:text-7xl lg:text-8xl">
-                        Hi, I&apos;m Choi, a designer and developer building useful digital products.
-                    </h1>
-                </div>
-
-                <div className="grid gap-6 border-t border-[#30363d] pt-6 text-[#c9d1d9] md:grid-cols-[1.2fr_0.8fr]">
-                    <p className="max-w-3xl text-[17px] leading-relaxed md:text-[20px]">
-                        서비스의 첫 화면부터 운영자가 매일 쓰는 관리자 도구까지, 화면 구조와 데이터 흐름이 함께 움직이는 포트폴리오를 만듭니다.
-                    </p>
-                    <div className="grid grid-cols-2 gap-4 text-[13px] uppercase text-[#8b949e] md:justify-self-end md:text-right">
-                        <div>
-                            <span className="block text-[#f0f6fc]">UI/UX</span>
-                            Product structure
-                        </div>
-                        <div>
-                            <span className="block text-[#f0f6fc]">Frontend</span>
-                            React & TypeScript
-                        </div>
-                    </div>
-                </div>
+        <section className="relative w-full overflow-hidden bg-[#f8f7f3] px-4 pb-12 pt-28 md:px-6 md:pb-16 md:pt-36">
+            <div className="mx-auto flex w-full max-w-[1120px] justify-center">
+                <h1 className="max-w-[920px] text-center text-[42px] font-medium leading-[1.08] text-[#4f443a] tracking-normal md:text-[70px] lg:text-[82px]">
+                    안녕하세요, 저는 사용자와 운영자를 위한 디지털 제품을 만드는 최동준입니다.
+                </h1>
             </div>
         </section>
     );
@@ -61,17 +40,8 @@ const WorkShowcase: React.FC = () => {
     }, []);
 
     return (
-        <section id="projects" className="bg-[#0d1117] px-4 py-12 md:px-6 md:py-20">
+        <section id="projects" className="bg-[#f8f7f3] px-4 pb-12 pt-0 md:px-6 md:pb-20">
             <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-16 md:gap-24">
-                <div className="flex items-end justify-between gap-6 border-t border-[#30363d] pt-6">
-                    <h2 className="text-[24px] font-medium leading-none text-[#f0f6fc] md:text-[30px]">
-                        Selected work
-                    </h2>
-                    <Link to="/work" className="text-[15px] font-medium text-[#8b949e] transition-colors hover:text-[#f0f6fc]">
-                        전체보기
-                    </Link>
-                </div>
-
                 {isLoading ? (
                     <div className="flex min-h-[360px] items-center justify-center">
                         <div className="h-8 w-8 rounded-full border-4 border-[#1983FC] border-t-transparent animate-spin" />
@@ -101,10 +71,10 @@ const WorkShowcase: React.FC = () => {
                                     </div>
 
                                     <div className="mt-4 grid gap-2 md:grid-cols-[1fr_auto] md:items-start">
-                                        <h3 className="text-lg font-medium leading-tight text-[#f0f6fc] md:text-xl">
+                                        <h3 className="text-lg font-medium leading-tight text-[#4f443a] md:text-xl">
                                             {project.title}
                                         </h3>
-                                        <div className="flex flex-col gap-1 text-[12px] font-medium uppercase text-[#8b949e] md:items-end md:text-right">
+                                        <div className="flex flex-col gap-1 text-[12px] font-medium uppercase text-[#9a8f84] md:items-end md:text-right">
                                             <span>{meta}</span>
                                             <span>{project.date}</span>
                                         </div>
@@ -120,9 +90,9 @@ const WorkShowcase: React.FC = () => {
 };
 
 const ClosingStatement: React.FC = () => (
-    <section className="bg-[#0d1117] px-4 py-16 md:px-6 md:py-24">
-        <div className="mx-auto max-w-[1440px] border-t border-[#30363d] pt-8">
-            <h2 className="max-w-[900px] text-4xl font-semibold leading-[1.08] text-[#f0f6fc] md:text-6xl">
+    <section className="bg-[#f8f7f3] px-4 py-16 md:px-6 md:py-24">
+        <div className="mx-auto max-w-[1440px] border-t border-[#d8d2c8] pt-8">
+            <h2 className="max-w-[900px] text-4xl font-semibold leading-[1.08] text-[#4f443a] md:text-6xl">
                 Making digital products clear, useful, and easy to operate.
             </h2>
         </div>
@@ -150,7 +120,7 @@ const AdminCreateButton: React.FC = () => {
 
 export const Home: React.FC = () => {
     return (
-        <main className="relative bg-[#0d1117]">
+        <main className="relative bg-[#f8f7f3]">
             <Hero />
             <WorkShowcase />
             <ClosingStatement />
