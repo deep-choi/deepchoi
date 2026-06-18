@@ -72,7 +72,7 @@ export const HeroParticleField: React.FC = () => {
         const colors = new Float32Array(particleCount * 3);
         const dotTexture = createDotTexture();
         const material = new PointsMaterial({
-            size: window.innerWidth < 768 ? 3 : 3.7,
+            size: window.innerWidth < 768 ? 4.2 : 5.4,
             sizeAttenuation: true,
             map: dotTexture || undefined,
             alphaTest: 0.5,
