@@ -2,6 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Project } from '../types';
+import { ScrollReveal } from './ScrollReveal';
 
 interface ProjectCardProps {
     project: Project;
@@ -12,12 +13,12 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, index }) => {
     const navigate = useNavigate();
 
     return (
-        <div
+        <ScrollReveal
             onClick={() => navigate(`/post/${project.id}`)}
-            className={`group cursor-pointer animate-in fade-in slide-in-from-bottom-10 duration-1000 fill-mode-both`}
-            style={{ animationDelay: `${index * 150}ms` }}
+            className="group cursor-pointer"
+            delay={Math.min(index * 90, 360)}
         >
-            <div className="relative aspect-[16/9] rounded-lg overflow-hidden bg-[#f5f5f5] mb-3 md:mb-4 transition-all duration-700 ease-[cubic-bezier(0.2,0,0,1)] group-hover:shadow-[0_18px_44px_rgba(0,0,0,0.08)]">
+            <div className="relative aspect-[16/9] rounded-[26px] overflow-hidden bg-[#f5f5f5] mb-3 md:mb-4 transition-all duration-700 ease-[cubic-bezier(0.2,0,0,1)] group-hover:shadow-[0_18px_44px_rgba(0,0,0,0.08)]">
                 <img
                     src={project.imageUrl}
                     alt={project.title}
@@ -43,6 +44,6 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, index }) => {
                     {project.date}
                 </p>
             </div>
-        </div>
+        </ScrollReveal>
     );
 };

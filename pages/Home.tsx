@@ -3,11 +3,19 @@ import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
 import { projectService } from '../services/projectService';
 import { Project } from '../types';
+import { ScrollReveal } from '../components/ScrollReveal';
+
+const HeroParticleField = React.lazy(() =>
+    import('../components/HeroParticleField').then((module) => ({ default: module.HeroParticleField }))
+);
 
 const Hero: React.FC = () => {
     return (
-        <section className="relative w-full overflow-hidden bg-[#ffffff] px-4 pb-10 pt-24 md:px-6 md:pb-14 md:pt-32">
-            <div className="mx-auto flex w-full max-w-[1120px] justify-center">
+        <section className="relative flex min-h-[100svh] w-full items-center overflow-hidden bg-[#ffffff] px-[20px] pb-16 pt-[72px]">
+            <React.Suspense fallback={null}>
+                <HeroParticleField />
+            </React.Suspense>
+            <div className="relative z-10 mx-auto flex w-full max-w-[1120px] justify-center">
                 <h1 className="max-w-[760px] text-center text-[34px] font-medium leading-[1.12] text-[#111111] tracking-normal md:text-[52px] lg:text-[60px]">
                     디자인과 개발로 더 나은 제품 경험을 만듭니다.
                 </h1>
@@ -55,31 +63,36 @@ const WorkShowcase: React.FC = () => {
                                 : project.category;
 
                             return (
-                                <Link
+                                <ScrollReveal
                                     key={project.id}
-                                    to={`/post/${project.id}`}
-                                    className="group mx-auto block w-full"
+                                    className="mx-auto w-full"
+                                    delay={Math.min(index * 100, 400)}
                                 >
-                                    <div className="relative aspect-[16/9] overflow-hidden rounded-lg bg-[#ffffff]">
-                                        <img
-                                            src={visual}
-                                            alt={project.title}
-                                            loading={index === 0 ? 'eager' : 'lazy'}
-                                            decoding="async"
-                                            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
-                                        />
-                                    </div>
-
-                                    <div className="mt-4 grid gap-2 md:grid-cols-[1fr_auto] md:items-start">
-                                        <h3 className="text-lg font-medium leading-tight text-[#111111] md:text-xl">
-                                            {project.title}
-                                        </h3>
-                                        <div className="flex flex-col gap-1 text-[12px] font-medium uppercase text-[#666666] md:items-end md:text-right">
-                                            <span>{meta}</span>
-                                            <span>{project.date}</span>
+                                    <Link
+                                        to={`/post/${project.id}`}
+                                        className="group block w-full"
+                                    >
+                                        <div className="relative aspect-[16/9] overflow-hidden rounded-[32px] bg-[#ffffff]">
+                                            <img
+                                                src={visual}
+                                                alt={project.title}
+                                                loading={index === 0 ? 'eager' : 'lazy'}
+                                                decoding="async"
+                                                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
+                                            />
                                         </div>
-                                    </div>
-                                </Link>
+
+                                        <div className="mt-4 grid gap-2 md:grid-cols-[1fr_auto] md:items-start">
+                                            <h3 className="text-lg font-medium leading-tight text-[#111111] md:text-xl">
+                                                {project.title}
+                                            </h3>
+                                            <div className="flex flex-col gap-1 text-[12px] font-medium uppercase text-[#666666] md:items-end md:text-right">
+                                                <span>{meta}</span>
+                                                <span>{project.date}</span>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                </ScrollReveal>
                             );
                         })}
                     </div>
