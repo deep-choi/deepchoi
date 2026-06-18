@@ -22,8 +22,8 @@ const TypewriterHeadline: React.FC = () => {
         }
 
         let frameId = 0;
-        const startDelay = 500;
-        const typingDuration = 7500;
+        const startDelay = 300;
+        const typingDuration = 3700;
         const delayWeights = HERO_TEXT.split('').map((character) => {
             if (character === ' ') return 1.35;
             if (character === '.') return 1.7;
