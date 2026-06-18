@@ -61,15 +61,10 @@ const Navbar: React.FC<{ isScrolled: boolean }> = ({ isScrolled }) => {
               <Link to="/work" className="text-[14px] font-medium text-[#111111] hover:text-[#4169E1] transition-colors">Work</Link>
               <Link to="/blog" className="text-[14px] font-medium text-[#111111] hover:text-[#4169E1] transition-colors">Blog</Link>
               <Link to="/contact" className="text-[14px] font-medium text-[#111111] hover:text-[#4169E1] transition-colors">Contact</Link>
-              <button className="flex h-9 w-9 items-center justify-center rounded-full text-[#111111] transition-colors hover:bg-[#f5f5f5] hover:text-[#4169E1]" aria-label="Search">
-                <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </button>
             </div>
           </div>
 
-          {/* Right Side: Search & Auth */}
+          {/* Right Side: Auth */}
           <div className="hidden md:flex items-center gap-3">
             {/* Auth Buttons */}
             <div className="flex items-center gap-3">
@@ -107,14 +102,6 @@ const Navbar: React.FC<{ isScrolled: boolean }> = ({ isScrolled }) => {
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-40 bg-[#ffffff] pt-[84px] md:hidden overscroll-none text-[#111111]">
           <div className="flex flex-col items-start gap-6 pt-8 px-6">
-            <div className="w-full relative">
-              <input
-                type="text"
-                placeholder="검색..."
-                className="w-full bg-white border border-[#e5e5e5] rounded-md px-3 py-2 text-[#111111] placeholder-[#888888] focus:border-[#4169E1] focus:outline-none"
-              />
-            </div>
-
             <Link to="/about" onClick={closeMobileMenu} className="text-xl font-semibold border-b border-[#e5e5e5] w-full pb-3">About</Link>
             <Link to="/work" onClick={closeMobileMenu} className="text-xl font-semibold border-b border-[#e5e5e5] w-full pb-3">Work</Link>
             <Link to="/blog" onClick={closeMobileMenu} className="text-xl font-semibold border-b border-[#e5e5e5] w-full pb-3">Blog</Link>
@@ -156,8 +143,8 @@ const ScrollToTop: React.FC = () => {
 // Experience component removed as it is migrated to About page
 
 const Footer: React.FC = () => (
-  <footer className="relative py-24 bg-white overflow-hidden border-t border-[#e5e5e5]">
-    <div className="max-w-[1200px] mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-8 relative z-10">
+  <footer className="relative py-24 bg-white overflow-hidden">
+    <div className="max-w-[1440px] mx-auto px-[20px] grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-8 relative z-10">
 
       {/* Column 1: Main */}
       <div className="flex flex-col">
