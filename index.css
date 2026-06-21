@@ -259,8 +259,8 @@ img {
 .dual-prose figure,
 .dual-prose div:has(> img),
 .dual-prose p:has(> img) {
-    max-width: 100%;
-    width: 100%;
+    max-width: 100% !important;
+    width: 100% !important;
 }
 
 /* Editor surface: separated from the published post renderer */
