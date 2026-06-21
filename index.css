@@ -379,7 +379,7 @@ img {
     min-width: 100%;
     margin: 0 !important;
     scroll-snap-align: center;
-    aspect-ratio: 16 / 10;
+    aspect-ratio: 16 / 9;
     background: #f5f5f7;
 }
 
@@ -409,14 +409,24 @@ img {
     border-radius: 999px;
     background: rgba(17, 17, 17, 0.82);
     color: #ffffff;
-    font-size: 34px;
+    font-size: 0;
     font-weight: 300;
-    line-height: 1;
+    line-height: 0;
     transform: translateY(-50%);
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
     cursor: pointer;
     user-select: none;
     transition: background-color 160ms ease, transform 160ms ease, opacity 160ms ease;
+}
+
+.dual-prose .image-carousel-nav::before,
+.editor-prose .image-carousel-nav::before {
+    content: "";
+    display: block;
+    width: 11px;
+    height: 11px;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
 }
 
 .dual-prose .image-carousel-nav:hover,
@@ -430,9 +440,21 @@ img {
     left: 18px;
 }
 
+.dual-prose .image-carousel-prev::before,
+.editor-prose .image-carousel-prev::before {
+    margin-right: -2px;
+    transform: rotate(135deg);
+}
+
 .dual-prose .image-carousel-next,
 .editor-prose .image-carousel-next {
     right: 18px;
+}
+
+.dual-prose .image-carousel-next::before,
+.editor-prose .image-carousel-next::before {
+    margin-left: -2px;
+    transform: rotate(-45deg);
 }
 
 .dual-prose .image-carousel::after,
@@ -453,7 +475,6 @@ img {
     .editor-prose .image-carousel-nav {
         width: 38px;
         height: 38px;
-        font-size: 28px;
     }
 
     .dual-prose .image-carousel-prev,
