@@ -47,7 +47,7 @@ const Navbar: React.FC<{ isScrolled: boolean }> = ({ isScrolled }) => {
   return (
     <>
       <nav className="fixed left-0 top-0 z-50 w-full bg-white text-[#111111]">
-        <div className="mx-auto flex h-[72px] w-full max-w-[1440px] items-center justify-between px-[20px]">
+        <div className="mx-auto flex h-[72px] w-full max-w-[1440px] items-center justify-between px-4 md:px-[20px]">
 
           {/* Left Side: Logo & Navigation */}
           <div className="flex items-center gap-8">
@@ -145,7 +145,7 @@ const ScrollToTop: React.FC = () => {
 
 const Footer: React.FC = () => (
   <footer className="relative py-24 bg-white overflow-hidden">
-    <div className="max-w-[1440px] mx-auto px-[20px] grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-8 relative z-10">
+    <div className="max-w-[1440px] mx-auto px-4 md:px-[20px] grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-8 relative z-10">
 
       {/* Column 1: Main */}
       <div className="flex flex-col">

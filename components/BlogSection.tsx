@@ -26,7 +26,7 @@ export const BlogSection: React.FC = () => {
 
     return (
         <section id="blog" className="py-16 md:py-32 bg-[#ffffff]">
-            <div className="max-w-[1440px] mx-auto px-[20px]">
+            <div className="max-w-[1440px] mx-auto px-4 md:px-[20px]">
                 <div className="mb-4">
                     <div className="flex flex-col gap-8">
                         <div className="flex justify-between items-center">

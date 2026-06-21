@@ -30,7 +30,7 @@ export const ProjectGrid: React.FC<{ isPage?: boolean }> = ({ isPage = false }) 
 
   return (
     <section id="projects" className={`${isPage ? 'pt-32 pb-24' : 'py-12 md:py-24'} bg-[#ffffff]`}>
-      <div className="max-w-[1440px] mx-auto px-[20px]">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-[20px]">
         <div className="mb-4">
           <div className="flex flex-col gap-8">
             <div className="flex justify-between items-center">
