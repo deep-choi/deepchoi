@@ -38,6 +38,9 @@ const ALLOWED_CLASSES = new Set([
     'image-carousel',
     'image-carousel-track',
     'image-carousel-slide',
+    'image-carousel-nav',
+    'image-carousel-prev',
+    'image-carousel-next',
     'full-width'
 ]);
 

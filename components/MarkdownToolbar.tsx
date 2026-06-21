@@ -310,7 +310,7 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
             const slidesHtml = urls.map((url, index) => (
                 `<figure class="image-carousel-slide"><img src="${url}" alt="Slide image ${index + 1}" /></figure>`
             )).join('');
-            const carouselHtml = `<div class="image-carousel" data-count="${urls.length}"><div class="image-carousel-track">${slidesHtml}</div></div>`;
+            const carouselHtml = `<div class="image-carousel" data-count="${urls.length}"><div class="image-carousel-track">${slidesHtml}</div><button type="button" class="image-carousel-nav image-carousel-prev" data-carousel-action="prev" aria-label="이전 이미지">&lsaquo;</button><button type="button" class="image-carousel-nav image-carousel-next" data-carousel-action="next" aria-label="다음 이미지">&rsaquo;</button></div>`;
 
             insertContent(carouselHtml);
         } catch (error) {

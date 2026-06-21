@@ -54,6 +54,23 @@ export const RichEditor: React.FC<RichEditorProps> = ({
     const handleEditorClick = (e: React.MouseEvent) => {
         const target = e.target as HTMLElement;
 
+        const carouselNav = target.closest('.image-carousel-nav') as HTMLElement | null;
+        if (carouselNav) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const carousel = carouselNav.closest('.image-carousel') as HTMLElement | null;
+            const track = carousel?.querySelector('.image-carousel-track') as HTMLElement | null;
+            if (track) {
+                const direction = carouselNav.dataset.carouselAction === 'prev' ? -1 : 1;
+                track.scrollBy({
+                    left: direction * track.clientWidth,
+                    behavior: 'smooth'
+                });
+            }
+            return;
+        }
+
         // Remove previous selection highlight
         if (selectedMedia) {
             selectedMedia.classList.remove('selected-media');

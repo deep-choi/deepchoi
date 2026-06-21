@@ -23,6 +23,7 @@ export const PostDetail: React.FC = () => {
     const [editForm, setEditForm] = useState<Partial<Project>>({});
     const [tagDraft, setTagDraft] = useState('');
     const contentEditorRef = useRef<HTMLDivElement>(null);
+    const contentDisplayRef = useRef<HTMLDivElement>(null);
     const coverInputRef = useRef<HTMLInputElement>(null);
     const [editSessionId, setEditSessionId] = useState(0); // Used as key for contentEditable remount
     const [isCoverUploading, setIsCoverUploading] = useState(false);
@@ -58,6 +59,36 @@ export const PostDetail: React.FC = () => {
             setPanPosition({ x: 0, y: 0 });
         }
     }, [selectedImage]);
+
+    useEffect(() => {
+        if (isEditing) return;
+
+        const root = contentDisplayRef.current;
+        if (!root) return;
+
+        const carousels = Array.from(root.querySelectorAll('.image-carousel')) as HTMLElement[];
+        carousels.forEach(carousel => {
+            if (!carousel.querySelector('.image-carousel-prev')) {
+                const prev = document.createElement('button');
+                prev.type = 'button';
+                prev.className = 'image-carousel-nav image-carousel-prev';
+                prev.dataset.carouselAction = 'prev';
+                prev.setAttribute('aria-label', '이전 이미지');
+                prev.innerHTML = '&lsaquo;';
+                carousel.appendChild(prev);
+            }
+
+            if (!carousel.querySelector('.image-carousel-next')) {
+                const next = document.createElement('button');
+                next.type = 'button';
+                next.className = 'image-carousel-nav image-carousel-next';
+                next.dataset.carouselAction = 'next';
+                next.setAttribute('aria-label', '다음 이미지');
+                next.innerHTML = '&rsaquo;';
+                carousel.appendChild(next);
+            }
+        });
+    }, [project?.content, isEditing]);
 
     const handleMouseDown = (e: React.MouseEvent) => {
         clickStartPosRef.current = { x: e.clientX, y: e.clientY };
@@ -206,6 +237,24 @@ export const PostDetail: React.FC = () => {
 
     const handleContentClick = (e: React.MouseEvent) => {
         const target = e.target as HTMLElement;
+
+        const carouselNav = target.closest('.image-carousel-nav') as HTMLElement | null;
+        if (carouselNav) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const carousel = carouselNav.closest('.image-carousel') as HTMLElement | null;
+            const track = carousel?.querySelector('.image-carousel-track') as HTMLElement | null;
+            if (!track) return;
+
+            const direction = carouselNav.dataset.carouselAction === 'prev' ? -1 : 1;
+            track.scrollBy({
+                left: direction * track.clientWidth,
+                behavior: 'smooth'
+            });
+            return;
+        }
+
         if (target.tagName === 'IMG') {
             setSelectedImage((target as HTMLImageElement).src);
         }
@@ -632,7 +681,7 @@ export const PostDetail: React.FC = () => {
                             </div>
                         </div>
                     ) : (
-                        <div className="markdown-body dual-prose prose prose-lg max-w-none prose-headings:text-[#111111] prose-p:text-[#2b2b2b] prose-strong:text-[#111111] prose-ul:text-[#2b2b2b] prose-ol:text-[#2b2b2b] prose-li:text-[#2b2b2b] prose-blockquote:text-[#2b2b2b] prose-a:text-[#4169E1] prose-img:rounded-[16px] prose-headings:m-0 prose-p:m-0 prose-ul:m-0 prose-ol:m-0 prose-li:m-0 prose-blockquote:m-0 prose-pre:m-0" dangerouslySetInnerHTML={{ __html: linkifyHtml(project.content) }} />
+                        <div ref={contentDisplayRef} className="markdown-body dual-prose prose prose-lg max-w-none prose-headings:text-[#111111] prose-p:text-[#2b2b2b] prose-strong:text-[#111111] prose-ul:text-[#2b2b2b] prose-ol:text-[#2b2b2b] prose-li:text-[#2b2b2b] prose-blockquote:text-[#2b2b2b] prose-a:text-[#4169E1] prose-img:rounded-[16px] prose-headings:m-0 prose-p:m-0 prose-ul:m-0 prose-ol:m-0 prose-li:m-0 prose-blockquote:m-0 prose-pre:m-0" dangerouslySetInnerHTML={{ __html: linkifyHtml(project.content) }} />
                     )}
                 </div>
 
