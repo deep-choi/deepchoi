@@ -59,16 +59,6 @@ export const PostDetail: React.FC = () => {
         }
     }, [selectedImage]);
 
-    const handleWheel = (e: React.WheelEvent) => {
-        if (selectedImage) {
-            e.preventDefault();
-            const delta = e.deltaY * -0.001;
-            const newZoom = Math.min(Math.max(1, zoomLevel + delta), 4);
-            setZoomLevel(newZoom);
-            if (newZoom === 1) setPanPosition({ x: 0, y: 0 });
-        }
-    };
-
     const handleMouseDown = (e: React.MouseEvent) => {
         clickStartPosRef.current = { x: e.clientX, y: e.clientY };
         e.preventDefault();
@@ -250,7 +240,6 @@ export const PostDetail: React.FC = () => {
                 <div
                     className="fixed inset-0 bg-black/95 z-[100] flex items-center justify-center overflow-hidden"
                     onClick={() => setSelectedImage(null)}
-                    onWheel={handleWheel}
                 >
                     <div
                         className="relative w-full h-full flex items-start justify-center pt-10"
@@ -283,21 +272,21 @@ export const PostDetail: React.FC = () => {
                     </div>
 
                     {/* Zoom Controls */}
-                    <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-4 bg-white/10 backdrop-blur-md px-6 py-3 rounded-full z-[110]" onClick={e => e.stopPropagation()}>
+                    <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-4 rounded-full border border-white/15 bg-[#111111]/90 px-6 py-3 shadow-[0_18px_50px_rgba(0,0,0,0.45)] backdrop-blur-md z-[110]" onClick={e => e.stopPropagation()}>
                         <button
                             onClick={() => {
                                 const newZoom = Math.max(1, zoomLevel / 2);
                                 setZoomLevel(newZoom);
                                 if (newZoom <= 1.5) setPanPosition({ x: 0, y: 0 })
                             }}
-                            className="text-white hover:text-[#111111] transition-colors"
+                            className="rounded-full p-1 text-white transition-colors hover:bg-white/15"
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" /></svg>
                         </button>
                         <span className="text-white font-medium min-w-[4ch] text-center">{Math.round(zoomLevel * 100)}%</span>
                         <button
                             onClick={() => setZoomLevel(Math.min(4, zoomLevel * 2))}
-                            className="text-white hover:text-[#111111] transition-colors"
+                            className="rounded-full p-1 text-white transition-colors hover:bg-white/15"
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
                         </button>
