@@ -89,6 +89,13 @@ img {
     content-visibility: auto;
 }
 
+.cover-image-container,
+.dual-prose img,
+.dual-prose .image-carousel {
+    border: 1px solid #4169E1;
+    box-sizing: border-box;
+}
+
 /* Mobile detail media keeps the same 16px page gutter as the rest of the page. */
 @media (max-width: 767px) {
 
@@ -425,6 +432,7 @@ img {
     max-width: 100% !important;
     margin: 0 !important;
     border-radius: 8px !important;
+    border: 0 !important;
     object-fit: contain;
     background: #f5f5f7;
 }
