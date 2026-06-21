@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
 import { projectService } from '../services/projectService';
 import { Project } from '../types';
@@ -245,7 +246,7 @@ export const PostDetail: React.FC = () => {
     return (
         <div className="bg-[#ffffff] min-h-screen pt-32 pb-20 px-4 animate-in fade-in duration-700" onClick={() => setIsMenuOpen(false)}>
             {/* Image Lightbox Modal */}
-            {selectedImage && (
+            {selectedImage && createPortal(
                 <div
                     className="fixed inset-0 bg-black/95 z-[100] flex items-center justify-center overflow-hidden"
                     onClick={() => setSelectedImage(null)}
@@ -308,11 +309,12 @@ export const PostDetail: React.FC = () => {
                     >
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* Custom Delete Confirmation Modal */}
-            {isDeleteModalOpen && (
+            {isDeleteModalOpen && createPortal(
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center animate-in fade-in duration-200" onClick={() => setIsDeleteModalOpen(false)}>
                     <div className="bg-[#ffffff] rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl border border-[#e5e5e5] animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
                         <div className="text-center mb-6">
@@ -339,7 +341,8 @@ export const PostDetail: React.FC = () => {
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             <div className="max-w-[1200px] mx-auto relative group/page">
