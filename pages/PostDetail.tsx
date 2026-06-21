@@ -11,6 +11,7 @@ import { RichEditor } from '../components/RichEditor';
 import { imageService } from '../services/imageService';
 import { linkifyHtml, normalizeEditorHtml } from '../utils/contentProcessor';
 import { CommentInput } from '../components/CommentInput';
+import { moveCarousel, setupCarousel } from '../utils/carousel';
 
 export const PostDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -67,27 +68,11 @@ export const PostDetail: React.FC = () => {
         if (!root) return;
 
         const carousels = Array.from(root.querySelectorAll('.image-carousel')) as HTMLElement[];
-        carousels.forEach(carousel => {
-            if (!carousel.querySelector('.image-carousel-prev')) {
-                const prev = document.createElement('button');
-                prev.type = 'button';
-                prev.className = 'image-carousel-nav image-carousel-prev';
-                prev.dataset.carouselAction = 'prev';
-                prev.setAttribute('aria-label', '이전 이미지');
-                prev.innerHTML = '&lsaquo;';
-                carousel.appendChild(prev);
-            }
+        const cleanups = carousels.map(setupCarousel);
 
-            if (!carousel.querySelector('.image-carousel-next')) {
-                const next = document.createElement('button');
-                next.type = 'button';
-                next.className = 'image-carousel-nav image-carousel-next';
-                next.dataset.carouselAction = 'next';
-                next.setAttribute('aria-label', '다음 이미지');
-                next.innerHTML = '&rsaquo;';
-                carousel.appendChild(next);
-            }
-        });
+        return () => {
+            cleanups.forEach(cleanup => cleanup());
+        };
     }, [project?.content, isEditing]);
 
     const handleMouseDown = (e: React.MouseEvent) => {
@@ -244,14 +229,10 @@ export const PostDetail: React.FC = () => {
             e.stopPropagation();
 
             const carousel = carouselNav.closest('.image-carousel') as HTMLElement | null;
-            const track = carousel?.querySelector('.image-carousel-track') as HTMLElement | null;
-            if (!track) return;
+            if (!carousel) return;
 
             const direction = carouselNav.dataset.carouselAction === 'prev' ? -1 : 1;
-            track.scrollBy({
-                left: direction * track.clientWidth,
-                behavior: 'smooth'
-            });
+            moveCarousel(carousel, direction);
             return;
         }
 

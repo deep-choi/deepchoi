@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useCallback, useState } from 'react';
+import { moveCarousel, setupCarousel } from '../utils/carousel';
 
 interface RichEditorProps {
     initialContent: string;
@@ -45,6 +46,37 @@ export const RichEditor: React.FC<RichEditorProps> = ({
         return () => document.removeEventListener('click', handleClickOutside);
     }, [selectedMedia]);
 
+    useEffect(() => {
+        const root = editorRef.current;
+        if (!root) return;
+
+        let frame = 0;
+        let cleanups: Array<() => void> = [];
+
+        const refreshCarousels = () => {
+            cleanups.forEach(cleanup => cleanup());
+            cleanups = Array.from(root.querySelectorAll('.image-carousel')).map(carousel =>
+                setupCarousel(carousel as HTMLElement)
+            );
+        };
+
+        const scheduleRefresh = () => {
+            if (frame) window.cancelAnimationFrame(frame);
+            frame = window.requestAnimationFrame(refreshCarousels);
+        };
+
+        refreshCarousels();
+
+        const observer = new MutationObserver(scheduleRefresh);
+        observer.observe(root, { childList: true, subtree: true });
+
+        return () => {
+            if (frame) window.cancelAnimationFrame(frame);
+            observer.disconnect();
+            cleanups.forEach(cleanup => cleanup());
+        };
+    }, [initialContent]);
+
     const handleBlur = useCallback(() => {
         if (editorRef.current) {
             onContentChange(editorRef.current.innerHTML);
@@ -60,13 +92,9 @@ export const RichEditor: React.FC<RichEditorProps> = ({
             e.stopPropagation();
 
             const carousel = carouselNav.closest('.image-carousel') as HTMLElement | null;
-            const track = carousel?.querySelector('.image-carousel-track') as HTMLElement | null;
-            if (track) {
+            if (carousel) {
                 const direction = carouselNav.dataset.carouselAction === 'prev' ? -1 : 1;
-                track.scrollBy({
-                    left: direction * track.clientWidth,
-                    behavior: 'smooth'
-                });
+                moveCarousel(carousel, direction);
             }
             return;
         }

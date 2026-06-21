@@ -41,6 +41,11 @@ const ALLOWED_CLASSES = new Set([
     'image-carousel-nav',
     'image-carousel-prev',
     'image-carousel-next',
+    'image-carousel-indicator',
+    'image-carousel-status',
+    'image-carousel-dots',
+    'image-carousel-dot',
+    'is-active',
     'full-width'
 ]);
 
@@ -271,7 +276,14 @@ const normalizeDivBlocks = (root: HTMLElement) => {
     const divs = Array.from(root.querySelectorAll('div')) as HTMLElement[];
 
     divs.forEach(div => {
-        if (div.classList.contains('image-grid') || div.querySelector('img,video')) {
+        if (
+            div.classList.contains('image-grid') ||
+            div.classList.contains('image-carousel') ||
+            div.classList.contains('image-carousel-track') ||
+            div.classList.contains('image-carousel-indicator') ||
+            div.classList.contains('image-carousel-dots') ||
+            div.querySelector('img,video')
+        ) {
             return;
         }
 
