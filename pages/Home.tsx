@@ -148,7 +148,7 @@ const WorkShowcase: React.FC = () => {
                                         to={`/post/${project.id}`}
                                         className="group block w-full"
                                     >
-                                        <div className="relative aspect-[16/9] overflow-hidden rounded-[32px] bg-[#ffffff]">
+                                        <div className="relative aspect-[16/9] overflow-hidden rounded-[8px] bg-[#ffffff]">
                                             <img
                                                 src={visual}
                                                 alt={project.title}

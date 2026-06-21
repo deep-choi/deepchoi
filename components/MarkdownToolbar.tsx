@@ -206,7 +206,7 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
         } else {
             const url = prompt('Enter image URL:');
             if (url) {
-                const imgHtml = `<img src="${url}" alt="Image" style="max-width: 100%; height: auto; border-radius: 12px; margin: 16px 0;" />`;
+                const imgHtml = `<img src="${url}" alt="Image" style="max-width: 100%; height: auto; border-radius: 8px; margin: 16px 0;" />`;
                 insertContent(imgHtml);
             }
         }
@@ -217,7 +217,7 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
         if (file && onImageUpload) {
             try {
                 const url = await onImageUpload(file);
-                const imgHtml = `<img src="${url}" alt="Uploaded image" class="full-width" style="border-radius: 12px; margin: 16px 0;" />`;
+                const imgHtml = `<img src="${url}" alt="Uploaded image" class="full-width" style="border-radius: 8px; margin: 16px 0;" />`;
                 insertContent(imgHtml);
             } catch (error) {
                 console.error('Image upload failed:', error);
@@ -336,7 +336,7 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
             try {
                 const url = await imageService.uploadVideo(file);
                 // Create video element with autoplay, loop, muted (GIF-like behavior)
-                const videoHtml = `<video src="${url}" autoplay loop muted playsinline style="width: 100%; max-width: 100%; border-radius: 12px; margin: 16px 0;"></video>`;
+                const videoHtml = `<video src="${url}" autoplay loop muted playsinline style="width: 100%; max-width: 100%; border-radius: 8px; margin: 16px 0;"></video>`;
                 insertContent(videoHtml);
             } catch (error) {
                 console.error('Video upload failed:', error);

@@ -288,7 +288,7 @@ export const PostDetail: React.FC = () => {
                         <img
                             src={selectedImage}
                             alt="Zoomed view"
-                            className="max-w-[80vw] w-auto h-auto object-contain transition-transform duration-200 ease-out select-none"
+                            className="max-w-[80vw] w-auto h-auto rounded-[8px] object-contain transition-transform duration-200 ease-out select-none"
                             style={{
                                 transform: `scale(${zoomLevel}) translate(${panPosition.x / zoomLevel}px, ${panPosition.y / zoomLevel}px)`,
                                 transformOrigin: 'top center'
@@ -464,7 +464,7 @@ export const PostDetail: React.FC = () => {
                                     <div className="flex items-center justify-between">
                                         <label className="text-sm font-bold text-[#111111]">커버 이미지</label>
                                     </div>
-                                    <div className="group relative overflow-hidden rounded-xl bg-[#ffffff] aspect-[16/3] min-h-[150px] ring-1 ring-white/5">
+                                    <div className="group relative overflow-hidden rounded-[8px] bg-[#ffffff] aspect-[16/3] min-h-[150px] ring-1 ring-white/5">
                                         {editForm.imageUrl ? (
                                             <img src={editForm.imageUrl} alt="" className="h-full w-full object-cover" />
                                         ) : (
@@ -629,7 +629,7 @@ export const PostDetail: React.FC = () => {
                 {/* Cover Image */}
                 {!isEditing && project.imageUrl && (
                     <div
-                        className="cover-image-container mb-16 w-full max-w-[1200px] mx-auto bg-[#ffffff] rounded-[16px] md:rounded-[16px] overflow-hidden shadow-sm cursor-zoom-in"
+                        className="cover-image-container mb-16 w-full max-w-[1200px] mx-auto bg-[#ffffff] rounded-[8px] overflow-hidden shadow-sm cursor-zoom-in"
                         onClick={() => setSelectedImage(project.imageUrl)}
                     >
                         <img
@@ -662,7 +662,7 @@ export const PostDetail: React.FC = () => {
                             </div>
                         </div>
                     ) : (
-                        <div ref={contentDisplayRef} className="markdown-body dual-prose prose prose-lg max-w-none prose-headings:text-[#111111] prose-p:text-[#2b2b2b] prose-strong:text-[#111111] prose-ul:text-[#2b2b2b] prose-ol:text-[#2b2b2b] prose-li:text-[#2b2b2b] prose-blockquote:text-[#2b2b2b] prose-a:text-[#4169E1] prose-img:rounded-[16px] prose-headings:m-0 prose-p:m-0 prose-ul:m-0 prose-ol:m-0 prose-li:m-0 prose-blockquote:m-0 prose-pre:m-0" dangerouslySetInnerHTML={{ __html: linkifyHtml(project.content) }} />
+                        <div ref={contentDisplayRef} className="markdown-body dual-prose prose prose-lg max-w-none prose-headings:text-[#111111] prose-p:text-[#2b2b2b] prose-strong:text-[#111111] prose-ul:text-[#2b2b2b] prose-ol:text-[#2b2b2b] prose-li:text-[#2b2b2b] prose-blockquote:text-[#2b2b2b] prose-a:text-[#4169E1] prose-img:rounded-[8px] prose-headings:m-0 prose-p:m-0 prose-ul:m-0 prose-ol:m-0 prose-li:m-0 prose-blockquote:m-0 prose-pre:m-0" dangerouslySetInnerHTML={{ __html: linkifyHtml(project.content) }} />
                     )}
                 </div>
 

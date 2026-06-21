@@ -40,7 +40,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
                 {label}
             </label>
 
-            <div className="group relative w-full h-[300px] bg-[#ffffff] rounded-2xl overflow-hidden border border-dashed border-[#e5e5e5] hover:border-[#4169E1] transition-colors flex items-center justify-center cursor-pointer"
+            <div className="group relative w-full h-[300px] bg-[#ffffff] rounded-[8px] overflow-hidden border border-dashed border-[#e5e5e5] hover:border-[#4169E1] transition-colors flex items-center justify-center cursor-pointer"
                 onClick={() => fileInputRef.current?.click()}>
 
                 {imageUrl ? (
