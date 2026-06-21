@@ -800,3 +800,21 @@ img {
         border-radius: 8px;
     }
 }
+
+@media (min-width: 768px) {
+
+    .markdown-body img,
+    .dual-prose img,
+    .dual-prose video,
+    .editor-prose img,
+    .editor-prose video,
+    .dual-prose .image-grid img,
+    .editor-prose .image-grid img,
+    .dual-prose .image-carousel,
+    .editor-prose .image-carousel,
+    .dual-prose .image-carousel-slide img,
+    .editor-prose .image-carousel-slide img,
+    .cover-image-container {
+        border-radius: 16px !important;
+    }
+}

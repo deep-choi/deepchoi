@@ -18,7 +18,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, index }) => {
             className="group cursor-pointer"
             delay={Math.min(index * 90, 360)}
         >
-            <div className="relative aspect-[16/9] rounded-[8px] overflow-hidden bg-[#f5f5f5] mb-3 transition-all duration-700 ease-[cubic-bezier(0.2,0,0,1)] md:mb-4 group-hover:shadow-[0_18px_44px_rgba(0,0,0,0.08)]">
+            <div className="relative aspect-[16/9] rounded-[8px] overflow-hidden bg-[#f5f5f5] mb-3 transition-all duration-700 ease-[cubic-bezier(0.2,0,0,1)] md:mb-4 md:rounded-[16px] group-hover:shadow-[0_18px_44px_rgba(0,0,0,0.08)]">
                 <img
                     src={project.imageUrl}
                     alt={project.title}
