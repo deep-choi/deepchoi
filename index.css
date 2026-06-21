@@ -755,24 +755,48 @@ img {
     gap: 8px;
     margin: 16px 0;
     max-width: 100%;
+    align-items: flex-start;
 }
 
-/* Grid images - mobile (2 column, 1:1 ratio) */
-.image-grid img {
-    width: calc(50% - 4px);
-    aspect-ratio: 1 / 1;
-    object-fit: cover;
-    border-radius: 8px;
+/* Grid images keep their original aspect ratio. */
+.dual-prose .image-grid,
+.editor-prose .image-grid {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.dual-prose .image-grid img,
+.editor-prose .image-grid img {
+    width: calc(50% - 4px) !important;
+    max-width: calc(50% - 4px) !important;
+    height: auto !important;
+    aspect-ratio: auto !important;
+    object-fit: contain !important;
+    align-self: flex-start;
+    border-radius: 12px;
     margin: 0 !important;
 }
 
 /* Desktop: 3 and 4 column grids */
 @media (min-width: 768px) {
-    .image-grid-3 img {
-        width: calc(33.333% - 6px);
+
+    .dual-prose .image-grid-3 img,
+    .editor-prose .image-grid-3 img {
+        width: calc(33.333% - 6px) !important;
+        max-width: calc(33.333% - 6px) !important;
     }
 
-    .image-grid-4 img {
-        width: calc(25% - 6px);
+    .dual-prose .image-grid-4 img,
+    .editor-prose .image-grid-4 img {
+        width: calc(25% - 6px) !important;
+        max-width: calc(25% - 6px) !important;
+    }
+}
+
+@media (max-width: 767px) {
+
+    .dual-prose .image-grid img,
+    .editor-prose .image-grid img {
+        border-radius: 0;
     }
 }
