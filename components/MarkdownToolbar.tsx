@@ -10,7 +10,32 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
     const fileInputRef = useRef<HTMLInputElement>(null);
     const videoInputRef = useRef<HTMLInputElement>(null);
     const gridInputRef = useRef<HTMLInputElement>(null);
+    const carouselInputRef = useRef<HTMLInputElement>(null);
+    const savedRangeRef = useRef<Range | null>(null);
     const [gridColumns, setGridColumns] = useState<number>(2);
+
+    const saveSelection = () => {
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+            savedRangeRef.current = selection.getRangeAt(0).cloneRange();
+        }
+    };
+
+    const insertContent = (content: string) => {
+        if (onInsertContent) {
+            onInsertContent(content);
+            return;
+        }
+
+        const selection = window.getSelection();
+        if (savedRangeRef.current && selection) {
+            selection.removeAllRanges();
+            selection.addRange(savedRangeRef.current);
+        }
+
+        document.execCommand('insertHTML', false, content);
+        savedRangeRef.current = null;
+    };
 
     // Apply color to the current block element (p, h1, h2, h3)
     const applyColorToBlock = (color: string) => {
@@ -175,17 +200,14 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
     };
 
     const handleImageClick = () => {
+        saveSelection();
         if (onImageUpload && fileInputRef.current) {
             fileInputRef.current.click();
         } else {
             const url = prompt('Enter image URL:');
             if (url) {
                 const imgHtml = `<img src="${url}" alt="Image" style="max-width: 100%; height: auto; border-radius: 12px; margin: 16px 0;" />`;
-                if (onInsertContent) {
-                    onInsertContent(imgHtml);
-                } else {
-                    document.execCommand('insertHTML', false, imgHtml);
-                }
+                insertContent(imgHtml);
             }
         }
     };
@@ -196,11 +218,7 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
             try {
                 const url = await onImageUpload(file);
                 const imgHtml = `<img src="${url}" alt="Uploaded image" class="full-width" style="border-radius: 12px; margin: 16px 0;" />`;
-                if (onInsertContent) {
-                    onInsertContent(imgHtml);
-                } else {
-                    document.execCommand('insertHTML', false, imgHtml);
-                }
+                insertContent(imgHtml);
             } catch (error) {
                 console.error('Image upload failed:', error);
                 alert('Failed to upload image');
@@ -212,6 +230,7 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
     };
 
     const handleGridClick = (columns: number) => {
+        saveSelection();
         setGridColumns(columns);
         if (gridInputRef.current) {
             gridInputRef.current.click();
@@ -244,11 +263,7 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
 
             const gridHtml = `<div class="${gridClass}">${imagesHtml}</div>`;
 
-            if (onInsertContent) {
-                onInsertContent(gridHtml);
-            } else {
-                document.execCommand('insertHTML', false, gridHtml);
-            }
+            insertContent(gridHtml);
         } catch (error) {
             console.error('Grid image upload failed:', error);
             alert('이미지 업로드에 실패했습니다.');
@@ -259,7 +274,57 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
         }
     };
 
+    const handleCarouselClick = () => {
+        saveSelection();
+        if (carouselInputRef.current) {
+            carouselInputRef.current.click();
+        }
+    };
+
+    const handleCarouselFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        if (!onImageUpload) {
+            if (carouselInputRef.current) carouselInputRef.current.value = '';
+            return;
+        }
+
+        if (files.length < 2) {
+            alert('슬라이드는 이미지를 2장 이상 선택해야 합니다.');
+            if (carouselInputRef.current) carouselInputRef.current.value = '';
+            return;
+        }
+
+        if (files.length > 4) {
+            alert('슬라이드는 최대 4장까지 선택할 수 있습니다.');
+            if (carouselInputRef.current) carouselInputRef.current.value = '';
+            return;
+        }
+
+        try {
+            const urls: string[] = [];
+            for (const file of files) {
+                const url = await onImageUpload(file);
+                urls.push(url);
+            }
+
+            const slidesHtml = urls.map((url, index) => (
+                `<figure class="image-carousel-slide"><img src="${url}" alt="Slide image ${index + 1}" /></figure>`
+            )).join('');
+            const carouselHtml = `<div class="image-carousel" data-count="${urls.length}"><div class="image-carousel-track">${slidesHtml}</div></div>`;
+
+            insertContent(carouselHtml);
+        } catch (error) {
+            console.error('Carousel image upload failed:', error);
+            alert('슬라이드 이미지 업로드에 실패했습니다.');
+        }
+
+        if (carouselInputRef.current) {
+            carouselInputRef.current.value = '';
+        }
+    };
+
     const handleVideoClick = () => {
+        saveSelection();
         if (videoInputRef.current) {
             videoInputRef.current.click();
         }
@@ -272,11 +337,7 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
                 const url = await imageService.uploadVideo(file);
                 // Create video element with autoplay, loop, muted (GIF-like behavior)
                 const videoHtml = `<video src="${url}" autoplay loop muted playsinline style="width: 100%; max-width: 100%; border-radius: 12px; margin: 16px 0;"></video>`;
-                if (onInsertContent) {
-                    onInsertContent(videoHtml);
-                } else {
-                    document.execCommand('insertHTML', false, videoHtml);
-                }
+                insertContent(videoHtml);
             } catch (error) {
                 console.error('Video upload failed:', error);
                 alert('동영상 업로드에 실패했습니다. 파일 크기를 확인해주세요.');
@@ -365,6 +426,14 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
                 type="file"
                 ref={gridInputRef}
                 onChange={handleGridFileChange}
+                className="hidden"
+                accept="image/*,.gif"
+                multiple
+            />
+            <input
+                type="file"
+                ref={carouselInputRef}
+                onChange={handleCarouselFileChange}
                 className="hidden"
                 accept="image/*,.gif"
                 multiple
@@ -472,6 +541,7 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
                 </button>
                 {/* Grid Layout Buttons */}
                 <button
+                    type="button"
                     onMouseDown={(e) => { e.preventDefault(); handleGridClick(2); }}
                     className={`${mediaButtonClass} text-[#ffb454]`}
                     title="2열 그리드 (여러 이미지 선택)"
@@ -483,6 +553,7 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
                     2열
                 </button>
                 <button
+                    type="button"
                     onMouseDown={(e) => { e.preventDefault(); handleGridClick(3); }}
                     className={`${mediaButtonClass} text-[#d2a8ff]`}
                     title="3열 그리드 (여러 이미지 선택)"
@@ -495,6 +566,7 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
                     3열
                 </button>
                 <button
+                    type="button"
                     onMouseDown={(e) => { e.preventDefault(); handleGridClick(4); }}
                     className={`${mediaButtonClass} text-[#ff7b72]`}
                     title="4열 그리드 (여러 이미지 선택)"
@@ -508,6 +580,19 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
                     4열
                 </button>
                 <button
+                    type="button"
+                    onMouseDown={(e) => { e.preventDefault(); handleCarouselClick(); }}
+                    className={`${mediaButtonClass} text-[#4169E1]`}
+                    title="슬라이드 (이미지 2-4장 선택)"
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <rect x="4" y="5" width="16" height="12" rx="2" strokeWidth={2} />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 20h8M9 9h.01M15 9h.01" />
+                    </svg>
+                    슬라이드
+                </button>
+                <button
+                    type="button"
                     onMouseDown={(e) => { e.preventDefault(); handleVideoClick(); }}
                     className={`${mediaButtonClass} text-[#3fb950]`}
                     title="동영상 (자동재생)"
@@ -516,6 +601,7 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
                     동영상
                 </button>
                 <button
+                    type="button"
                     onMouseDown={(e) => {
                         e.preventDefault();
                         const url = prompt('링크 URL 입력:');

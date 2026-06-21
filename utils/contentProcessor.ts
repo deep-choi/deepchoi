@@ -30,7 +30,16 @@ const BLOCK_TAGS = new Set([
 
 const TEXT_BLOCK_TAGS = new Set(['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LI', 'BLOCKQUOTE', 'FIGCAPTION']);
 const MEDIA_TAGS = new Set(['IMG', 'VIDEO']);
-const ALLOWED_CLASSES = new Set(['image-grid', 'image-grid-2', 'image-grid-3', 'image-grid-4', 'full-width']);
+const ALLOWED_CLASSES = new Set([
+    'image-grid',
+    'image-grid-2',
+    'image-grid-3',
+    'image-grid-4',
+    'image-carousel',
+    'image-carousel-track',
+    'image-carousel-slide',
+    'full-width'
+]);
 
 const TEXT_STYLE_PROPS = new Set([
     'background-color',

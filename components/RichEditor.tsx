@@ -70,9 +70,28 @@ export const RichEditor: React.FC<RichEditorProps> = ({
         }
     };
 
+    const removeMediaElement = (media: HTMLElement) => {
+        const carousel = media.closest('.image-carousel') as HTMLElement | null;
+        const carouselSlide = media.closest('.image-carousel-slide') as HTMLElement | null;
+
+        if (carousel && carouselSlide) {
+            carouselSlide.parentNode?.removeChild(carouselSlide);
+            const remainingSlides = carousel.querySelectorAll('.image-carousel-slide').length;
+
+            if (remainingSlides === 0) {
+                carousel.parentNode?.removeChild(carousel);
+            } else {
+                carousel.setAttribute('data-count', String(remainingSlides));
+            }
+            return;
+        }
+
+        media.parentNode?.removeChild(media);
+    };
+
     const handleDeleteMedia = () => {
         if (selectedMedia) {
-            selectedMedia.parentNode?.removeChild(selectedMedia);
+            removeMediaElement(selectedMedia);
             setSelectedMedia(null);
             // Trigger content change
             if (editorRef.current) {
@@ -150,7 +169,10 @@ export const RichEditor: React.FC<RichEditorProps> = ({
                                     const el = targetNode as HTMLElement;
                                     if (el.tagName === 'VIDEO' || el.tagName === 'IMG') {
                                         e.preventDefault();
-                                        el.parentNode?.removeChild(el);
+                                        removeMediaElement(el);
+                                        if (editorRef.current) {
+                                            onContentChange(editorRef.current.innerHTML);
+                                        }
                                         return;
                                     }
                                 }
@@ -161,7 +183,10 @@ export const RichEditor: React.FC<RichEditorProps> = ({
                                     const el = container as HTMLElement;
                                     if (el.tagName === 'VIDEO' || el.tagName === 'IMG') {
                                         e.preventDefault();
-                                        el.parentNode?.removeChild(el);
+                                        removeMediaElement(el);
+                                        if (editorRef.current) {
+                                            onContentChange(editorRef.current.innerHTML);
+                                        }
                                         return;
                                     }
                                 }

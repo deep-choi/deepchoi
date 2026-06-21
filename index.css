@@ -344,6 +344,68 @@ img {
     background: #ffffff;
 }
 
+.dual-prose .image-carousel,
+.editor-prose .image-carousel {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 32px auto !important;
+    border-radius: 20px;
+    background: #f5f5f7;
+    overflow: hidden;
+}
+
+.dual-prose .image-carousel-track,
+.editor-prose .image-carousel-track {
+    display: flex;
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+.dual-prose .image-carousel-track::-webkit-scrollbar,
+.editor-prose .image-carousel-track::-webkit-scrollbar {
+    display: none;
+}
+
+.dual-prose .image-carousel-slide,
+.editor-prose .image-carousel-slide {
+    flex: 0 0 100%;
+    width: 100%;
+    min-width: 100%;
+    margin: 0 !important;
+    scroll-snap-align: center;
+    aspect-ratio: 16 / 10;
+    background: #f5f5f7;
+}
+
+.dual-prose .image-carousel-slide img,
+.editor-prose .image-carousel-slide img {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    object-fit: contain;
+    background: #f5f5f7;
+}
+
+.dual-prose .image-carousel::after,
+.editor-prose .image-carousel::after {
+    content: "";
+    display: block;
+    width: 44px;
+    height: 4px;
+    margin: 10px auto 12px;
+    border-radius: 999px;
+    background: #4169E1;
+    opacity: 0.55;
+}
+
 .editor-prose a {
     color: #4169E1;
 }
