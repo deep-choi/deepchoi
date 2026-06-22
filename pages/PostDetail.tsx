@@ -629,7 +629,7 @@ export const PostDetail: React.FC = () => {
                 {/* Cover Image */}
                 {!isEditing && project.imageUrl && (
                     <div
-                        className="cover-image-container mb-16 w-full max-w-[1200px] mx-auto bg-[#ffffff] rounded-[8px] overflow-hidden shadow-sm cursor-zoom-in md:rounded-[16px]"
+                        className="cover-image-container mb-16 w-full max-w-[1000px] mx-auto bg-[#ffffff] rounded-[8px] overflow-hidden shadow-sm cursor-zoom-in md:rounded-[16px]"
                         onClick={() => setSelectedImage(project.imageUrl)}
                     >
                         <img
