@@ -89,10 +89,9 @@ img {
     content-visibility: auto;
 }
 
-.cover-image-container,
 .dual-prose img,
 .dual-prose .image-carousel {
-    border: 1px solid #4169E1;
+    border: 2px solid #4169E1;
     box-sizing: border-box;
 }
 
