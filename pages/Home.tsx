@@ -125,7 +125,7 @@ const WorkShowcase: React.FC = () => {
 
     return (
         <section id="projects" className="bg-[#ffffff] pb-12 pt-0 md:pb-20">
-            <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-16 px-4 md:gap-24 md:px-[20px]">
+            <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-16 px-4 md:gap-24 md:px-[20px]">
                 {isLoading ? (
                     <div className="flex min-h-[360px] items-center justify-center">
                         <div className="h-8 w-8 rounded-full border-4 border-[#4169E1] border-t-transparent animate-spin" />
