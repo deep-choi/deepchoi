@@ -149,7 +149,7 @@ img {
 /* Dual Layout & Typography Overrides */
 /* Inline editor styles should be able to override these display defaults. */
 .dual-prose {
-    max-width: 1200px;
+    max-width: 1000px;
     margin-left: auto;
     margin-right: auto;
 }
@@ -260,7 +260,7 @@ img {
     background: transparent !important;
 }
 
-/* Exception: Images and their containers expand to 1200px */
+/* Exception: Images and their containers expand beyond the text column. */
 .dual-prose img,
 .dual-prose figure,
 .dual-prose div:has(> img),

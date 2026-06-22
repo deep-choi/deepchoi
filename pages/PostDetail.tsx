@@ -645,7 +645,7 @@ export const PostDetail: React.FC = () => {
 
                 {/* Content Body */}
                 <div
-                    className="max-w-[1200px] mx-auto [&_img]:cursor-zoom-in [&_img]:hover:opacity-95 [&_img]:transition-opacity"
+                    className="max-w-[1000px] mx-auto [&_img]:cursor-zoom-in [&_img]:hover:opacity-95 [&_img]:transition-opacity"
                     onClick={handleContentClick}
                 >
                     {isEditing ? (
