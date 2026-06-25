@@ -162,7 +162,7 @@ const WorkShowcase: React.FC = () => {
                                             <h3 className="text-lg font-medium leading-tight text-[#111111] md:text-xl">
                                                 {project.title}
                                             </h3>
-                                            <div className="flex flex-col gap-1 text-[12px] font-medium uppercase text-[#666666] md:items-end md:text-right">
+                                            <div className="flex flex-col gap-1 text-[13px] font-medium uppercase text-[#666666] md:items-end md:text-right">
                                                 <span>{meta}</span>
                                                 <span>{project.date}</span>
                                             </div>
