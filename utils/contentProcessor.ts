@@ -30,6 +30,7 @@ const BLOCK_TAGS = new Set([
 
 const TEXT_BLOCK_TAGS = new Set(['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LI', 'BLOCKQUOTE', 'FIGCAPTION']);
 const MEDIA_TAGS = new Set(['IMG', 'VIDEO']);
+const EMPTY_LINE_ATTR = 'data-empty-line';
 const ALLOWED_CLASSES = new Set([
     'image-grid',
     'image-grid-2',
@@ -101,6 +102,17 @@ const isMeaningfulNode = (node: Node): boolean => {
 
 const hasMeaningfulContent = (el: HTMLElement): boolean => {
     return Array.from(el.childNodes).some(isMeaningfulNode);
+};
+
+const markEmptyLine = (el: HTMLElement) => {
+    el.innerHTML = '<br>';
+    el.setAttribute(EMPTY_LINE_ATTR, 'true');
+};
+
+const createEmptyLineParagraph = (doc: Document): HTMLParagraphElement => {
+    const p = doc.createElement('p');
+    markEmptyLine(p);
+    return p;
 };
 
 const copyAttributes = (source: HTMLElement, target: HTMLElement) => {
@@ -350,14 +362,16 @@ const normalizeEmptyBlocks = (root: HTMLElement) => {
 
     blocks.forEach(block => {
         if (hasMeaningfulContent(block)) {
+            block.removeAttribute(EMPTY_LINE_ATTR);
             return;
         }
 
-        if (block.tagName === 'P') {
-            block.innerHTML = '<br>';
-        } else {
-            block.parentNode?.removeChild(block);
+        if (block.tagName === 'P' || block.tagName === 'LI') {
+            markEmptyLine(block);
+            return;
         }
+
+        block.parentNode?.replaceChild(createEmptyLineParagraph(block.ownerDocument), block);
     });
 };
 
@@ -374,9 +388,7 @@ const wrapLooseBodyNodes = (root: HTMLElement) => {
         }
 
         if (node.nodeName === 'BR') {
-            const p = doc.createElement('p');
-            p.innerHTML = '<br>';
-            node.parentNode?.replaceChild(p, node);
+            node.parentNode?.replaceChild(createEmptyLineParagraph(doc), node);
         }
     });
 };

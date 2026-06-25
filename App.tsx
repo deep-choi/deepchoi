@@ -6,7 +6,6 @@ import { PostDetail } from './pages/PostDetail';
 import { Editor } from './pages/Editor';
 import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
-import { About } from './pages/About';
 import { Work } from './pages/Work';
 import { Blog } from './pages/Blog';
 import { Contact } from './pages/Contact';
@@ -58,7 +57,6 @@ const Navbar: React.FC<{ isScrolled: boolean }> = ({ isScrolled }) => {
 
             {/* Desktop Navigation Links */}
             <div className="hidden md:flex gap-7 items-center">
-              <Link to="/about" className="text-[14px] font-medium text-[#111111] hover:text-[#4169E1] transition-colors">About</Link>
               <Link to="/work" className="text-[14px] font-medium text-[#111111] hover:text-[#4169E1] transition-colors">Work</Link>
               <Link to="/blog" className="text-[14px] font-medium text-[#111111] hover:text-[#4169E1] transition-colors">Blog</Link>
               <Link to="/contact" className="text-[14px] font-medium text-[#111111] hover:text-[#4169E1] transition-colors">Contact</Link>
@@ -83,47 +81,55 @@ const Navbar: React.FC<{ isScrolled: boolean }> = ({ isScrolled }) => {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 text-[#111111]"
+            className="relative flex h-10 w-10 items-center justify-center text-[#111111] md:hidden"
             aria-label="Menu"
+            aria-expanded={isMobileMenuOpen}
+            aria-controls="mobile-menu-drawer"
           >
-            {isMobileMenuOpen ? (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            ) : (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            )}
+            <span className="relative h-5 w-6" aria-hidden="true">
+              <span className={`absolute left-0 top-[2px] h-[2px] w-6 rounded-full bg-current transition-all duration-300 ease-out ${isMobileMenuOpen ? 'translate-y-[8px] rotate-45' : ''}`}></span>
+              <span className={`absolute left-0 top-[10px] h-[2px] w-6 rounded-full bg-current transition-all duration-200 ease-out ${isMobileMenuOpen ? 'opacity-0 scale-x-0' : 'opacity-100 scale-x-100'}`}></span>
+              <span className={`absolute left-0 top-[18px] h-[2px] w-6 rounded-full bg-current transition-all duration-300 ease-out ${isMobileMenuOpen ? '-translate-y-[8px] -rotate-45' : ''}`}></span>
+            </span>
           </button>
         </div>
       </nav>
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-40 bg-[#ffffff] pt-[84px] md:hidden overscroll-none text-[#111111]">
-          <div className="flex flex-col items-start gap-6 pt-8 px-6">
-            <Link to="/about" onClick={closeMobileMenu} className="text-xl font-semibold border-b border-[#e5e5e5] w-full pb-3">About</Link>
-            <Link to="/work" onClick={closeMobileMenu} className="text-xl font-semibold border-b border-[#e5e5e5] w-full pb-3">Work</Link>
-            <Link to="/blog" onClick={closeMobileMenu} className="text-xl font-semibold border-b border-[#e5e5e5] w-full pb-3">Blog</Link>
-            <Link to="/contact" onClick={closeMobileMenu} className="text-xl font-semibold border-b border-[#e5e5e5] w-full pb-3">Contact</Link>
+        <div className="fixed inset-x-0 bottom-0 top-[72px] z-40 md:hidden overscroll-none text-[#111111]">
+          <button
+            type="button"
+            onClick={closeMobileMenu}
+            className="absolute inset-0 bg-[#ffffff]/25 backdrop-blur-[3px]"
+            aria-label="모바일 메뉴 닫기"
+          />
+          <aside
+            id="mobile-menu-drawer"
+            className="mobile-menu-drawer absolute right-0 top-0 flex h-full w-[min(84vw,340px)] flex-col overflow-hidden border-l border-white/70 px-5 py-6 shadow-[-24px_0_70px_rgba(17,17,17,0.16)]"
+          >
+            <nav className="flex flex-col items-start gap-1">
+              <Link to="/work" onClick={closeMobileMenu} className="w-full border-b border-[#d8d8d8]/70 py-5 text-lg font-semibold">Work</Link>
+              <Link to="/blog" onClick={closeMobileMenu} className="w-full border-b border-[#d8d8d8]/70 py-5 text-lg font-semibold">Blog</Link>
+              <Link to="/contact" onClick={closeMobileMenu} className="w-full border-b border-[#d8d8d8]/70 py-5 text-lg font-semibold">Contact</Link>
+            </nav>
 
-            <div className="flex flex-col gap-4 mt-2 w-full">
+            <div className="mt-auto flex w-full flex-col gap-4 border-t border-[#d8d8d8]/70 pt-5">
               {isLoggedIn ? (
                 <>
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">{authService.getCurrentUser()?.name?.[0]}</div>
-                    <span className="font-semibold">{authService.getCurrentUser()?.name}님</span>
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#4169E1] text-sm font-bold text-white">{authService.getCurrentUser()?.name?.[0]}</div>
+                    <span className="text-sm font-semibold text-[#111111]">{authService.getCurrentUser()?.name}님</span>
                   </div>
-                  <button onClick={() => { handleLogout(); closeMobileMenu(); }} className="text-left text-lg text-gray-400">로그아웃</button>
+                  <button onClick={() => { handleLogout(); closeMobileMenu(); }} className="w-fit text-left text-[13px] font-medium text-[#86868b] transition-colors hover:text-[#111111]">로그아웃</button>
                 </>
               ) : (
                 <>
-                  <Link to="/login" onClick={closeMobileMenu} className="text-xl font-semibold">로그인</Link>
+                  <Link to="/login" onClick={closeMobileMenu} className="w-fit rounded-full bg-[#f5f5f5] px-4 py-2 text-[13px] font-semibold text-[#111111] transition-colors hover:bg-[#ededed]">로그인</Link>
                 </>
               )}
             </div>
-          </div>
+          </aside>
         </div>
       )}
     </>
@@ -141,8 +147,6 @@ const ScrollToTop: React.FC = () => {
   return null;
 };
 
-// Experience component removed as it is migrated to About page
-
 const Footer: React.FC = () => (
   <footer className="relative py-24 bg-white overflow-hidden">
     <div className="max-w-[1440px] mx-auto px-4 md:px-[20px] grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-8 relative z-10">
@@ -151,7 +155,6 @@ const Footer: React.FC = () => (
       <div className="flex flex-col">
         <h4 className="text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-6">Main</h4>
         <Link to="/" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">Home</Link>
-        <Link to="/about" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">About</Link>
       </div>
 
       {/* Column 2: Project */}
@@ -222,7 +225,7 @@ export default function App() {
       <Layout>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
+          <Route path="/about" element={<Navigate to="/" replace />} />
           <Route path="/work" element={<Work />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/contact" element={<Contact />} />
@@ -237,6 +240,22 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Editor />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/edit/about"
+            element={
+              <ProtectedRoute>
+                <Navigate to="/" replace />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/edit/contact"
+            element={
+              <ProtectedRoute>
+                <Navigate to="/contact?edit=1" replace />
               </ProtectedRoute>
             }
           />

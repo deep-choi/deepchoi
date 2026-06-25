@@ -9,7 +9,7 @@ const HeroParticleField = React.lazy(() =>
     import('../components/HeroParticleField').then((module) => ({ default: module.HeroParticleField }))
 );
 
-const HERO_TEXT = '디자인과 개발로 더 나은 제품 경험을 만듭니다.';
+const HERO_TEXT = '기획부터 개발까지\n완성도 높은 웹 경험을 만듭니다.';
 
 const TypewriterHeadline: React.FC = () => {
     const [visibleLength, setVisibleLength] = useState(0);
@@ -71,7 +71,7 @@ const TypewriterHeadline: React.FC = () => {
 
     return (
         <h1
-            className="relative max-w-[760px] text-center text-[34px] font-medium leading-[1.12] text-[#111111] tracking-normal md:text-[52px] lg:text-[60px]"
+            className="relative max-w-[760px] whitespace-pre-line text-center text-[34px] font-medium leading-[1.12] text-[#111111] tracking-normal md:text-[52px] lg:text-[60px]"
             aria-label={HERO_TEXT}
         >
             <span className="invisible" aria-hidden="true">

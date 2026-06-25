@@ -5,20 +5,24 @@ interface RichEditorProps {
     initialContent: string;
     onContentChange: (content: string) => void;
     className?: string;
+    editorRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 export const RichEditor: React.FC<RichEditorProps> = ({
     initialContent,
     onContentChange,
-    className = ''
+    className = '',
+    editorRef: externalEditorRef
 }) => {
-    const editorRef = useRef<HTMLDivElement>(null);
+    const fallbackEditorRef = useRef<HTMLDivElement>(null);
+    const editorRef = externalEditorRef || fallbackEditorRef;
     const initializedRef = useRef(false);
+    const hasUserEditedRef = useRef(false);
     const [selectedMedia, setSelectedMedia] = useState<HTMLElement | null>(null);
 
     // Set initial content only once on mount
     useEffect(() => {
-        if (editorRef.current && !initializedRef.current && initialContent) {
+        if (editorRef.current && !initializedRef.current && !hasUserEditedRef.current && initialContent) {
             editorRef.current.innerHTML = initialContent;
             initializedRef.current = true;
         }
@@ -75,9 +79,16 @@ export const RichEditor: React.FC<RichEditorProps> = ({
             observer.disconnect();
             cleanups.forEach(cleanup => cleanup());
         };
-    }, [initialContent]);
+    }, []);
 
     const handleBlur = useCallback(() => {
+        if (editorRef.current) {
+            onContentChange(editorRef.current.innerHTML);
+        }
+    }, [onContentChange]);
+
+    const handleInput = useCallback(() => {
+        hasUserEditedRef.current = true;
         if (editorRef.current) {
             onContentChange(editorRef.current.innerHTML);
         }
@@ -167,6 +178,7 @@ export const RichEditor: React.FC<RichEditorProps> = ({
                 contentEditable
                 suppressContentEditableWarning
                 onBlur={handleBlur}
+                onInput={handleInput}
                 onClick={handleEditorClick}
                 onKeyDown={(e) => {
                     // Handle deletion of media elements (video, img)

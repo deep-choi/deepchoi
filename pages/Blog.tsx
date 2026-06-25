@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Project } from '../types';
 import { projectService } from '../services/projectService';
 import { ProjectCard } from '../components/ProjectCard';
+import { authService } from '../services/authService';
 
 type BlogCategory = '전체보기' | 'AI' | 'UI UX';
 
@@ -9,6 +11,7 @@ export const Blog: React.FC = () => {
     const [posts, setPosts] = useState<Project[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<BlogCategory>('전체보기');
+    const isAdmin = authService.isAuthenticated();
 
     useEffect(() => {
         setIsLoading(true);
@@ -30,7 +33,20 @@ export const Blog: React.FC = () => {
             <div className="max-w-[1440px] mx-auto px-4 md:px-[20px]">
                 <div className="mb-4">
                     <div className="flex flex-col gap-8">
-                        <h1 className="text-[28px] font-medium text-[#111111] tracking-tight">블로그</h1>
+                        <div className="flex items-center justify-between">
+                            <h1 className="text-[24px] md:text-[28px] leading-none font-medium text-[#111111] tracking-tight">블로그</h1>
+                            {isAdmin && (
+                                <Link
+                                    to="/admin/create?type=blog"
+                                    className="inline-flex h-10 items-center gap-2 rounded-full bg-[#4169E1] px-4 text-[13px] font-semibold text-white shadow-sm shadow-[#4169E1]/20 transition-all hover:bg-[#3458c7] active:scale-95"
+                                >
+                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    글 추가
+                                </Link>
+                            )}
+                        </div>
 
                         {/* Divider */}
                         {/* Divider Removed */}

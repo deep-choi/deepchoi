@@ -155,10 +155,11 @@ export const PostDetail: React.FC = () => {
     const handleSave = async () => {
         if (!project || !project.id) return;
 
+        const latestContent = contentEditorRef.current?.innerHTML || editForm.content || project.content || '';
         const updatedProject: Project = {
             ...project,
             ...editForm,
-            content: normalizeEditorHtml(editForm.content || project.content || ''),
+            content: normalizeEditorHtml(latestContent),
         };
 
         try {
@@ -384,12 +385,7 @@ export const PostDetail: React.FC = () => {
                             <div>
                                 <div className="flex flex-wrap items-center gap-2">
                                     <h2 className="text-xl font-bold tracking-tight text-[#111111]">포스트 편집</h2>
-                                    <span className="inline-flex items-center gap-1 rounded-lg border border-[#164b63] bg-[#0f2530] px-2.5 py-1 text-xs font-bold text-[#39c5cf]">
-                                        <span className="h-1.5 w-1.5 rounded-full bg-[#39c5cf]"></span>
-                                        수정 중
-                                    </span>
                                 </div>
-                                <p className="mt-1 text-xs font-medium text-[#666666]">마지막 변경: 방금 전</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -656,6 +652,7 @@ export const PostDetail: React.FC = () => {
                                 />
                                 <RichEditor
                                     key={editSessionId}
+                                    editorRef={contentEditorRef}
                                     initialContent={editForm.content || ''}
                                     onContentChange={(content) => setEditForm(prev => ({ ...prev, content }))}
                                 />

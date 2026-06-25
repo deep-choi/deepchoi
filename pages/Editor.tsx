@@ -1,10 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { projectService } from '../services/projectService';
 import { Project } from '../types';
 import { MarkdownToolbar } from '../components/MarkdownToolbar';
 import { ImageUploader } from '../components/ImageUploader';
+import { RichEditor } from '../components/RichEditor';
 import { imageService } from '../services/imageService';
 import { normalizeEditorHtml } from '../utils/contentProcessor';
 
@@ -12,7 +13,9 @@ import { normalizeEditorHtml } from '../utils/contentProcessor';
 export const Editor: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const isEdit = !!id;
+    const requestedType = searchParams.get('type') === 'blog' ? 'blog' : 'work';
 
 
     const [formData, setFormData] = useState<Partial<Project>>({
@@ -22,8 +25,8 @@ export const Editor: React.FC = () => {
         tech: [],
         tags: [],
         imageUrl: '',
-        category: 'UI UX',
-        type: 'work',
+        category: requestedType === 'blog' ? 'AI' : 'UI UX',
+        type: requestedType,
         date: new Date().toISOString().split('T')[0],
         content: '',
     });
@@ -32,8 +35,11 @@ export const Editor: React.FC = () => {
 
     const [techInput, setTechInput] = useState('');
     const [tagInput, setTagInput] = useState('');
-
     const editorRef = React.useRef<HTMLDivElement>(null);
+    const entryLabel = formData.type === 'blog' ? '블로그 글' : '프로젝트';
+    const cancelTarget = isEdit
+        ? (id === 'about' ? '/about' : id === 'contact' ? '/contact' : `/post/${id}`)
+        : (formData.type === 'blog' ? '/blog' : '/work');
 
     useEffect(() => {
         if (isEdit && id) {
@@ -42,11 +48,6 @@ export const Editor: React.FC = () => {
                     setFormData(project);
                     setTechInput(project.tech.join(', '));
                     setTagInput(project.tags.join(', '));
-
-                    // Explicitly set editor content when data is loaded
-                    if (editorRef.current) {
-                        editorRef.current.innerHTML = project.content || '<p><br></p>';
-                    }
                 }
             });
         }
@@ -84,6 +85,10 @@ export const Editor: React.FC = () => {
                 navigate('/about');
             } else if (id === 'contact') {
                 navigate('/contact');
+            } else if (projectData.type === 'blog') {
+                navigate('/blog');
+            } else if (projectData.type === 'work') {
+                navigate('/work');
             } else {
                 navigate('/');
             }
@@ -103,36 +108,42 @@ export const Editor: React.FC = () => {
         return imageService.uploadImage(file, 1200, 0.8);
     };
 
-    const modules = {
-        toolbar: [
-            [{ 'header': [1, 2, 3, false] }],
-            ['bold', 'italic', 'underline', 'strike', 'blockquote'],
-            [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }],
-            ['link', 'image'],
-            ['clean']
-        ],
-    };
-
-    const formats = [
-        'header',
-        'bold', 'italic', 'underline', 'strike', 'blockquote',
-        'list', 'bullet', 'indent',
-        'link', 'image'
-    ];
-
     return (
-        <div className="pt-32 pb-20 px-6 bg-[#ffffff] min-h-screen font-sans">
-            <div className="max-w-[1200px] mx-auto bg-[#ffffff] rounded-[24px] p-6 md:p-10 border border-[#e5e5e5] shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
-                <div className="flex justify-between items-center mb-12">
-                    <h1 className="text-3xl font-bold tracking-tight text-[#111111]">
-                        {isEdit ? 'Post Edit' : 'New CMS Entry'}
-                    </h1>
-                    <button onClick={() => navigate('/admin')} className="text-[#666666] hover:text-[#111111] font-medium transition-colors">
-                        Cancel
+        <div className="min-h-screen bg-[#ffffff] px-4 pb-20 pt-32 font-sans md:px-[20px]">
+            <div className="mx-auto max-w-[1200px]">
+                <div className="mb-10 flex flex-wrap items-center justify-between gap-4 border-b border-[#f5f5f5] px-1 py-4">
+                    <div className="flex items-center gap-3">
+                        <button
+                            type="button"
+                            onClick={() => navigate(cancelTarget)}
+                            className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#e5e5e5] bg-[#ffffff] text-[#2b2b2b] transition-colors hover:bg-[#f5f5f5] hover:text-[#111111]"
+                            aria-label="편집 종료"
+                        >
+                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
+                        <div>
+                            <div className="flex flex-wrap items-center gap-2">
+                                <h1 className="text-xl font-bold tracking-tight text-[#111111]">
+                                    {isEdit ? `${entryLabel} 편집` : `${entryLabel} 작성`}
+                                </h1>
+                            </div>
+                        </div>
+                    </div>
+                    <button
+                        type="submit"
+                        form="entry-editor-form"
+                        className="flex h-10 items-center justify-center gap-2 rounded-lg bg-[#4169E1] px-4 text-sm font-bold text-white shadow-lg shadow-[#4169E1]/20 transition-all hover:bg-[#3458c7] active:scale-95"
+                    >
+                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        {isEdit ? '저장' : '게시'}
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-8">
+                <form id="entry-editor-form" onSubmit={handleSubmit} className="space-y-8">
                     {/* Thumbnail Uploader */}
                     {!isStaticPage && (
                         <div className="space-y-2">
@@ -249,51 +260,21 @@ export const Editor: React.FC = () => {
                         <MarkdownToolbar
                             onImageUpload={handleImageUpload}
                         />
-                        <div
-                            contentEditable
-                            suppressContentEditableWarning
-                            ref={editorRef}
-                            onBlur={(e) => setFormData({ ...formData, content: e.currentTarget.innerHTML })}
-                            onKeyDown={(e) => {
-                                // Handle Enter key to create new p tags
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault();
-
-                                    // Use formatBlock to create new paragraph
-                                    document.execCommand('insertParagraph', false);
-                                }
-                            }}
-                            onClick={(e) => {
-                                // Ensure clicks on empty areas still position cursor
-                                const target = e.target as HTMLElement;
-                                if (target.tagName === 'BR' || (!target.textContent?.trim() && target.tagName !== 'IMG')) {
-                                    const selection = window.getSelection();
-                                    if (selection) {
-                                        const range = document.createRange();
-                                        range.setStart(target, 0);
-                                        range.collapse(true);
-                                        selection.removeAllRanges();
-                                        selection.addRange(range);
-                                    }
-                                }
-                            }}
-                            className="editor-prose w-full min-h-[620px] p-5 md:p-8 rounded-2xl border border-[#e5e5e5] bg-[#ffffff] shadow-[0_24px_80px_rgba(0,0,0,0.18)] focus:outline-none focus:border-[#4169E1] focus:ring-2 focus:ring-[#4169E1]/20 transition-all"
+                        <RichEditor
+                            editorRef={editorRef}
+                            initialContent={formData.content || ''}
+                            onContentChange={(content) => setFormData(prev => ({ ...prev, content }))}
                         />
-                        <p className="text-center text-xs text-[#86868b] mt-2">
-                            * Click outside the editor to save changes. Editor supports rich text and inline images.
-                        </p>
                     </div>
 
-                    <button
-                        type="submit"
-                        className="w-full py-4 bg-[#4169E1] text-white rounded-2xl font-bold text-[17px] hover:bg-[#3458c7] transition-all shadow-lg shadow-[#4169E1]/20 active:scale-[0.98]"
-                    >
-                        {isEdit ? 'Update Entry' : 'Publish Entry'}
-                    </button>
-                    <p className="text-center text-xs text-[#86868b]">
-                        Note: Images uploaded in the editor are embedded directly.
-                        For larger images, consider hosting them externally to improve load times.
-                    </p>
+                    <div className="flex justify-end border-t border-[#f5f5f5] pt-6">
+                        <button
+                            type="submit"
+                            className="flex h-11 items-center justify-center rounded-lg bg-[#4169E1] px-5 text-sm font-bold text-white shadow-lg shadow-[#4169E1]/20 transition-all hover:bg-[#3458c7] active:scale-[0.98]"
+                        >
+                            {isEdit ? '저장' : '게시'}
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>

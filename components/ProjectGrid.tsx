@@ -3,6 +3,7 @@ import { useLocation, Link } from 'react-router-dom';
 import { projectService } from '../services/projectService';
 import { Project } from '../types';
 import { ProjectCard } from './ProjectCard';
+import { authService } from '../services/authService';
 
 type Category = '전체보기' | 'UI/UX' | '바이브코딩';
 
@@ -12,6 +13,7 @@ export const ProjectGrid: React.FC<{ isPage?: boolean }> = ({ isPage = false }) 
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const location = useLocation();
+  const isAdmin = authService.isAuthenticated();
 
   useEffect(() => {
     setIsLoading(true);
@@ -38,6 +40,17 @@ export const ProjectGrid: React.FC<{ isPage?: boolean }> = ({ isPage = false }) 
               {location.pathname === '/' && (
                 <Link to="/work" className="text-[#666666] hover:text-[#111111] transition-colors text-[15px] font-medium flex items-center gap-1">
                   전체보기
+                </Link>
+              )}
+              {isPage && isAdmin && (
+                <Link
+                  to="/admin/create?type=work"
+                  className="inline-flex h-10 items-center gap-2 rounded-full bg-[#4169E1] px-4 text-[13px] font-semibold text-white shadow-sm shadow-[#4169E1]/20 transition-all hover:bg-[#3458c7] active:scale-95"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  프로젝트 추가
                 </Link>
               )}
             </div>
