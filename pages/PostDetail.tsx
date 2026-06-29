@@ -121,8 +121,12 @@ export const PostDetail: React.FC = () => {
 
     const handleDeleteComment = async (commentId: string) => {
         if (window.confirm('Delete this comment?')) {
-            await commentService.deleteComment(commentId);
-            setComments(prev => prev.filter(c => c.id !== commentId));
+            const success = await commentService.deleteComment(commentId);
+            if (success) {
+                setComments(prev => prev.filter(c => c.id !== commentId));
+            } else {
+                alert('댓글 삭제에 실패했습니다. 다시 시도해 주세요.');
+            }
         }
     };
 

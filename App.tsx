@@ -106,12 +106,12 @@ const Navbar: React.FC<{ isScrolled: boolean }> = ({ isScrolled }) => {
           />
           <aside
             id="mobile-menu-drawer"
-            className="mobile-menu-drawer absolute right-0 top-0 flex h-full w-[min(84vw,340px)] flex-col overflow-hidden border-l border-white/70 px-5 py-6 shadow-[-24px_0_70px_rgba(17,17,17,0.16)]"
+            className="mobile-menu-drawer absolute right-0 top-0 flex h-full w-[min(84vw,340px)] flex-col overflow-hidden border-l border-white/70 px-5 pb-6 pt-0 shadow-[-24px_0_70px_rgba(17,17,17,0.16)]"
           >
-            <nav className="flex flex-col items-start gap-1">
-              <Link to="/work" onClick={closeMobileMenu} className="w-full border-b border-[#d8d8d8]/70 py-5 text-lg font-semibold">Work</Link>
-              <Link to="/blog" onClick={closeMobileMenu} className="w-full border-b border-[#d8d8d8]/70 py-5 text-lg font-semibold">Blog</Link>
-              <Link to="/contact" onClick={closeMobileMenu} className="w-full border-b border-[#d8d8d8]/70 py-5 text-lg font-semibold">Contact</Link>
+            <nav className="flex flex-col items-start">
+              <Link to="/work" onClick={closeMobileMenu} className="w-full border-b border-[#d8d8d8]/70 py-3.5 text-lg font-semibold">Work</Link>
+              <Link to="/blog" onClick={closeMobileMenu} className="w-full border-b border-[#d8d8d8]/70 py-3.5 text-lg font-semibold">Blog</Link>
+              <Link to="/contact" onClick={closeMobileMenu} className="w-full border-b border-[#d8d8d8]/70 py-3.5 text-lg font-semibold">Contact</Link>
             </nav>
 
             <div className="mt-auto flex w-full flex-col gap-4 border-t border-[#d8d8d8]/70 pt-5">

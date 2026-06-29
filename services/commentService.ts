@@ -45,13 +45,19 @@ export const commentService = {
         }
     },
 
-    deleteComment: async (commentId: string): Promise<void> => {
+    deleteComment: async (commentId: string): Promise<boolean> => {
         try {
-            await fetch(`${API_COMMENTS}/${commentId}`, {
+            const res = await fetch(`${API_COMMENTS}/delete/${commentId}`, {
                 method: 'DELETE'
             });
+            if (!res.ok) {
+                const errorText = await res.text();
+                throw new Error(errorText || 'Failed to delete comment');
+            }
+            return true;
         } catch (err) {
             console.error(err);
+            return false;
         }
     }
 };
