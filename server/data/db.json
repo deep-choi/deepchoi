@@ -184,16 +184,9 @@
   ],
   "users": [
     {
-      "email": "admin@example.com",
-      "name": "Admin Choi",
-      "password": "admin",
-      "role": "admin",
-      "avatarUrl": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200"
-    },
-    {
       "email": "cryingonion77@gmail.com",
       "name": "cryingonion77",
-      "password": "google-login-user",
+      "password": "google-oauth-user",
       "role": "admin",
       "avatarUrl": "https://ui-avatars.com/api/?name=cryingonion77"
     }

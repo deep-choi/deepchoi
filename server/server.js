@@ -88,19 +88,30 @@ app.delete('/api/projects/:id', (req, res) => {
 
 // --- Auth API ---
 
-const ADMIN_EMAILS = ['admin@example.com', 'dongjun.choi@example.com', 'cryingonion77@gmail.com']; // Temporary allowlist
+const ADMIN_EMAILS = ['cryingonion77@gmail.com'];
 
 app.post('/api/auth/login', (req, res) => {
     const { email, password } = req.body;
     const db = readDB();
     const user = db.users.find(u => u.email === email && u.password === password);
+    const isLocalRequest = ['localhost', '127.0.0.1', '::1'].includes(req.hostname);
 
     if (user) {
+        if (String(user.password || '').startsWith('google-')) {
+            return res.status(401).json({ message: 'Use Google login for this account' });
+        }
+        if (user.role === 'admin' && !ADMIN_EMAILS.includes(user.email)) {
+            return res.status(403).json({ message: 'Admin account is not allowed' });
+        }
         res.json(user);
     } else {
         // Simple Google Login Simulation / Auto-registration for demo
         // If password is 'google-auth-mock-token', we treat it as Google Login
         if (password === 'google-auth-mock-token') {
+            if (!isLocalRequest) {
+                return res.status(403).json({ message: 'Local mock login is not allowed here' });
+            }
+
             let googleUser = db.users.find(u => u.email === email);
             if (!googleUser) {
                 // Register new Google User
@@ -108,12 +119,15 @@ app.post('/api/auth/login', (req, res) => {
                 googleUser = {
                     email,
                     name: email.split('@')[0], // Simple name extraction
-                    password: 'google-login-user', // Dummy
+                    password: 'google-oauth-user',
                     role: isAdmin ? 'admin' : 'user',
                     avatarUrl: `https://ui-avatars.com/api/?name=${email.split('@')[0]}`
                 };
                 db.users.push(googleUser);
                 writeDB(db);
+            }
+            if (googleUser.role === 'admin' && !ADMIN_EMAILS.includes(googleUser.email)) {
+                return res.status(403).json({ message: 'Admin account is not allowed' });
             }
             return res.json(googleUser);
         }

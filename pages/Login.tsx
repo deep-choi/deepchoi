@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
 import { useGoogleLogin } from '@react-oauth/google';
 
@@ -7,15 +7,18 @@ export const Login: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('이메일 또는 비밀번호가 올바르지 않습니다.');
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
     const isLocalDev = ['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname);
+    const redirectTo = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname || '/admin';
 
     React.useEffect(() => {
         if (authService.isAuthenticated()) {
-            navigate('/');
+            navigate(authService.isAdmin() ? redirectTo : '/');
         }
-    }, [navigate]);
+    }, [navigate, redirectTo]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -25,9 +28,10 @@ export const Login: React.FC = () => {
         // Simulate a bit of network delay for that premium feel
         setTimeout(async () => {
             const user = await authService.login(email, password);
-            if (user) {
-                navigate('/');
+            if (user?.role === 'admin') {
+                navigate(redirectTo);
             } else {
+                setErrorMessage(user ? '관리자 계정만 접근할 수 있습니다.' : '이메일 또는 비밀번호가 올바르지 않습니다.');
                 setError(true);
                 setIsLoading(false);
             }
@@ -40,9 +44,10 @@ export const Login: React.FC = () => {
             try {
                 const user = await authService.googleLogin(tokenResponse.access_token);
 
-                if (user) {
-                    navigate('/');
+                if (user?.role === 'admin') {
+                    navigate(redirectTo);
                 } else {
+                    setErrorMessage(user ? '관리자 계정만 접근할 수 있습니다.' : 'Google 로그인에 실패했습니다.');
                     setError(true);
                     setIsLoading(false);
                 }
@@ -62,9 +67,10 @@ export const Login: React.FC = () => {
         setError(false);
 
         const user = await authService.login('cryingonion77@gmail.com', 'google-auth-mock-token');
-        if (user) {
-            navigate('/');
+        if (user?.role === 'admin') {
+            navigate(redirectTo);
         } else {
+            setErrorMessage(user ? '관리자 계정만 접근할 수 있습니다.' : '로컬 관리자 로그인에 실패했습니다.');
             setError(true);
             setIsLoading(false);
         }
@@ -114,7 +120,7 @@ export const Login: React.FC = () => {
                             />
                             {error && (
                                 <p className="absolute -bottom-6 left-0 w-full text-center text-[12px] font-bold text-[#ff3b30] animate-in fade-in slide-in-from-top-2">
-                                    이메일 또는 비밀번호가 올바르지 않습니다.
+                                    {errorMessage}
                                 </p>
                             )}
                         </div>

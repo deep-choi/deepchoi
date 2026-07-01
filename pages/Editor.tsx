@@ -8,6 +8,7 @@ import { ImageUploader } from '../components/ImageUploader';
 import { RichEditor } from '../components/RichEditor';
 import { imageService } from '../services/imageService';
 import { normalizeEditorHtml } from '../utils/contentProcessor';
+import { categoryLabel, categoryService, CategoryRecord, EntryType } from '../services/categoryService';
 
 
 export const Editor: React.FC = () => {
@@ -35,11 +36,24 @@ export const Editor: React.FC = () => {
 
     const [techInput, setTechInput] = useState('');
     const [tagInput, setTagInput] = useState('');
+    const [categories, setCategories] = useState<CategoryRecord[]>([]);
     const editorRef = React.useRef<HTMLDivElement>(null);
     const entryLabel = formData.type === 'blog' ? '블로그 글' : '프로젝트';
     const cancelTarget = isEdit
         ? (id === 'about' ? '/about' : id === 'contact' ? '/contact' : `/post/${id}`)
         : (formData.type === 'blog' ? '/blog' : '/work');
+
+    useEffect(() => {
+        let isMounted = true;
+
+        categoryService.getCategories().then(data => {
+            if (isMounted) setCategories(data);
+        });
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
 
     useEffect(() => {
         if (isEdit && id) {
@@ -52,6 +66,26 @@ export const Editor: React.FC = () => {
             });
         }
     }, [isEdit, id]);
+
+    useEffect(() => {
+        if (isEdit || isStaticPage || categories.length === 0) return;
+        const type = (formData.type || requestedType) as EntryType;
+        const typeCategories = categories.filter(category => category.type === type);
+        if (typeCategories.length > 0 && !typeCategories.some(category => category.name === formData.category)) {
+            setFormData(prev => ({ ...prev, category: typeCategories[0].name }));
+        }
+    }, [categories, formData.category, formData.type, isEdit, isStaticPage, requestedType]);
+
+    const getCategoryOptions = (type?: string): CategoryRecord[] => {
+        const entryType = (type === 'blog' ? 'blog' : 'work') as EntryType;
+        return categories.filter(category => category.type === entryType);
+    };
+
+    const firstCategoryFor = (type: EntryType): string => {
+        const option = getCategoryOptions(type)[0];
+        if (option) return option.name;
+        return type === 'blog' ? 'AI' : 'UI UX';
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -186,17 +220,9 @@ export const Editor: React.FC = () => {
                                     onChange={e => setFormData({ ...formData, category: e.target.value as any })}
                                     className="w-full px-6 py-4 bg-[#ffffff] rounded-2xl border border-[#e5e5e5] text-[#111111] focus:ring-2 focus:ring-[#4169E1]/30 transition-all outline-none"
                                 >
-                                    {formData.type === 'blog' ? (
-                                        <>
-                                            <option value="AI">AI</option>
-                                            <option value="UI UX">UI UX</option>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <option value="UI UX">UI UX</option>
-                                            <option value="바이브코딩">바이브코딩</option>
-                                        </>
-                                    )}
+                                    {getCategoryOptions(formData.type).map(category => (
+                                        <option key={category.id} value={category.name}>{categoryLabel(category.name)}</option>
+                                    ))}
                                 </select>
                             </div>
                             <div className="space-y-2">
@@ -204,14 +230,14 @@ export const Editor: React.FC = () => {
                                 <div className="flex bg-[#ffffff] p-1 rounded-2xl border border-[#e5e5e5]">
                                     <button
                                         type="button"
-                                        onClick={() => setFormData({ ...formData, type: 'work', category: 'UI UX' })}
+                                        onClick={() => setFormData({ ...formData, type: 'work', category: firstCategoryFor('work') })}
                                         className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${formData.type === 'work' ? 'bg-[#4169E1] text-white shadow-sm' : 'text-[#666666] hover:text-[#111111]'}`}
                                     >
                                         Work
                                     </button>
                                     <button
                                         type="button"
-                                        onClick={() => setFormData({ ...formData, type: 'blog', category: 'AI' })}
+                                        onClick={() => setFormData({ ...formData, type: 'blog', category: firstCategoryFor('blog') })}
                                         className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${formData.type === 'blog' ? 'bg-[#4169E1] text-white shadow-sm' : 'text-[#666666] hover:text-[#111111]'}`}
                                     >
                                         Blog

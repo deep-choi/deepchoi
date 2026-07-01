@@ -4,29 +4,42 @@ import { Project } from '../types';
 import { projectService } from '../services/projectService';
 import { ProjectCard } from '../components/ProjectCard';
 import { authService } from '../services/authService';
-
-type BlogCategory = '전체보기' | 'AI' | 'UI UX';
+import { categoryLabel, categoryService } from '../services/categoryService';
 
 export const Blog: React.FC = () => {
     const [posts, setPosts] = useState<Project[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<BlogCategory>('전체보기');
-    const isAdmin = authService.isAuthenticated();
+    const [activeTab, setActiveTab] = useState('전체보기');
+    const [tabs, setTabs] = useState<string[]>(['전체보기']);
+    const isAdmin = authService.isAdmin();
 
     useEffect(() => {
+        let isMounted = true;
         setIsLoading(true);
-        projectService.getAllProjects().then(data => {
+
+        Promise.all([
+            projectService.getAllProjects(),
+            categoryService.getCategories('blog')
+        ]).then(([data, categories]) => {
+            if (!isMounted) return;
             const blogPosts = data.filter(p => p.type === 'blog');
             setPosts(blogPosts);
+            const categoryNames = Array.from(new Set([
+                ...categories.map(category => category.name),
+                ...blogPosts.map(post => post.category).filter(Boolean)
+            ]));
+            setTabs(['전체보기', ...categoryNames]);
             setIsLoading(false);
         });
+
+        return () => {
+            isMounted = false;
+        };
     }, []);
 
     const filteredPosts = activeTab === '전체보기'
         ? posts
         : posts.filter(p => p.category === activeTab);
-
-    const tabs: BlogCategory[] = ['전체보기', 'AI', 'UI UX'];
 
     return (
         <section className="py-32 bg-[#ffffff] min-h-screen">
@@ -62,7 +75,7 @@ export const Blog: React.FC = () => {
                                         : 'bg-white border-[#e5e5e5] text-[#666666] hover:border-[#4169E1] hover:text-[#111111]'
                                         }`}
                                 >
-                                    {tab}
+                                    {tab === '전체보기' ? tab : categoryLabel(tab)}
                                 </button>
                             ))}
                         </div>

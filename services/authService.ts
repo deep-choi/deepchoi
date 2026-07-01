@@ -54,7 +54,29 @@ export const authService = {
         }
     },
 
-    logout: () => {
+    getSession: async (): Promise<User | null> => {
+        try {
+            const res = await fetch(`${API_Auth}/me`);
+            if (!res.ok) {
+                localStorage.removeItem('portfolio_user');
+                return null;
+            }
+            const user: User = await res.json();
+            localStorage.setItem('portfolio_user', JSON.stringify(user));
+            return user;
+        } catch (err) {
+            console.error(err);
+            localStorage.removeItem('portfolio_user');
+            return null;
+        }
+    },
+
+    logout: async () => {
+        try {
+            await fetch(`${API_Auth}/logout`, { method: 'POST' });
+        } catch (err) {
+            console.error(err);
+        }
         localStorage.removeItem('portfolio_user');
     },
 

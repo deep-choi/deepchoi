@@ -9,7 +9,9 @@ import { Signup } from './pages/Signup';
 import { Work } from './pages/Work';
 import { Blog } from './pages/Blog';
 import { Contact } from './pages/Contact';
+import { Admin } from './pages/Admin';
 import { authService } from './services/authService';
+import { analyticsService } from './services/analyticsService';
 import { SmoothScroll } from './components/SmoothScroll';
 
 const Navbar: React.FC<{ isScrolled: boolean }> = ({ isScrolled }) => {
@@ -35,8 +37,8 @@ const Navbar: React.FC<{ isScrolled: boolean }> = ({ isScrolled }) => {
     return null;
   }
 
-  const handleLogout = () => {
-    authService.logout();
+  const handleLogout = async () => {
+    await authService.logout();
     navigate('/');
     window.location.reload();
   };
@@ -70,6 +72,9 @@ const Navbar: React.FC<{ isScrolled: boolean }> = ({ isScrolled }) => {
               {isLoggedIn ? (
                 <>
                   <span className="text-[14px] font-medium text-[#111111]">{authService.getCurrentUser()?.name}님</span>
+                  {authService.isAdmin() && (
+                    <Link to="/admin" className="rounded-full bg-[#111111] px-5 py-2.5 text-[14px] font-medium text-white transition-colors hover:bg-[#333333]">Admin</Link>
+                  )}
                   <button onClick={handleLogout} className="rounded-full bg-[#f5f5f5] px-5 py-2.5 text-[14px] font-medium text-[#111111] transition-colors hover:bg-[#ededed]">로그아웃</button>
                 </>
               ) : (
@@ -121,6 +126,9 @@ const Navbar: React.FC<{ isScrolled: boolean }> = ({ isScrolled }) => {
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#4169E1] text-sm font-bold text-white">{authService.getCurrentUser()?.name?.[0]}</div>
                     <span className="text-sm font-semibold text-[#111111]">{authService.getCurrentUser()?.name}님</span>
                   </div>
+                  {authService.isAdmin() && (
+                    <Link to="/admin" onClick={closeMobileMenu} className="w-fit rounded-full bg-[#111111] px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[#333333]">Admin</Link>
+                  )}
                   <button onClick={() => { handleLogout(); closeMobileMenu(); }} className="w-fit text-left text-[13px] font-medium text-[#86868b] transition-colors hover:text-[#111111]">로그아웃</button>
                 </>
               ) : (
@@ -143,6 +151,27 @@ const ScrollToTop: React.FC = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
+
+  return null;
+};
+
+const AnalyticsTracker: React.FC = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    const path = `${location.pathname}${location.search}`;
+    if (/^\/(admin|login|signup)(\/|$)/.test(location.pathname)) return;
+
+    const now = Date.now();
+    const key = `deepchoi:last-view:${path}`;
+    const lastTrackedAt = Number(sessionStorage.getItem(key) || 0);
+    if (now - lastTrackedAt < 5000) return;
+    sessionStorage.setItem(key, String(now));
+
+    const match = location.pathname.match(/^\/post\/([^/]+)/);
+    const projectId = match ? decodeURIComponent(match[1]) : undefined;
+    analyticsService.trackPageView(path, projectId);
+  }, [location.pathname, location.search]);
 
   return null;
 };
@@ -213,15 +242,41 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  if (!authService.isAuthenticated()) {
-    return <Navigate to="/login" replace />;
+  const location = useLocation();
+  const [status, setStatus] = useState<'checking' | 'allowed' | 'denied'>('checking');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    authService.getSession().then(user => {
+      if (!isMounted) return;
+      setStatus(user?.role === 'admin' ? 'allowed' : 'denied');
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  if (status === 'checking') {
+    return (
+      <div className="min-h-[420px] pt-32 flex items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#4169E1] border-t-transparent"></div>
+      </div>
+    );
   }
+
+  if (status === 'denied') {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
   return <>{children}</>;
 };
 
 export default function App() {
   return (
     <BrowserRouter>
+      <AnalyticsTracker />
       <Layout>
         <Routes>
           <Route path="/" element={<Home />} />
@@ -234,7 +289,14 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
 
-          <Route path="/admin" element={<Navigate to="/login" replace />} />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <Admin />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/admin/create"
             element={

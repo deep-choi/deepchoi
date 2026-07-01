@@ -1,7 +1,10 @@
 
 interface Env {
     DB: D1Database;
+    ADMIN_SESSION_SECRET?: string;
 }
+
+import { createSessionCookie, isAllowedAdmin, publicUser } from '../../_utils/auth';
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {
     try {
@@ -22,7 +25,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         const { email, name, picture } = userInfo;
 
         // Admin allowlist logic (Production)
-        const ADMIN_EMAILS = ['admin@example.com', 'dongjun.choi@example.com', 'cryingonion77@gmail.com'];
+        const ADMIN_EMAILS = ['cryingonion77@gmail.com'];
 
         // Check if user exists
         let user: any = await context.env.DB.prepare("SELECT * FROM User WHERE email = ?").bind(email).first();
@@ -42,7 +45,12 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
                 "INSERT INTO User (email, name, password, role, avatarUrl) VALUES (?, ?, ?, ?, ?)"
             ).bind(newUser.email, newUser.name, newUser.password, newUser.role, newUser.avatarUrl).run();
 
-            return Response.json(newUser);
+            const userPayload = publicUser(newUser);
+            return Response.json(userPayload, {
+                headers: {
+                    'Set-Cookie': await createSessionCookie(userPayload, context.env, context.request)
+                }
+            });
         }
 
         // If user exists, return user info (simulate login)
@@ -51,8 +59,20 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
             await context.env.DB.prepare("UPDATE User SET avatarUrl = ? WHERE email = ?").bind(picture, email).run();
             user.avatarUrl = picture;
         }
+        if (ADMIN_EMAILS.includes(email) && user.role !== 'admin') {
+            await context.env.DB.prepare("UPDATE User SET role = 'admin' WHERE email = ?").bind(email).run();
+            user.role = 'admin';
+        }
 
-        return Response.json(user);
+        const userPayload = publicUser(user);
+        if (userPayload.role === 'admin' && !isAllowedAdmin(userPayload)) {
+            return Response.json({ error: "Admin account is not allowed" }, { status: 403 });
+        }
+        return Response.json(userPayload, {
+            headers: {
+                'Set-Cookie': await createSessionCookie(userPayload, context.env, context.request)
+            }
+        });
 
     } catch (err) {
         return Response.json({ error: err.message }, { status: 500 });

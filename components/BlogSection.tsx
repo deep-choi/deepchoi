@@ -4,25 +4,38 @@ import { Link } from 'react-router-dom';
 import { projectService } from '../services/projectService';
 import { Project } from '../types';
 import { ProjectCard } from './ProjectCard';
-
-type BlogCategory = '전체보기' | 'AI' | 'UI UX';
+import { categoryLabel, categoryService } from '../services/categoryService';
 
 export const BlogSection: React.FC = () => {
     const [posts, setPosts] = useState<Project[]>([]);
-    const [activeTab, setActiveTab] = useState<BlogCategory>('전체보기');
+    const [activeTab, setActiveTab] = useState('전체보기');
+    const [tabs, setTabs] = useState<string[]>(['전체보기']);
 
     useEffect(() => {
-        projectService.getAllProjects().then(data => {
+        let isMounted = true;
+
+        Promise.all([
+            projectService.getAllProjects(),
+            categoryService.getCategories('blog')
+        ]).then(([data, categories]) => {
+            if (!isMounted) return;
             const blogPosts = data.filter(p => p.type === 'blog');
             setPosts(blogPosts);
+            const categoryNames = Array.from(new Set([
+                ...categories.map(category => category.name),
+                ...blogPosts.map(post => post.category).filter(Boolean)
+            ]));
+            setTabs(['전체보기', ...categoryNames]);
         });
+
+        return () => {
+            isMounted = false;
+        };
     }, []);
 
     const filteredPosts = activeTab === '전체보기'
         ? posts.slice(0, 6)
         : posts.filter(p => p.category === activeTab).slice(0, 6);
-
-    const tabs: BlogCategory[] = ['전체보기', 'AI', 'UI UX'];
 
     return (
         <section id="blog" className="py-16 md:py-32 bg-[#ffffff]">
@@ -50,7 +63,7 @@ export const BlogSection: React.FC = () => {
                                         : 'bg-white border-[#e5e5e5] text-[#666666] hover:border-[#4169E1] hover:text-[#111111]'
                                         }`}
                                 >
-                                    {tab}
+                                    {tab === '전체보기' ? tab : categoryLabel(tab)}
                                 </button>
                             ))}
                         </div>

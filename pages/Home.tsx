@@ -180,7 +180,7 @@ const WorkShowcase: React.FC = () => {
 
 const AdminCreateButton: React.FC = () => {
     const navigate = useNavigate();
-    const isAdmin = authService.isAuthenticated();
+    const isAdmin = authService.isAdmin();
 
     if (!isAdmin) {
         return null;

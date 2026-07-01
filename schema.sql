@@ -2,6 +2,8 @@
 DROP TABLE IF EXISTS Project;
 DROP TABLE IF EXISTS User;
 DROP TABLE IF EXISTS Comment;
+DROP TABLE IF EXISTS Category;
+DROP TABLE IF EXISTS PageView;
 
 CREATE TABLE Project (
     id TEXT PRIMARY KEY,
@@ -35,11 +37,40 @@ CREATE TABLE Comment (
     FOREIGN KEY(projectId) REFERENCES Project(id)
 );
 
+CREATE TABLE Category (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    type TEXT NOT NULL DEFAULT 'work',
+    sortOrder INTEGER NOT NULL DEFAULT 0,
+    createdAt TEXT NOT NULL,
+    updatedAt TEXT NOT NULL,
+    UNIQUE(name, type)
+);
+
+CREATE TABLE PageView (
+    id TEXT PRIMARY KEY,
+    projectId TEXT,
+    path TEXT NOT NULL,
+    referrer TEXT,
+    ipHash TEXT,
+    day TEXT NOT NULL,
+    createdAt TEXT NOT NULL
+);
+
+CREATE INDEX idx_page_view_day ON PageView(day);
+CREATE INDEX idx_page_view_project ON PageView(projectId);
+CREATE INDEX idx_page_view_path ON PageView(path);
+
 -- Initial Data Seeding (Based on db.json)
 
 INSERT INTO User (email, name, password, role, avatarUrl) VALUES
-('cryingonion77@gmail.com', 'cryingonion77', 'google-login-user', 'admin', 'https://ui-avatars.com/api/?name=cryingonion77'),
-('admin@example.com', 'Admin Choi', 'admin', 'admin', 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200');
+('cryingonion77@gmail.com', 'cryingonion77', 'google-oauth-user', 'admin', 'https://ui-avatars.com/api/?name=cryingonion77');
+
+INSERT INTO Category (id, name, type, sortOrder, createdAt, updatedAt) VALUES
+('work:ui-ux', 'UI UX', 'work', 0, datetime('now'), datetime('now')),
+('work:바이브코딩', '바이브코딩', 'work', 1, datetime('now'), datetime('now')),
+('blog:ai', 'AI', 'blog', 0, datetime('now'), datetime('now')),
+('blog:ui-ux', 'UI UX', 'blog', 1, datetime('now'), datetime('now'));
 
 INSERT INTO Project (id, title, subtitle, description, tech, tags, imageUrl, category, date, content, author) VALUES
 ('01', 'CogniFlow Interface', 'Neural Work Management', '인지 부하를 최소화하는 신경망 기반 작업 관리 모바일 앱 UI/UX 디자인입니다.', '["Figma", "Protopie"]', '["Mobile APP", "AI UI", "Productivity"]', 'https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?auto=format&fit=crop&q=80&w=800', 'UI UX', '2024.12.20', '

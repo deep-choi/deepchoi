@@ -25,8 +25,7 @@ CREATE TABLE User (
     role TEXT,
     avatarUrl TEXT
 );
-INSERT INTO "User" VALUES('cryingonion77@gmail.com','cryingonion77','google-login-user','admin','https://lh3.googleusercontent.com/a/ACg8ocLxZuysWY8C4ZkXX7VHgNd_6EEPIcvZ7tLOwmU-F_A1qQp1E80=s96-c');
-INSERT INTO "User" VALUES('admin@example.com','Admin Choi','admin','admin','https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200');
+INSERT INTO "User" VALUES('cryingonion77@gmail.com','cryingonion77','google-oauth-user','admin','https://lh3.googleusercontent.com/a/ACg8ocLxZuysWY8C4ZkXX7VHgNd_6EEPIcvZ7tLOwmU-F_A1qQp1E80=s96-c');
 CREATE TABLE Comment (
     id TEXT PRIMARY KEY,
     projectId TEXT,
@@ -35,4 +34,4 @@ CREATE TABLE Comment (
     date TEXT,
     FOREIGN KEY(projectId) REFERENCES Project(id)
 );
-INSERT INTO "Comment" VALUES('1766919607248','01','테스트입니다.','{"email":"cryingonion77@gmail.com","name":"cryingonion77","password":"google-login-user","role":"admin","avatarUrl":"https://lh3.googleusercontent.com/a/ACg8ocLxZuysWY8C4ZkXX7VHgNd_6EEPIcvZ7tLOwmU-F_A1qQp1E80=s96-c"}','2025-12-28T11:00:07.241Z');
+INSERT INTO "Comment" VALUES('1766919607248','01','테스트입니다.','{"email":"cryingonion77@gmail.com","name":"cryingonion77","password":"google-oauth-user","role":"admin","avatarUrl":"https://lh3.googleusercontent.com/a/ACg8ocLxZuysWY8C4ZkXX7VHgNd_6EEPIcvZ7tLOwmU-F_A1qQp1E80=s96-c"}','2025-12-28T11:00:07.241Z');

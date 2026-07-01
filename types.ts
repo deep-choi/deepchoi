@@ -21,7 +21,7 @@ export interface Project {
   tech: string[];
   tags: string[];
   imageUrl?: string;
-  category: 'UI UX' | '바이브코딩' | 'AI' | 'About';
+  category: string;
   type?: 'work' | 'blog' | 'page';
   link?: string;
   date: string;

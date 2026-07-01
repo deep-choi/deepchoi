@@ -47,19 +47,22 @@ const ensureCarouselIndicator = (carousel: HTMLElement, slideCount: number) => {
         const dots = document.createElement('span');
         dots.className = 'image-carousel-dots';
 
-        indicator.append(status, dots);
+        indicator.appendChild(status);
+        indicator.appendChild(dots);
         carousel.appendChild(indicator);
     }
 
     const dots = indicator.querySelector('.image-carousel-dots') as HTMLElement | null;
     if (dots && dots.children.length !== slideCount) {
-        dots.replaceChildren(...Array.from({ length: slideCount }, (_, index) => {
+        dots.textContent = '';
+        Array.from({ length: slideCount }, (_, index) => {
             const dot = document.createElement('span');
             dot.className = 'image-carousel-dot';
             dot.setAttribute('aria-hidden', 'true');
             dot.dataset.slideIndex = String(index);
+            dots.appendChild(dot);
             return dot;
-        }));
+        });
     }
 };
 

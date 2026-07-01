@@ -4,31 +4,44 @@ import { projectService } from '../services/projectService';
 import { Project } from '../types';
 import { ProjectCard } from './ProjectCard';
 import { authService } from '../services/authService';
-
-type Category = '전체보기' | 'UI/UX' | '바이브코딩';
+import { categoryLabel, categoryService } from '../services/categoryService';
 
 
 export const ProjectGrid: React.FC<{ isPage?: boolean }> = ({ isPage = false }) => {
-  const [activeTab, setActiveTab] = useState<Category>('전체보기');
+  const [activeTab, setActiveTab] = useState('전체보기');
   const [projects, setProjects] = useState<Project[]>([]);
+  const [tabs, setTabs] = useState<string[]>(['전체보기']);
   const [isLoading, setIsLoading] = useState(true);
   const location = useLocation();
-  const isAdmin = authService.isAuthenticated();
+  const isAdmin = authService.isAdmin();
 
   useEffect(() => {
+    let isMounted = true;
     setIsLoading(true);
-    projectService.getAllProjects().then(data => {
+
+    Promise.all([
+      projectService.getAllProjects(),
+      categoryService.getCategories('work')
+    ]).then(([data, categories]) => {
+      if (!isMounted) return;
       const workProjects = data.filter(p => !p.type || p.type === 'work');
       setProjects(workProjects);
+      const categoryNames = Array.from(new Set([
+        ...categories.map(category => category.name),
+        ...workProjects.map(project => project.category).filter(Boolean)
+      ]));
+      setTabs(['전체보기', ...categoryNames]);
       setIsLoading(false);
     });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const filteredProjects = activeTab === '전체보기'
     ? projects
-    : projects.filter(p => p.category === (activeTab === 'UI/UX' ? 'UI UX' : activeTab));
-
-  const tabs: Category[] = ['전체보기', 'UI/UX', '바이브코딩'];
+    : projects.filter(p => p.category === activeTab);
 
   return (
     <section id="projects" className={`${isPage ? 'pt-32 pb-24' : 'py-12 md:py-24'} bg-[#ffffff]`}>
@@ -70,7 +83,7 @@ export const ProjectGrid: React.FC<{ isPage?: boolean }> = ({ isPage = false }) 
                     : 'bg-white border-[#e5e5e5] text-[#666666] hover:border-[#4169E1] hover:text-[#111111]'
                     }`}
                 >
-                  {tab}
+                  {tab === '전체보기' ? tab : categoryLabel(tab)}
                 </button>
               ))}
             </div>

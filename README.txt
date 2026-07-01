@@ -1,5 +1,5 @@
 
-# 📂 NEXBOT UI/UX Portfolio V2
+# 📂 Deepchoi Portfolio
 > 현대적이고 미니멀한 "Headless CMS 스타일" 포트폴리오 웹사이트입니다.
 
 ## 🌟 프로젝트 개요
@@ -8,7 +8,7 @@
 
 ## 🏗️ 폴더 구조 설명 (누구나 알기 쉽게)
 ```
-📦 nexbot-ui_ux-portfolio (1)
+📦 deepchoi
  ┣ 📂 public          # 이미지, 아이콘 등 정적 파일들이 모여있는 곳
  ┣ 📂 src             # 실제 소스 코드가 들어있는 핵심 폴더
  ┃ ┣ 📂 assets        # 로고나 작은 이미지들

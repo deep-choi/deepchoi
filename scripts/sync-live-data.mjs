@@ -8,16 +8,9 @@ const liveOrigin = (process.env.PORTFOLIO_LIVE_ORIGIN || 'https://deepchoi.com')
 
 const defaultUsers = [
   {
-    email: 'admin@example.com',
-    name: 'Admin Choi',
-    password: 'admin',
-    role: 'admin',
-    avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200',
-  },
-  {
     email: 'cryingonion77@gmail.com',
     name: 'cryingonion77',
-    password: 'google-login-user',
+    password: 'google-oauth-user',
     role: 'admin',
     avatarUrl: 'https://ui-avatars.com/api/?name=cryingonion77',
   },
@@ -116,6 +109,7 @@ const buildSql = (projects, comments, users) => {
     'BEGIN TRANSACTION;',
     'DELETE FROM Comment;',
     'DELETE FROM Project;',
+    'DELETE FROM Category;',
   ];
 
   for (const user of users) {
@@ -145,6 +139,34 @@ const buildSql = (projects, comments, users) => {
         project.date,
         project.content,
         JSON.stringify(project.author),
+      ].map(sqlText).join(', ')});`,
+    );
+  }
+
+  const categoryMap = new Map();
+  for (const project of projects) {
+    if (!project.category) continue;
+    const type = project.type || 'work';
+    const key = `${type}:${project.category}`;
+    if (!categoryMap.has(key)) {
+      categoryMap.set(key, {
+        id: `${type}:${project.category.toLowerCase().replace(/\s+/g, '-')}`,
+        name: project.category,
+        type,
+        sortOrder: categoryMap.size,
+      });
+    }
+  }
+
+  for (const category of categoryMap.values()) {
+    lines.push(
+      `INSERT OR IGNORE INTO Category (id, name, type, sortOrder, createdAt, updatedAt) VALUES (${[
+        category.id,
+        category.name,
+        category.type,
+        category.sortOrder,
+        new Date().toISOString(),
+        new Date().toISOString(),
       ].map(sqlText).join(', ')});`,
     );
   }

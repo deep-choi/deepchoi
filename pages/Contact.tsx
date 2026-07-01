@@ -18,7 +18,7 @@ export const Contact: React.FC = () => {
     const editorRef = useRef<HTMLDivElement>(null);
     const contentDisplayRef = useRef<HTMLDivElement>(null);
     const [searchParams, setSearchParams] = useSearchParams();
-    const isAdmin = authService.isAuthenticated();
+    const isAdmin = authService.isAdmin();
 
     useEffect(() => {
         setIsLoading(true);

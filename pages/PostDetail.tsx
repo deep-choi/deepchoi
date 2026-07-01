@@ -12,6 +12,7 @@ import { imageService } from '../services/imageService';
 import { linkifyHtml, normalizeEditorHtml } from '../utils/contentProcessor';
 import { CommentInput } from '../components/CommentInput';
 import { moveCarousel, setupCarousel } from '../utils/carousel';
+import { categoryLabel, categoryService, CategoryRecord, EntryType } from '../services/categoryService';
 
 export const PostDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -22,13 +23,14 @@ export const PostDetail: React.FC = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [editForm, setEditForm] = useState<Partial<Project>>({});
+    const [categories, setCategories] = useState<CategoryRecord[]>([]);
     const [tagDraft, setTagDraft] = useState('');
     const contentEditorRef = useRef<HTMLDivElement>(null);
     const contentDisplayRef = useRef<HTMLDivElement>(null);
     const coverInputRef = useRef<HTMLInputElement>(null);
     const [editSessionId, setEditSessionId] = useState(0); // Used as key for contentEditable remount
     const [isCoverUploading, setIsCoverUploading] = useState(false);
-    const isAdmin = authService.isAuthenticated();
+    const isAdmin = authService.isAdmin();
 
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [zoomLevel, setZoomLevel] = useState(1);
@@ -40,6 +42,18 @@ export const PostDetail: React.FC = () => {
     // Comments Logic
     const [comments, setComments] = useState<Comment[]>([]);
     const currentUser = authService.getCurrentUser();
+
+    useEffect(() => {
+        let isMounted = true;
+
+        categoryService.getCategories().then(data => {
+            if (isMounted) setCategories(data);
+        });
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
 
     useEffect(() => {
         if (id) {
@@ -223,6 +237,17 @@ export const PostDetail: React.FC = () => {
             ...prev,
             tags: (prev.tags || []).filter(tag => tag !== tagToRemove)
         }));
+    };
+
+    const getCategoryOptions = (type?: string): CategoryRecord[] => {
+        const entryType = (type === 'blog' ? 'blog' : 'work') as EntryType;
+        return categories.filter(category => category.type === entryType);
+    };
+
+    const firstCategoryFor = (type: EntryType): string => {
+        const option = getCategoryOptions(type)[0];
+        if (option) return option.name;
+        return type === 'blog' ? 'AI' : 'UI UX';
     };
 
     const handleContentClick = (e: React.MouseEvent) => {
@@ -534,14 +559,14 @@ export const PostDetail: React.FC = () => {
                                             <div className="flex bg-transparent">
                                                 <button
                                                     type="button"
-                                                    onClick={() => setEditForm(prev => ({ ...prev, type: 'work', category: 'UI UX' }))}
+                                                    onClick={() => setEditForm(prev => ({ ...prev, type: 'work', category: firstCategoryFor('work') }))}
                                                     className={`h-9 px-4 rounded-lg text-sm font-bold transition-all ${editForm.type === 'work' ? 'bg-[#4169E1] text-white shadow-sm' : 'text-[#666666] hover:text-[#111111]'}`}
                                                 >
                                                     Work
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    onClick={() => setEditForm(prev => ({ ...prev, type: 'blog', category: 'AI' }))}
+                                                    onClick={() => setEditForm(prev => ({ ...prev, type: 'blog', category: firstCategoryFor('blog') }))}
                                                     className={`h-9 px-4 rounded-lg text-sm font-bold transition-all ${editForm.type === 'blog' ? 'bg-[#4169E1] text-white shadow-sm' : 'text-[#666666] hover:text-[#111111]'}`}
                                                 >
                                                     Blog
@@ -552,17 +577,9 @@ export const PostDetail: React.FC = () => {
                                                 onChange={e => setEditForm(prev => ({ ...prev, category: e.target.value as any }))}
                                                 className="ml-auto h-9 min-w-[120px] rounded-lg border border-[#e5e5e5]/70 bg-[#ffffff] px-3 text-sm font-bold text-[#111111] outline-none focus:ring-2 focus:ring-[#4169E1]/30"
                                             >
-                                                {editForm.type === 'blog' ? (
-                                                    <>
-                                                        <option value="AI">AI</option>
-                                                        <option value="UI UX">UI UX</option>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <option value="UI UX">UI/UX</option>
-                                                        <option value="바이브코딩">바이브코딩</option>
-                                                    </>
-                                                )}
+                                                {getCategoryOptions(editForm.type).map(category => (
+                                                    <option key={category.id} value={category.name}>{categoryLabel(category.name)}</option>
+                                                ))}
                                             </select>
                                         </div>
                                     </div>

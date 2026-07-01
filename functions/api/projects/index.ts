@@ -1,7 +1,10 @@
 
 interface Env {
     DB: D1Database;
+    ADMIN_SESSION_SECRET?: string;
 }
+
+import { requireAdmin } from '../../_utils/auth';
 
 export const onRequestGet: PagesFunction<Env> = async (context) => {
     try {
@@ -21,6 +24,9 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
 };
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {
+    const auth = await requireAdmin(context);
+    if ('response' in auth) return auth.response;
+
     try {
         const project: any = await context.request.json();
         const info = await context.env.DB.prepare(

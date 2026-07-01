@@ -1,9 +1,16 @@
 
 interface Env {
     BUCKET: R2Bucket;
+    DB: D1Database;
+    ADMIN_SESSION_SECRET?: string;
 }
 
+import { requireAdmin } from '../_utils/auth';
+
 export const onRequestPost: PagesFunction<Env> = async (context) => {
+    const auth = await requireAdmin(context);
+    if ('response' in auth) return auth.response;
+
     try {
         const formData = await context.request.formData();
         const file = formData.get('file') as File;
