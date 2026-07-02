@@ -4,7 +4,18 @@ interface Env {
 }
 
 import { requireAdmin } from '../../_utils/auth';
-import { ensureAdminDataSchema, normalizeEntryType } from '../../_utils/schema';
+import { ensureAdminDataSchema, isContentEntryType, normalizeEntryType } from '../../_utils/schema';
+
+const getCategoryIdParam = (value: string | string[] | undefined): string => {
+    const rawValue = Array.isArray(value) ? value[0] : value;
+    if (!rawValue) return '';
+
+    try {
+        return decodeURIComponent(rawValue);
+    } catch {
+        return rawValue;
+    }
+};
 
 const getCategory = async (db: D1Database, id: string): Promise<any | null> =>
     db.prepare('SELECT * FROM Category WHERE id = ?').bind(id).first();
@@ -26,7 +37,7 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
     try {
         await ensureAdminDataSchema(context.env.DB);
 
-        const id = String(context.params.id || '');
+        const id = getCategoryIdParam(context.params.id);
         const category = await getCategory(context.env.DB, id);
         if (!category) {
             return Response.json({ error: 'Category not found' }, { status: 404 });
@@ -39,6 +50,9 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
 
         if (!name) {
             return Response.json({ error: 'Category name is required' }, { status: 400 });
+        }
+        if (!isContentEntryType(nextType)) {
+            return Response.json({ error: '콘텐츠 카테고리는 Work 또는 Blog만 사용할 수 있습니다.' }, { status: 400 });
         }
         if (nextType !== category.type && entryCount > 0) {
             return Response.json({ error: '콘텐츠가 있는 카테고리는 타입을 바꿀 수 없습니다.' }, { status: 409 });
@@ -78,7 +92,7 @@ export const onRequestDelete: PagesFunction<Env> = async (context) => {
     try {
         await ensureAdminDataSchema(context.env.DB);
 
-        const id = String(context.params.id || '');
+        const id = getCategoryIdParam(context.params.id);
         const category = await getCategory(context.env.DB, id);
         if (!category) {
             return Response.json({ error: 'Category not found' }, { status: 404 });

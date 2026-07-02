@@ -4,7 +4,7 @@ interface Env {
 }
 
 import { requireAdmin } from '../../_utils/auth';
-import { categoryId, ensureAdminDataSchema, normalizeEntryType } from '../../_utils/schema';
+import { categoryId, ensureAdminDataSchema, isContentEntryType, normalizeEntryType } from '../../_utils/schema';
 
 const categorySelect = `
     SELECT
@@ -27,9 +27,12 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
 
         const type = new URL(context.request.url).searchParams.get('type');
         const normalizedType = type ? normalizeEntryType(type) : null;
+        if (normalizedType && !isContentEntryType(normalizedType)) {
+            return Response.json([]);
+        }
         const query = normalizedType
             ? `${categorySelect} WHERE c.type = ? GROUP BY c.id ORDER BY c.sortOrder, c.name`
-            : `${categorySelect} GROUP BY c.id ORDER BY c.type, c.sortOrder, c.name`;
+            : `${categorySelect} WHERE c.type IN ('work', 'blog') GROUP BY c.id ORDER BY c.type, c.sortOrder, c.name`;
         const statement = normalizedType
             ? context.env.DB.prepare(query).bind(normalizedType)
             : context.env.DB.prepare(query);
@@ -60,15 +63,32 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         if (!name) {
             return Response.json({ error: 'Category name is required' }, { status: 400 });
         }
+        if (!isContentEntryType(type)) {
+            return Response.json({ error: '콘텐츠 카테고리는 Work 또는 Blog만 만들 수 있습니다.' }, { status: 400 });
+        }
+
+        const nextSortOrder: any = await context.env.DB.prepare(`
+            SELECT COALESCE(MAX(sortOrder), -1) + 1 AS sortOrder
+            FROM Category
+            WHERE type = ?
+        `).bind(type).first();
+
+        const baseId = categoryId(type, name);
+        let id = baseId;
+        for (let suffix = 2; suffix < 100; suffix += 1) {
+            const existing = await context.env.DB.prepare('SELECT id FROM Category WHERE id = ?').bind(id).first();
+            if (!existing) break;
+            id = `${baseId}-${suffix}`;
+        }
 
         await context.env.DB.prepare(`
             INSERT INTO Category (id, name, type, sortOrder, createdAt, updatedAt)
             VALUES (?, ?, ?, ?, ?, ?)
         `).bind(
-            crypto.randomUUID?.() || categoryId(type, name),
+            id,
             name,
             type,
-            Number(payload.sortOrder || 0),
+            Number(payload.sortOrder ?? nextSortOrder?.sortOrder ?? 0),
             now,
             now
         ).run();

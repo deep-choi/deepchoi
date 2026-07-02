@@ -161,6 +161,7 @@ const AnalyticsTracker: React.FC = () => {
   useEffect(() => {
     const path = `${location.pathname}${location.search}`;
     if (/^\/(admin|login|signup)(\/|$)/.test(location.pathname)) return;
+    if (authService.getCurrentUser()?.role === 'admin' || authService.isOwnerAnalyticsExcluded()) return;
 
     const now = Date.now();
     const key = `deepchoi:last-view:${path}`;
@@ -190,16 +191,16 @@ const Footer: React.FC = () => (
       <div className="flex flex-col">
         <h4 className="text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-6">Project</h4>
         <Link to="/work" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">전체보기</Link>
-        <Link to="/work?category=uiux" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">UI/UX</Link>
-        <Link to="/work?category=vibecoding" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">바이브코딩</Link>
+        <Link to="/work?category=UI%20UX" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">UI/UX</Link>
+        <Link to="/work?category=바이브코딩" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">바이브코딩</Link>
       </div>
 
       {/* Column 3: Blog */}
       <div className="flex flex-col">
         <h4 className="text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-6">Blog</h4>
         <Link to="/blog" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">전체보기</Link>
-        <Link to="/blog?category=ai" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">AI</Link>
-        <Link to="/blog?category=uiux" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">UI UX</Link>
+        <Link to="/blog?category=AI" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">AI</Link>
+        <Link to="/blog?category=UI%20UX" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">UI UX</Link>
       </div>
 
       {/* Column 4: Connect */}

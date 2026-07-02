@@ -4,7 +4,7 @@ import { projectService } from '../services/projectService';
 import { Project } from '../types';
 import { ProjectCard } from './ProjectCard';
 import { authService } from '../services/authService';
-import { categoryLabel, categoryService } from '../services/categoryService';
+import { categoryLabel, categoryService, findCategoryByQuery } from '../services/categoryService';
 
 
 export const ProjectGrid: React.FC<{ isPage?: boolean }> = ({ isPage = false }) => {
@@ -38,6 +38,17 @@ export const ProjectGrid: React.FC<{ isPage?: boolean }> = ({ isPage = false }) 
       isMounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    const queryCategory = new URLSearchParams(location.search).get('category');
+    if (!queryCategory) {
+      setActiveTab('전체보기');
+      return;
+    }
+
+    const matchedCategory = findCategoryByQuery(tabs.filter(tab => tab !== '전체보기'), queryCategory);
+    setActiveTab(matchedCategory || '전체보기');
+  }, [location.search, tabs]);
 
   const filteredProjects = activeTab === '전체보기'
     ? projects

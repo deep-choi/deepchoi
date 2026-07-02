@@ -13,6 +13,7 @@ import { linkifyHtml, normalizeEditorHtml } from '../utils/contentProcessor';
 import { CommentInput } from '../components/CommentInput';
 import { moveCarousel, setupCarousel } from '../utils/carousel';
 import { categoryLabel, categoryService, CategoryRecord, EntryType } from '../services/categoryService';
+import { applyDefaultSeo, applyProjectSeo } from '../utils/seo';
 
 export const PostDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -67,6 +68,15 @@ export const PostDetail: React.FC = () => {
             commentService.getComments(id).then(setComments);
         }
     }, [id]);
+
+    useEffect(() => {
+        if (project) {
+            applyProjectSeo(project);
+            return;
+        }
+
+        applyDefaultSeo();
+    }, [project]);
 
     useEffect(() => {
         if (!selectedImage) {
@@ -626,6 +636,7 @@ export const PostDetail: React.FC = () => {
                                         </div>
                                     </div>
                                 </section>
+
                             </div>
                         </div>
                     ) : (

@@ -5,20 +5,27 @@ interface Env {
 }
 
 import { requireAdmin } from '../../_utils/auth';
+import { ensureAdminDataSchema } from '../../_utils/schema';
+import { buildAutomaticSeo } from '../../_utils/seo';
+
+const normalizeProject = (project: any) => ({
+    ...project,
+    tech: JSON.parse(project.tech as string || '[]'),
+    tags: JSON.parse(project.tags as string || '[]'),
+    seoKeywords: JSON.parse(project.seoKeywords as string || '[]'),
+    noIndex: Boolean(project.noIndex),
+    author: JSON.parse(project.author as string || '{}')
+});
 
 export const onRequestGet: PagesFunction<Env> = async (context) => {
     const id = context.params.id;
     try {
-        const project: any = await context.env.DB.prepare("SELECT * FROM Project WHERE id = ?").bind(id).first();
+        await ensureAdminDataSchema(context.env.DB);
+        const project: any = await context.env.DB.prepare("SELECT * FROM Project WHERE id = ? OR slug = ?").bind(id, id).first();
         if (!project) {
             return Response.json({ error: "Not found" }, { status: 404 });
         }
-        return Response.json({
-            ...project,
-            tech: JSON.parse(project.tech as string),
-            tags: JSON.parse(project.tags as string),
-            author: JSON.parse(project.author as string)
-        });
+        return Response.json(normalizeProject(project));
     } catch (err) {
         return Response.json({ error: err.message }, { status: 500 });
     }
@@ -30,17 +37,26 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
 
     const id = context.params.id;
     try {
-        const project: any = await context.request.json();
+        await ensureAdminDataSchema(context.env.DB);
+        const payload: any = await context.request.json();
+        const existingProject = await context.env.DB.prepare("SELECT * FROM Project WHERE id = ?").bind(id).first();
+        const project = buildAutomaticSeo(payload, existingProject);
         console.log('[API] Updating project:', id);
         console.log('[API] Content length:', project.content?.length);
 
         const info = await context.env.DB.prepare(
-            `UPDATE Project SET title=?, subtitle=?, description=?, tech=?, tags=?, imageUrl=?, category=?, type=?, date=?, content=?, author=? WHERE id=?`
+            `UPDATE Project SET slug=?, title=?, subtitle=?, description=?, seoTitle=?, seoDescription=?, seoImage=?, seoKeywords=?, noIndex=?, tech=?, tags=?, imageUrl=?, category=?, type=?, date=?, content=?, author=? WHERE id=?`
         )
             .bind(
+                project.slug || '',
                 project.title,
                 project.subtitle || '',
-                project.description,
+                project.description || '',
+                project.seoTitle || '',
+                project.seoDescription || '',
+                project.seoImage || '',
+                JSON.stringify(project.seoKeywords || []),
+                project.noIndex ? 1 : 0,
                 JSON.stringify(project.tech),
                 JSON.stringify(project.tags),
                 project.imageUrl,

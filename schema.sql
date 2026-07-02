@@ -7,9 +7,15 @@ DROP TABLE IF EXISTS PageView;
 
 CREATE TABLE Project (
     id TEXT PRIMARY KEY,
+    slug TEXT,
     title TEXT,
     subtitle TEXT,
     description TEXT,
+    seoTitle TEXT,
+    seoDescription TEXT,
+    seoImage TEXT,
+    seoKeywords TEXT,
+    noIndex INTEGER NOT NULL DEFAULT 0,
     tech TEXT, -- JSON string
     tags TEXT, -- JSON string
     imageUrl TEXT,
@@ -34,6 +40,7 @@ CREATE TABLE Comment (
     content TEXT,
     author TEXT, -- JSON string (User object)
     date TEXT,
+    status TEXT NOT NULL DEFAULT 'visible',
     FOREIGN KEY(projectId) REFERENCES Project(id)
 );
 
@@ -52,6 +59,14 @@ CREATE TABLE PageView (
     projectId TEXT,
     path TEXT NOT NULL,
     referrer TEXT,
+    referrerHost TEXT,
+    source TEXT,
+    deviceType TEXT,
+    browser TEXT,
+    os TEXT,
+    utmSource TEXT,
+    utmMedium TEXT,
+    utmCampaign TEXT,
     ipHash TEXT,
     day TEXT NOT NULL,
     createdAt TEXT NOT NULL
@@ -60,6 +75,8 @@ CREATE TABLE PageView (
 CREATE INDEX idx_page_view_day ON PageView(day);
 CREATE INDEX idx_page_view_project ON PageView(projectId);
 CREATE INDEX idx_page_view_path ON PageView(path);
+CREATE INDEX idx_page_view_source ON PageView(source);
+CREATE INDEX idx_page_view_device ON PageView(deviceType);
 
 -- Initial Data Seeding (Based on db.json)
 

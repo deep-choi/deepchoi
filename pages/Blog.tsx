@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Project } from '../types';
 import { projectService } from '../services/projectService';
 import { ProjectCard } from '../components/ProjectCard';
 import { authService } from '../services/authService';
-import { categoryLabel, categoryService } from '../services/categoryService';
+import { categoryLabel, categoryService, findCategoryByQuery } from '../services/categoryService';
 
 export const Blog: React.FC = () => {
     const [posts, setPosts] = useState<Project[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('전체보기');
     const [tabs, setTabs] = useState<string[]>(['전체보기']);
+    const location = useLocation();
     const isAdmin = authService.isAdmin();
 
     useEffect(() => {
@@ -36,6 +37,17 @@ export const Blog: React.FC = () => {
             isMounted = false;
         };
     }, []);
+
+    useEffect(() => {
+        const queryCategory = new URLSearchParams(location.search).get('category');
+        if (!queryCategory) {
+            setActiveTab('전체보기');
+            return;
+        }
+
+        const matchedCategory = findCategoryByQuery(tabs.filter(tab => tab !== '전체보기'), queryCategory);
+        setActiveTab(matchedCategory || '전체보기');
+    }, [location.search, tabs]);
 
     const filteredPosts = activeTab === '전체보기'
         ? posts

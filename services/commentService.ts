@@ -9,6 +9,7 @@ export interface Comment {
     content: string;
     author: User;
     date: string;
+    status?: 'visible' | 'hidden';
 }
 
 export const commentService = {
@@ -53,6 +54,24 @@ export const commentService = {
             if (!res.ok) {
                 const errorText = await res.text();
                 throw new Error(errorText || 'Failed to delete comment');
+            }
+            return true;
+        } catch (err) {
+            console.error(err);
+            return false;
+        }
+    },
+
+    updateCommentStatus: async (commentId: string, status: 'visible' | 'hidden'): Promise<boolean> => {
+        try {
+            const res = await fetch(`${API_COMMENTS}/status/${encodeURIComponent(commentId)}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status })
+            });
+            if (!res.ok) {
+                const errorText = await res.text();
+                throw new Error(errorText || 'Failed to update comment status');
             }
             return true;
         } catch (err) {

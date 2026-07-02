@@ -15,9 +15,15 @@ export interface User {
 
 export interface Project {
   id: string;
+  slug?: string;
   title: string;
   subtitle?: string;
   description?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  seoImage?: string;
+  seoKeywords?: string[];
+  noIndex?: boolean;
   tech: string[];
   tags: string[];
   imageUrl?: string;

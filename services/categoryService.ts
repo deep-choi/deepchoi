@@ -19,6 +19,37 @@ const fallbackCategories: CategoryRecord[] = [
 
 export const categoryLabel = (name: string): string => name === 'UI UX' ? 'UI/UX' : name;
 
+export const normalizeCategoryQuery = (value: string): string =>
+    value
+        .trim()
+        .toLowerCase()
+        .replace(/\+/g, ' ')
+        .replace(/&/g, 'and')
+        .replace(/[\/\s_-]+/g, '');
+
+const categoryAliases: Record<string, string[]> = {
+    'UI UX': ['uiux', 'ui/ux', 'ui-ux'],
+    '바이브코딩': ['vibecoding', 'vibe-coding'],
+    AI: ['ai']
+};
+
+export const categoryMatchesQuery = (categoryName: string, queryValue: string | null): boolean => {
+    if (!queryValue) return false;
+
+    const decodedQuery = decodeURIComponent(queryValue);
+    const queryKey = normalizeCategoryQuery(decodedQuery);
+    const keys = [
+        categoryName,
+        categoryLabel(categoryName),
+        ...(categoryAliases[categoryName] || [])
+    ].map(normalizeCategoryQuery);
+
+    return keys.includes(queryKey);
+};
+
+export const findCategoryByQuery = (categoryNames: string[], queryValue: string | null): string | undefined =>
+    categoryNames.find(category => categoryMatchesQuery(category, queryValue));
+
 const readError = async (res: Response, fallback: string): Promise<string> => {
     const payload = await res.json().catch(() => null) as { error?: string } | null;
     return payload?.error || fallback;

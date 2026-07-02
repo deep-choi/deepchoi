@@ -2,6 +2,15 @@
 import { User } from '../types';
 
 const API_Auth = '/api/auth';
+const USER_STORAGE_KEY = 'portfolio_user';
+const OWNER_ANALYTICS_EXCLUDED_KEY = 'deepchoi_owner_analytics_excluded';
+
+const persistUser = (user: User) => {
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+    if (user.role === 'admin') {
+        localStorage.setItem(OWNER_ANALYTICS_EXCLUDED_KEY, 'true');
+    }
+};
 
 export const authService = {
     login: async (email: string, password: string): Promise<User | null> => {
@@ -13,7 +22,7 @@ export const authService = {
             });
             if (!res.ok) return null;
             const user: User = await res.json();
-            localStorage.setItem('portfolio_user', JSON.stringify(user));
+            persistUser(user);
             return user;
         } catch (err) {
             console.error(err);
@@ -29,7 +38,7 @@ export const authService = {
             });
             if (!res.ok) return null;
             const user: User = await res.json();
-            localStorage.setItem('portfolio_user', JSON.stringify(user));
+            persistUser(user);
             return user;
         } catch (err) {
             console.error(err);
@@ -46,7 +55,7 @@ export const authService = {
             });
             if (!res.ok) return null;
             const user: User = await res.json();
-            localStorage.setItem('portfolio_user', JSON.stringify(user));
+            persistUser(user);
             return user;
         } catch (err) {
             console.error(err);
@@ -58,15 +67,15 @@ export const authService = {
         try {
             const res = await fetch(`${API_Auth}/me`);
             if (!res.ok) {
-                localStorage.removeItem('portfolio_user');
+                localStorage.removeItem(USER_STORAGE_KEY);
                 return null;
             }
             const user: User = await res.json();
-            localStorage.setItem('portfolio_user', JSON.stringify(user));
+            persistUser(user);
             return user;
         } catch (err) {
             console.error(err);
-            localStorage.removeItem('portfolio_user');
+            localStorage.removeItem(USER_STORAGE_KEY);
             return null;
         }
     },
@@ -77,20 +86,24 @@ export const authService = {
         } catch (err) {
             console.error(err);
         }
-        localStorage.removeItem('portfolio_user');
+        localStorage.removeItem(USER_STORAGE_KEY);
     },
 
     getCurrentUser: (): User | null => {
-        const userStr = localStorage.getItem('portfolio_user');
+        const userStr = localStorage.getItem(USER_STORAGE_KEY);
         return userStr ? JSON.parse(userStr) : null;
     },
 
     isAuthenticated: (): boolean => {
-        return !!localStorage.getItem('portfolio_user');
+        return !!localStorage.getItem(USER_STORAGE_KEY);
     },
 
     isAdmin: (): boolean => {
         const user = authService.getCurrentUser();
         return user?.role === 'admin';
+    },
+
+    isOwnerAnalyticsExcluded: (): boolean => {
+        return localStorage.getItem(OWNER_ANALYTICS_EXCLUDED_KEY) === 'true';
     }
 };

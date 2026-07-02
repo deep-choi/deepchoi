@@ -22,6 +22,13 @@ const fallbackAuthor = {
   avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200',
 };
 
+const defaultCategories = [
+  { id: 'work:ui-ux', name: 'UI UX', type: 'work', sortOrder: 0 },
+  { id: 'work:바이브코딩', name: '바이브코딩', type: 'work', sortOrder: 1 },
+  { id: 'blog:ai', name: 'AI', type: 'blog', sortOrder: 0 },
+  { id: 'blog:ui-ux', name: 'UI UX', type: 'blog', sortOrder: 1 },
+];
+
 const fetchJson = async (pathname) => {
   const response = await fetch(`${liveOrigin}${pathname}`, {
     headers: {
@@ -68,9 +75,15 @@ const normalizeAuthor = (author) => {
 
 const normalizeProject = (project) => ({
   id: String(project.id),
+  slug: project.slug || '',
   title: project.title || '',
   subtitle: project.subtitle || '',
   description: project.description || '',
+  seoTitle: project.seoTitle || '',
+  seoDescription: project.seoDescription || '',
+  seoImage: project.seoImage || '',
+  seoKeywords: asArray(project.seoKeywords),
+  noIndex: Boolean(project.noIndex),
   tech: asArray(project.tech),
   tags: asArray(project.tags),
   imageUrl: project.imageUrl || '',
@@ -87,6 +100,7 @@ const normalizeComment = (comment) => ({
   content: comment.content || '',
   author: normalizeAuthor(comment.author),
   date: comment.date || new Date().toISOString(),
+  status: comment.status === 'hidden' ? 'hidden' : 'visible',
 });
 
 const readExistingUsers = async () => {
@@ -126,11 +140,17 @@ const buildSql = (projects, comments, users) => {
 
   for (const project of projects) {
     lines.push(
-      `INSERT INTO Project (id, title, subtitle, description, tech, tags, imageUrl, category, type, date, content, author) VALUES (${[
+      `INSERT INTO Project (id, slug, title, subtitle, description, seoTitle, seoDescription, seoImage, seoKeywords, noIndex, tech, tags, imageUrl, category, type, date, content, author) VALUES (${[
         project.id,
+        project.slug,
         project.title,
         project.subtitle,
         project.description,
+        project.seoTitle,
+        project.seoDescription,
+        project.seoImage,
+        JSON.stringify(project.seoKeywords),
+        project.noIndex ? 1 : 0,
         JSON.stringify(project.tech),
         JSON.stringify(project.tags),
         project.imageUrl,
@@ -143,17 +163,19 @@ const buildSql = (projects, comments, users) => {
     );
   }
 
-  const categoryMap = new Map();
+  const categoryMap = new Map(defaultCategories.map((category) => [`${category.type}:${category.name}`, category]));
   for (const project of projects) {
     if (!project.category) continue;
     const type = project.type || 'work';
+    if (type !== 'work' && type !== 'blog') continue;
     const key = `${type}:${project.category}`;
     if (!categoryMap.has(key)) {
+      const sameTypeCount = Array.from(categoryMap.values()).filter((category) => category.type === type).length;
       categoryMap.set(key, {
         id: `${type}:${project.category.toLowerCase().replace(/\s+/g, '-')}`,
         name: project.category,
         type,
-        sortOrder: categoryMap.size,
+        sortOrder: sameTypeCount,
       });
     }
   }
@@ -173,12 +195,13 @@ const buildSql = (projects, comments, users) => {
 
   for (const comment of comments) {
     lines.push(
-      `INSERT INTO Comment (id, projectId, content, author, date) VALUES (${[
+      `INSERT INTO Comment (id, projectId, content, author, date, status) VALUES (${[
         comment.id,
         comment.projectId,
         comment.content,
         JSON.stringify(comment.author),
         comment.date,
+        comment.status,
       ].map(sqlText).join(', ')});`,
     );
   }

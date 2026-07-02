@@ -5,6 +5,7 @@ interface Env {
 }
 
 import { requireAdmin } from '../../../_utils/auth';
+import { ensureAdminDataSchema } from '../../../_utils/schema';
 
 export const onRequestDelete: PagesFunction<Env> = async (context) => {
     const auth = await requireAdmin(context);
@@ -12,6 +13,8 @@ export const onRequestDelete: PagesFunction<Env> = async (context) => {
 
     const id = context.params.id;
     try {
+        await ensureAdminDataSchema(context.env.DB);
+
         const result = await context.env.DB.prepare("DELETE FROM Comment WHERE id = ?").bind(id).run();
         if (result.meta.changes === 0) {
             return Response.json({ error: "Comment not found" }, { status: 404 });
