@@ -494,7 +494,7 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
             {/* Line Height */}
             <div className={groupClass}>
                 <span className="text-[10px] text-[#666666] font-bold uppercase mr-1">줄간격</span>
-                {['1.5', '1.6', '1.8', '2.0', '2.5'].map(val => (
+                {['1.1', '1.2', '1.5', '1.6', '1.8', '2.0', '2.5'].map(val => (
                     <button
                         key={val}
                         type="button"

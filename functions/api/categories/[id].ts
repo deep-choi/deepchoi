@@ -20,6 +20,9 @@ const getCategoryIdParam = (value: string | string[] | undefined): string => {
 const getCategory = async (db: D1Database, id: string): Promise<any | null> =>
     db.prepare('SELECT * FROM Category WHERE id = ?').bind(id).first();
 
+const getReplacementCategory = async (db: D1Database, id: string, type: string): Promise<any | null> =>
+    db.prepare('SELECT * FROM Category WHERE id = ? AND type = ?').bind(id, type).first();
+
 const getEntryCount = async (db: D1Database, category: any): Promise<number> => {
     const result: any = await db.prepare(`
         SELECT COUNT(*) AS entryCount
@@ -98,12 +101,33 @@ export const onRequestDelete: PagesFunction<Env> = async (context) => {
             return Response.json({ error: 'Category not found' }, { status: 404 });
         }
 
+        const url = new URL(context.request.url);
+        const replacementCategoryId = url.searchParams.get('replacementCategoryId') || '';
         const entryCount = await getEntryCount(context.env.DB, category);
+        let replacementCategory: any | null = null;
+
         if (entryCount > 0) {
-            return Response.json({ error: '콘텐츠가 연결된 카테고리는 삭제할 수 없습니다. 먼저 글을 다른 카테고리로 옮겨주세요.' }, { status: 409 });
+            if (!replacementCategoryId || replacementCategoryId === category.id) {
+                return Response.json({ error: '콘텐츠가 연결된 카테고리는 옮길 대상 카테고리가 필요합니다.' }, { status: 409 });
+            }
+
+            replacementCategory = await getReplacementCategory(context.env.DB, replacementCategoryId, category.type);
+            if (!replacementCategory) {
+                return Response.json({ error: '같은 타입의 대체 카테고리를 찾을 수 없습니다.' }, { status: 400 });
+            }
         }
 
-        await context.env.DB.prepare('DELETE FROM Category WHERE id = ?').bind(id).run();
+        const statements = [];
+        if (replacementCategory) {
+            statements.push(context.env.DB.prepare(`
+                UPDATE Project
+                SET category = ?
+                WHERE category = ? AND COALESCE(NULLIF(type, ''), 'work') = ?
+            `).bind(replacementCategory.name, category.name, category.type));
+        }
+        statements.push(context.env.DB.prepare('DELETE FROM Category WHERE id = ?').bind(id));
+
+        await context.env.DB.batch(statements);
         return Response.json({ ok: true });
     } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to delete category';

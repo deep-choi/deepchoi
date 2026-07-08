@@ -259,6 +259,9 @@ export const Admin: React.FC = () => {
     const [editingCategoryType, setEditingCategoryType] = useState<EntryType>('work');
     const [actionError, setActionError] = useState('');
     const [isSavingCategory, setIsSavingCategory] = useState(false);
+    const [editingCommentId, setEditingCommentId] = useState('');
+    const [editingCommentContent, setEditingCommentContent] = useState('');
+    const [savingCommentId, setSavingCommentId] = useState('');
 
     const loadSummary = async (range: VisitRange = visitRange): Promise<AdminSummary> => {
         const res = await fetch(`/api/admin/summary?range=${encodeURIComponent(range)}`);
@@ -379,17 +382,24 @@ export const Admin: React.FC = () => {
         }
     };
 
-    const handleDeleteCategory = async (categoryId: string, entryCount: number) => {
-        if (entryCount > 0) {
-            setActionError('콘텐츠가 연결된 카테고리는 삭제할 수 없습니다. 먼저 글을 다른 카테고리로 옮겨주세요.');
+    const handleDeleteCategory = async (category: AdminCategory) => {
+        const siblings = categoriesByType[category.type === 'blog' ? 'blog' : 'work'];
+        const replacement = siblings.find(item => item.id !== category.id);
+
+        if (category.entryCount > 0 && !replacement) {
+            setActionError('콘텐츠를 옮길 같은 타입의 카테고리가 하나 더 필요합니다.');
             return;
         }
-        if (!window.confirm('이 카테고리를 삭제할까요?')) return;
+
+        const message = category.entryCount > 0 && replacement
+            ? `"${categoryLabel(category.name)}" 카테고리를 삭제하고 연결된 콘텐츠 ${category.entryCount}개를 "${categoryLabel(replacement.name)}"로 옮길까요?`
+            : `"${categoryLabel(category.name)}" 카테고리를 삭제할까요?`;
+        if (!window.confirm(message)) return;
 
         setIsSavingCategory(true);
         setActionError('');
         try {
-            await categoryService.deleteCategory(categoryId);
+            await categoryService.deleteCategory(category.id, replacement?.id);
             await refreshSummary();
         } catch (err) {
             setActionError(err instanceof Error ? err.message : '카테고리 삭제에 실패했습니다.');
@@ -418,6 +428,43 @@ export const Admin: React.FC = () => {
             return;
         }
         await refreshSummary();
+    };
+
+    const startEditingComment = (comment: AdminSummary['recentComments'][number]) => {
+        setActionError('');
+        setEditingCommentId(comment.id);
+        setEditingCommentContent(comment.content);
+    };
+
+    const cancelEditingComment = () => {
+        setEditingCommentId('');
+        setEditingCommentContent('');
+    };
+
+    const handleUpdateComment = async (commentId: string) => {
+        const content = editingCommentContent.trim();
+        if (!content) {
+            setActionError('댓글 내용을 입력해 주세요.');
+            return;
+        }
+
+        setActionError('');
+        setSavingCommentId(commentId);
+        const updated = await commentService.updateComment(commentId, content);
+        setSavingCommentId('');
+
+        if (!updated) {
+            setActionError('댓글 수정에 실패했습니다.');
+            return;
+        }
+
+        setSummary(prev => prev ? {
+            ...prev,
+            recentComments: prev.recentComments.map(comment =>
+                comment.id === commentId ? { ...comment, content: updated.content } : comment
+            )
+        } : prev);
+        cancelEditingComment();
     };
 
     if (isLoading) {
@@ -835,10 +882,10 @@ export const Admin: React.FC = () => {
                                                                         </button>
                                                                         <button
                                                                             type="button"
-                                                                            onClick={() => handleDeleteCategory(category.id, category.entryCount)}
-                                                                            disabled={category.entryCount > 0 || isSavingCategory}
+                                                                            onClick={() => handleDeleteCategory(category)}
+                                                                            disabled={isSavingCategory}
                                                                             className="h-9 rounded-lg border border-[#ffd9d6] px-3 text-xs font-bold text-[#ff3b30] disabled:cursor-not-allowed disabled:opacity-50"
-                                                                            title={category.entryCount > 0 ? '콘텐츠가 연결된 카테고리는 삭제할 수 없습니다.' : undefined}
+                                                                            title={category.entryCount > 0 ? '연결된 콘텐츠는 같은 타입의 다른 카테고리로 이동됩니다.' : undefined}
                                                                         >
                                                                             삭제
                                                                         </button>
@@ -897,7 +944,35 @@ export const Admin: React.FC = () => {
                                                             {new Date(comment.date).toLocaleDateString('ko-KR')}
                                                         </span>
                                                     </div>
-                                                    <p className="mt-2 line-clamp-2 text-sm font-medium leading-relaxed text-[#2b2b2b]">{comment.content}</p>
+                                                    {editingCommentId === comment.id ? (
+                                                        <div className="mt-3 space-y-3">
+                                                            <textarea
+                                                                value={editingCommentContent}
+                                                                onChange={event => setEditingCommentContent(event.target.value)}
+                                                                className="min-h-[96px] w-full resize-none rounded-lg border border-[#e5e5e5] bg-[#ffffff] px-3 py-2 text-sm font-medium leading-relaxed text-[#111111] outline-none focus:border-[#4169E1] focus:ring-2 focus:ring-[#4169E1]/20"
+                                                            />
+                                                            <div className="flex flex-wrap gap-2">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleUpdateComment(comment.id)}
+                                                                    disabled={savingCommentId === comment.id || !editingCommentContent.trim()}
+                                                                    className="h-9 rounded-lg bg-[#4169E1] px-3 text-xs font-bold text-white hover:bg-[#3458c7] disabled:opacity-50 disabled:hover:bg-[#4169E1]"
+                                                                >
+                                                                    {savingCommentId === comment.id ? '저장 중' : '저장'}
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={cancelEditingComment}
+                                                                    disabled={savingCommentId === comment.id}
+                                                                    className="h-9 rounded-lg border border-[#e5e5e5] px-3 text-xs font-bold text-[#111111] hover:bg-[#f5f5f5] disabled:opacity-50"
+                                                                >
+                                                                    취소
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <p className="mt-2 line-clamp-2 text-sm font-medium leading-relaxed text-[#2b2b2b]">{comment.content}</p>
+                                                    )}
                                                     <Link
                                                         to={`/post/${comment.projectId}`}
                                                         className="mt-2 inline-flex max-w-full text-xs font-bold text-[#4169E1]"
@@ -907,6 +982,13 @@ export const Admin: React.FC = () => {
                                                 </div>
                                                 <span className="text-xs font-bold text-[#666666] lg:text-right">{comment.projectId}</span>
                                                 <div className="flex flex-wrap gap-2 lg:justify-end">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => startEditingComment(comment)}
+                                                        className="h-9 rounded-lg border border-[#dbe3ff] px-3 text-xs font-bold text-[#4169E1] hover:bg-[#f0f4ff]"
+                                                    >
+                                                        수정
+                                                    </button>
                                                     {comment.status === 'hidden' ? (
                                                         <button
                                                             type="button"

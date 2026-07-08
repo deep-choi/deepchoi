@@ -43,6 +43,9 @@ export const PostDetail: React.FC = () => {
     // Comments Logic
     const [comments, setComments] = useState<Comment[]>([]);
     const currentUser = authService.getCurrentUser();
+    const [editingCommentId, setEditingCommentId] = useState('');
+    const [editingCommentContent, setEditingCommentContent] = useState('');
+    const [savingCommentId, setSavingCommentId] = useState('');
 
     useEffect(() => {
         let isMounted = true;
@@ -152,6 +155,36 @@ export const PostDetail: React.FC = () => {
                 alert('댓글 삭제에 실패했습니다. 다시 시도해 주세요.');
             }
         }
+    };
+
+    const startEditingComment = (comment: Comment) => {
+        setEditingCommentId(comment.id);
+        setEditingCommentContent(comment.content);
+    };
+
+    const cancelEditingComment = () => {
+        setEditingCommentId('');
+        setEditingCommentContent('');
+    };
+
+    const handleUpdateComment = async (commentId: string) => {
+        const content = editingCommentContent.trim();
+        if (!content) {
+            alert('댓글 내용을 입력해 주세요.');
+            return;
+        }
+
+        setSavingCommentId(commentId);
+        const updated = await commentService.updateComment(commentId, content);
+        setSavingCommentId('');
+
+        if (!updated) {
+            alert('댓글 수정에 실패했습니다. 다시 시도해 주세요.');
+            return;
+        }
+
+        setComments(prev => prev.map(comment => comment.id === commentId ? updated : comment));
+        cancelEditingComment();
     };
 
     const handleDelete = () => {
@@ -723,15 +756,56 @@ export const PostDetail: React.FC = () => {
                                             {comment.author.role === 'admin' && <span className="text-[10px] bg-[#111111] text-[#ffffff] px-2 py-0.5 rounded-full font-bold tracking-wider">AUTHOR</span>}
                                         </div>
                                         {isAdmin && (
-                                            <button onClick={() => handleDeleteComment(comment.id)} className="text-[#ff3b30] text-xs font-bold opacity-0 group-hover/comment:opacity-100 transition-all hover:bg-[#ff3b30]/10 px-3 py-1 rounded-full">
-                                                Delete
-                                            </button>
+                                            <div className="flex items-center gap-2 opacity-100 transition-all md:opacity-0 md:group-hover/comment:opacity-100">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => startEditingComment(comment)}
+                                                    className="rounded-full px-3 py-1 text-xs font-bold text-[#4169E1] hover:bg-[#4169E1]/10"
+                                                >
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDeleteComment(comment.id)}
+                                                    className="rounded-full px-3 py-1 text-xs font-bold text-[#ff3b30] hover:bg-[#ff3b30]/10"
+                                                >
+                                                    Delete
+                                                </button>
+                                            </div>
                                         )}
                                     </div>
                                     <div className="mb-3">
                                         <span className="text-[12px] text-[#666666] font-medium whitespace-nowrap">{new Date(comment.date).toLocaleDateString()}</span>
                                     </div>
-                                    <p className="text-[#2b2b2b] leading-relaxed text-[15px]">{comment.content}</p>
+                                    {editingCommentId === comment.id ? (
+                                        <div className="space-y-3">
+                                            <textarea
+                                                value={editingCommentContent}
+                                                onChange={e => setEditingCommentContent(e.target.value)}
+                                                className="min-h-[104px] w-full resize-none rounded-2xl border border-[#e5e5e5] bg-[#ffffff] p-4 text-[15px] font-medium leading-relaxed text-[#111111] outline-none transition-all focus:border-[#4169E1] focus:ring-1 focus:ring-[#4169E1]"
+                                            />
+                                            <div className="flex flex-wrap gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleUpdateComment(comment.id)}
+                                                    disabled={savingCommentId === comment.id || !editingCommentContent.trim()}
+                                                    className="h-9 rounded-full bg-[#4169E1] px-4 text-xs font-bold text-white transition-all hover:bg-[#3458c7] disabled:opacity-50 disabled:hover:bg-[#4169E1]"
+                                                >
+                                                    {savingCommentId === comment.id ? 'Saving...' : 'Save'}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={cancelEditingComment}
+                                                    disabled={savingCommentId === comment.id}
+                                                    className="h-9 rounded-full border border-[#e5e5e5] px-4 text-xs font-bold text-[#111111] transition-all hover:bg-[#f5f5f5] disabled:opacity-50"
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <p className="text-[#2b2b2b] leading-relaxed text-[15px]">{comment.content}</p>
+                                    )}
                                 </div>
                             </div>
                         ))}

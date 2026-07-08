@@ -4,7 +4,7 @@ const SITE_NAME = 'Deepchoi';
 const SITE_ORIGIN = 'https://deepchoi.com';
 const DEFAULT_TITLE = 'Deepchoi | Portfolio';
 const DEFAULT_DESCRIPTION = 'UI/UX 디자인, 프론트엔드 구현, 바이브코딩 프로젝트를 정리한 Choi의 포트폴리오입니다.';
-const DEFAULT_IMAGE = `${SITE_ORIGIN}/images/hero_bg.png`;
+const DEFAULT_IMAGE = `${SITE_ORIGIN}/deepchoi-og-v2.png?v=20260708-2`;
 
 const stripHtml = (value: string): string =>
     value
@@ -110,6 +110,10 @@ export const applyDefaultSeo = () => {
     setMeta('meta[property="og:title"]', 'content', DEFAULT_TITLE);
     setMeta('meta[property="og:description"]', 'content', DEFAULT_DESCRIPTION);
     setMeta('meta[property="og:image"]', 'content', DEFAULT_IMAGE);
+    setMeta('meta[property="og:image:secure_url"]', 'content', DEFAULT_IMAGE);
+    setMeta('meta[property="og:image:type"]', 'content', 'image/png');
+    setMeta('meta[property="og:image:width"]', 'content', '1600');
+    setMeta('meta[property="og:image:height"]', 'content', '900');
     setMeta('meta[name="twitter:title"]', 'content', DEFAULT_TITLE);
     setMeta('meta[name="twitter:description"]', 'content', DEFAULT_DESCRIPTION);
     setMeta('meta[name="twitter:image"]', 'content', DEFAULT_IMAGE);
