@@ -1,12 +1,15 @@
 import React, { useRef, useState } from 'react';
+import type { Editor as TiptapEditor } from '@tiptap/react';
 import { imageService } from '../services/imageService';
+import { mergeStyle } from './tiptapExtensions';
 
 interface MarkdownToolbarProps {
+    editor?: TiptapEditor | null;
     onImageUpload?: (file: File) => Promise<string>;
     onInsertContent?: (content: string) => void;
 }
 
-export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload, onInsertContent }) => {
+export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ editor, onImageUpload, onInsertContent }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const videoInputRef = useRef<HTMLInputElement>(null);
     const gridInputRef = useRef<HTMLInputElement>(null);
@@ -15,6 +18,8 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
     const [gridColumns, setGridColumns] = useState<number>(2);
 
     const saveSelection = () => {
+        if (editor) return;
+
         const selection = window.getSelection();
         if (selection && selection.rangeCount > 0) {
             savedRangeRef.current = selection.getRangeAt(0).cloneRange();
@@ -22,6 +27,11 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
     };
 
     const insertContent = (content: string) => {
+        if (editor) {
+            editor.chain().focus().insertContent(content).run();
+            return;
+        }
+
         if (onInsertContent) {
             onInsertContent(content);
             return;
@@ -37,8 +47,57 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
         savedRangeRef.current = null;
     };
 
+    const mergeBlockStyle = (style: Record<string, string>) => {
+        if (!editor) return;
+
+        const { state, view } = editor;
+        const { from, to, empty } = state.selection;
+        const tr = state.tr;
+        const touchedPositions = new Set<number>();
+
+        const applyStyleAt = (pos: number) => {
+            const node = state.doc.nodeAt(pos);
+            if (!node || !['paragraph', 'heading'].includes(node.type.name) || touchedPositions.has(pos)) {
+                return;
+            }
+
+            touchedPositions.add(pos);
+            tr.setNodeMarkup(pos, undefined, {
+                ...node.attrs,
+                style: mergeStyle(node.attrs.style, style),
+            });
+        };
+
+        if (empty) {
+            const resolvedPos = state.selection.$from;
+            for (let depth = resolvedPos.depth; depth > 0; depth -= 1) {
+                const node = resolvedPos.node(depth);
+                if (['paragraph', 'heading'].includes(node.type.name)) {
+                    applyStyleAt(resolvedPos.before(depth));
+                    break;
+                }
+            }
+        } else {
+            state.doc.nodesBetween(from, to, (node, pos) => {
+                if (['paragraph', 'heading'].includes(node.type.name)) {
+                    applyStyleAt(pos);
+                }
+            });
+        }
+
+        if (tr.docChanged) {
+            view.dispatch(tr);
+        }
+        editor.commands.focus();
+    };
+
     // Apply color to the current block element (p, h1, h2, h3)
     const applyColorToBlock = (color: string) => {
+        if (editor) {
+            mergeBlockStyle({ color });
+            return;
+        }
+
         const selection = window.getSelection();
         if (!selection || !selection.rangeCount) return;
 
@@ -97,6 +156,18 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
     // Partial selection: only selected text becomes new block type
     // Full selection or no selection: entire block changes
     const format = (tag: string) => {
+        if (editor) {
+            const chain = editor.chain().focus();
+            if (tag === 'P') {
+                chain.setParagraph().run();
+                return;
+            }
+
+            const level = Number(tag.replace('H', '')) as 1 | 2 | 3;
+            chain.setHeading({ level }).run();
+            return;
+        }
+
         const selection = window.getSelection();
         if (!selection || !selection.rangeCount) {
             document.execCommand('formatBlock', false, tag);
@@ -349,6 +420,11 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
     };
 
     const applyLineHeight = (height: string) => {
+        if (editor) {
+            mergeBlockStyle({ 'line-height': height });
+            return;
+        }
+
         const selection = window.getSelection();
         if (!selection || !selection.rangeCount) return;
 
@@ -475,7 +551,14 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
                 </button>
                 <button
                     type="button"
-                    onMouseDown={(e) => { e.preventDefault(); document.execCommand('bold', false); }}
+                    onMouseDown={(e) => {
+                        e.preventDefault();
+                        if (editor) {
+                            editor.chain().focus().toggleBold().run();
+                        } else {
+                            document.execCommand('bold', false);
+                        }
+                    }}
                     className={textButtonClass}
                     title="볼드"
                 >
@@ -483,7 +566,14 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
                 </button>
                 <button
                     type="button"
-                    onMouseDown={(e) => { e.preventDefault(); document.execCommand('insertHorizontalRule', false); }}
+                    onMouseDown={(e) => {
+                        e.preventDefault();
+                        if (editor) {
+                            editor.chain().focus().setHorizontalRule().run();
+                        } else {
+                            document.execCommand('insertHorizontalRule', false);
+                        }
+                    }}
                     className={`${textButtonClass} flex items-center justify-center`}
                     title="구분선"
                 >
@@ -605,7 +695,13 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
                     onMouseDown={(e) => {
                         e.preventDefault();
                         const url = prompt('링크 URL 입력:');
-                        if (url) document.execCommand('createLink', false, url);
+                        if (!url) return;
+
+                        if (editor) {
+                            editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+                        } else {
+                            document.execCommand('createLink', false, url);
+                        }
                     }}
                     className={`${mediaButtonClass} text-[#111111]`}
                     title="링크"

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import type { Editor as TiptapEditor } from '@tiptap/react';
 import { useSearchParams } from 'react-router-dom';
 import { projectService } from '../services/projectService';
 import { Project } from '../types';
@@ -16,6 +17,7 @@ export const About: React.FC = () => {
     const [editForm, setEditForm] = useState<Partial<Project>>({});
     const [editSessionId, setEditSessionId] = useState(0);
     const editorRef = useRef<HTMLDivElement>(null);
+    const [tiptapEditor, setTiptapEditor] = useState<TiptapEditor | null>(null);
     const contentDisplayRef = useRef<HTMLDivElement>(null);
     const [searchParams, setSearchParams] = useSearchParams();
     const isAdmin = authService.isAdmin();
@@ -62,7 +64,7 @@ export const About: React.FC = () => {
     const handleSave = async () => {
         if (!project) return;
 
-        const latestContent = editorRef.current?.innerHTML || editForm.content || project.content || '';
+        const latestContent = editorRef.current?.dataset.editorHtml || editorRef.current?.innerHTML || editForm.content || project.content || '';
         const updatedProject: Project = {
             ...project,
             ...editForm,
@@ -187,12 +189,13 @@ export const About: React.FC = () => {
                         </div>
 
                         <div className="mx-auto max-w-[1000px] space-y-2">
-                            <MarkdownToolbar onImageUpload={handleImageUpload} />
+                            <MarkdownToolbar editor={tiptapEditor} onImageUpload={handleImageUpload} />
                             <RichEditor
                                 key={editSessionId}
                                 editorRef={editorRef}
                                 initialContent={editForm.content || ''}
                                 onContentChange={(content) => setEditForm(prev => ({ ...prev, content }))}
+                                onEditorReady={setTiptapEditor}
                             />
                         </div>
                     </div>

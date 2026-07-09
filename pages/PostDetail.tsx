@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
+import type { Editor as TiptapEditor } from '@tiptap/react';
 import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
 import { projectService } from '../services/projectService';
@@ -27,6 +28,7 @@ export const PostDetail: React.FC = () => {
     const [categories, setCategories] = useState<CategoryRecord[]>([]);
     const [tagDraft, setTagDraft] = useState('');
     const contentEditorRef = useRef<HTMLDivElement>(null);
+    const [tiptapEditor, setTiptapEditor] = useState<TiptapEditor | null>(null);
     const contentDisplayRef = useRef<HTMLDivElement>(null);
     const coverInputRef = useRef<HTMLInputElement>(null);
     const [editSessionId, setEditSessionId] = useState(0); // Used as key for contentEditable remount
@@ -216,7 +218,7 @@ export const PostDetail: React.FC = () => {
     const handleSave = async () => {
         if (!project || !project.id) return;
 
-        const latestContent = contentEditorRef.current?.innerHTML || editForm.content || project.content || '';
+        const latestContent = contentEditorRef.current?.dataset.editorHtml || contentEditorRef.current?.innerHTML || editForm.content || project.content || '';
         const updatedProject: Project = {
             ...project,
             ...editForm,
@@ -713,6 +715,7 @@ export const PostDetail: React.FC = () => {
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <MarkdownToolbar
+                                    editor={tiptapEditor}
                                     onImageUpload={handleImageUpload}
                                 />
                                 <RichEditor
@@ -720,6 +723,7 @@ export const PostDetail: React.FC = () => {
                                     editorRef={contentEditorRef}
                                     initialContent={editForm.content || ''}
                                     onContentChange={(content) => setEditForm(prev => ({ ...prev, content }))}
+                                    onEditorReady={setTiptapEditor}
                                 />
                             </div>
                         </div>
