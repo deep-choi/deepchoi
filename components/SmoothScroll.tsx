@@ -15,21 +15,8 @@ export const SmoothScroll: React.FC<SmoothScrollProps> = ({ children, disabled =
     const [canSmoothScroll, setCanSmoothScroll] = useState(false);
 
     useEffect(() => {
-        const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-        const desktopQuery = window.matchMedia('(min-width: 1024px)');
-
-        const syncSmoothScrollState = () => {
-            setCanSmoothScroll(!disabled && !reducedMotionQuery.matches && desktopQuery.matches);
-        };
-
-        syncSmoothScrollState();
-        reducedMotionQuery.addEventListener('change', syncSmoothScrollState);
-        desktopQuery.addEventListener('change', syncSmoothScrollState);
-
-        return () => {
-            reducedMotionQuery.removeEventListener('change', syncSmoothScrollState);
-            desktopQuery.removeEventListener('change', syncSmoothScrollState);
-        };
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        setCanSmoothScroll(!disabled && !prefersReducedMotion);
     }, [disabled]);
 
     useLayoutEffect(() => {

@@ -1,6 +1,5 @@
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import type { Editor as TiptapEditor } from '@tiptap/react';
 import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
 import { projectService } from '../services/projectService';
@@ -28,7 +27,6 @@ export const PostDetail: React.FC = () => {
     const [categories, setCategories] = useState<CategoryRecord[]>([]);
     const [tagDraft, setTagDraft] = useState('');
     const contentEditorRef = useRef<HTMLDivElement>(null);
-    const [tiptapEditor, setTiptapEditor] = useState<TiptapEditor | null>(null);
     const contentDisplayRef = useRef<HTMLDivElement>(null);
     const coverInputRef = useRef<HTMLInputElement>(null);
     const [editSessionId, setEditSessionId] = useState(0); // Used as key for contentEditable remount
@@ -45,9 +43,6 @@ export const PostDetail: React.FC = () => {
     // Comments Logic
     const [comments, setComments] = useState<Comment[]>([]);
     const currentUser = authService.getCurrentUser();
-    const [editingCommentId, setEditingCommentId] = useState('');
-    const [editingCommentContent, setEditingCommentContent] = useState('');
-    const [savingCommentId, setSavingCommentId] = useState('');
 
     useEffect(() => {
         let isMounted = true;
@@ -159,36 +154,6 @@ export const PostDetail: React.FC = () => {
         }
     };
 
-    const startEditingComment = (comment: Comment) => {
-        setEditingCommentId(comment.id);
-        setEditingCommentContent(comment.content);
-    };
-
-    const cancelEditingComment = () => {
-        setEditingCommentId('');
-        setEditingCommentContent('');
-    };
-
-    const handleUpdateComment = async (commentId: string) => {
-        const content = editingCommentContent.trim();
-        if (!content) {
-            alert('댓글 내용을 입력해 주세요.');
-            return;
-        }
-
-        setSavingCommentId(commentId);
-        const updated = await commentService.updateComment(commentId, content);
-        setSavingCommentId('');
-
-        if (!updated) {
-            alert('댓글 수정에 실패했습니다. 다시 시도해 주세요.');
-            return;
-        }
-
-        setComments(prev => prev.map(comment => comment.id === commentId ? updated : comment));
-        cancelEditingComment();
-    };
-
     const handleDelete = () => {
         console.log('=== DELETE BUTTON CLICKED - OPENING MODAL ===');
         setIsMenuOpen(false);
@@ -218,7 +183,7 @@ export const PostDetail: React.FC = () => {
     const handleSave = async () => {
         if (!project || !project.id) return;
 
-        const latestContent = contentEditorRef.current?.dataset.editorHtml || contentEditorRef.current?.innerHTML || editForm.content || project.content || '';
+        const latestContent = contentEditorRef.current?.innerHTML || editForm.content || project.content || '';
         const updatedProject: Project = {
             ...project,
             ...editForm,
@@ -715,7 +680,6 @@ export const PostDetail: React.FC = () => {
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <MarkdownToolbar
-                                    editor={tiptapEditor}
                                     onImageUpload={handleImageUpload}
                                 />
                                 <RichEditor
@@ -723,7 +687,6 @@ export const PostDetail: React.FC = () => {
                                     editorRef={contentEditorRef}
                                     initialContent={editForm.content || ''}
                                     onContentChange={(content) => setEditForm(prev => ({ ...prev, content }))}
-                                    onEditorReady={setTiptapEditor}
                                 />
                             </div>
                         </div>
@@ -760,56 +723,15 @@ export const PostDetail: React.FC = () => {
                                             {comment.author.role === 'admin' && <span className="text-[10px] bg-[#111111] text-[#ffffff] px-2 py-0.5 rounded-full font-bold tracking-wider">AUTHOR</span>}
                                         </div>
                                         {isAdmin && (
-                                            <div className="flex items-center gap-2 opacity-100 transition-all md:opacity-0 md:group-hover/comment:opacity-100">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => startEditingComment(comment)}
-                                                    className="rounded-full px-3 py-1 text-xs font-bold text-[#4169E1] hover:bg-[#4169E1]/10"
-                                                >
-                                                    Edit
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleDeleteComment(comment.id)}
-                                                    className="rounded-full px-3 py-1 text-xs font-bold text-[#ff3b30] hover:bg-[#ff3b30]/10"
-                                                >
-                                                    Delete
-                                                </button>
-                                            </div>
+                                            <button onClick={() => handleDeleteComment(comment.id)} className="text-[#ff3b30] text-xs font-bold opacity-0 group-hover/comment:opacity-100 transition-all hover:bg-[#ff3b30]/10 px-3 py-1 rounded-full">
+                                                Delete
+                                            </button>
                                         )}
                                     </div>
                                     <div className="mb-3">
                                         <span className="text-[12px] text-[#666666] font-medium whitespace-nowrap">{new Date(comment.date).toLocaleDateString()}</span>
                                     </div>
-                                    {editingCommentId === comment.id ? (
-                                        <div className="space-y-3">
-                                            <textarea
-                                                value={editingCommentContent}
-                                                onChange={e => setEditingCommentContent(e.target.value)}
-                                                className="min-h-[104px] w-full resize-none rounded-2xl border border-[#e5e5e5] bg-[#ffffff] p-4 text-[15px] font-medium leading-relaxed text-[#111111] outline-none transition-all focus:border-[#4169E1] focus:ring-1 focus:ring-[#4169E1]"
-                                            />
-                                            <div className="flex flex-wrap gap-2">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleUpdateComment(comment.id)}
-                                                    disabled={savingCommentId === comment.id || !editingCommentContent.trim()}
-                                                    className="h-9 rounded-full bg-[#4169E1] px-4 text-xs font-bold text-white transition-all hover:bg-[#3458c7] disabled:opacity-50 disabled:hover:bg-[#4169E1]"
-                                                >
-                                                    {savingCommentId === comment.id ? 'Saving...' : 'Save'}
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={cancelEditingComment}
-                                                    disabled={savingCommentId === comment.id}
-                                                    className="h-9 rounded-full border border-[#e5e5e5] px-4 text-xs font-bold text-[#111111] transition-all hover:bg-[#f5f5f5] disabled:opacity-50"
-                                                >
-                                                    Cancel
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <p className="text-[#2b2b2b] leading-relaxed text-[15px]">{comment.content}</p>
-                                    )}
+                                    <p className="text-[#2b2b2b] leading-relaxed text-[15px]">{comment.content}</p>
                                 </div>
                             </div>
                         ))}

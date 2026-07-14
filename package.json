@@ -14,13 +14,6 @@
   },
   "dependencies": {
     "@react-oauth/google": "^0.13.4",
-    "@tiptap/extension-color": "^3.27.3",
-    "@tiptap/extension-image": "^3.27.3",
-    "@tiptap/extension-link": "^3.27.3",
-    "@tiptap/extension-text-style": "^3.27.3",
-    "@tiptap/extension-underline": "^3.27.3",
-    "@tiptap/react": "^3.27.3",
-    "@tiptap/starter-kit": "^3.27.3",
     "@types/react-router-dom": "^5.3.3",
     "jwt-decode": "^4.0.0",
     "react": "^19.2.3",

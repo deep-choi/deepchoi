@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import type { Editor as TiptapEditor } from '@tiptap/react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { projectService } from '../services/projectService';
 import { Project } from '../types';
@@ -39,7 +38,6 @@ export const Editor: React.FC = () => {
     const [tagInput, setTagInput] = useState('');
     const [categories, setCategories] = useState<CategoryRecord[]>([]);
     const editorRef = React.useRef<HTMLDivElement>(null);
-    const [tiptapEditor, setTiptapEditor] = useState<TiptapEditor | null>(null);
     const entryLabel = formData.type === 'blog' ? '블로그 글' : '프로젝트';
     const cancelTarget = isEdit
         ? (id === 'about' ? '/about' : id === 'contact' ? '/contact' : `/post/${id}`)
@@ -91,7 +89,7 @@ export const Editor: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const latestContent = editorRef.current?.dataset.editorHtml || editorRef.current?.innerHTML || formData.content || '';
+        const latestContent = editorRef.current?.innerHTML || formData.content || '';
         const projectData: Project = {
             id: isEdit ? (id as string) : Date.now().toString(),
             ...formData,
@@ -286,14 +284,12 @@ export const Editor: React.FC = () => {
 
                     <div className="space-y-2">
                         <MarkdownToolbar
-                            editor={tiptapEditor}
                             onImageUpload={handleImageUpload}
                         />
                         <RichEditor
                             editorRef={editorRef}
                             initialContent={formData.content || ''}
                             onContentChange={(content) => setFormData(prev => ({ ...prev, content }))}
-                            onEditorReady={setTiptapEditor}
                         />
                     </div>
 

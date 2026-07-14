@@ -77,12 +77,12 @@ export const Blog: React.FC = () => {
                         {/* Divider Removed */}
 
                         {/* Pill Style Tabs */}
-                        <div className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:px-0">
+                        <div className="flex gap-3">
                             {tabs.map((tab) => (
                                 <button
                                     key={tab}
                                     onClick={() => setActiveTab(tab)}
-                                    className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-full text-[13px] font-medium transition-all border ${activeTab === tab
+                                    className={`px-4 py-2 rounded-full text-[13px] font-medium transition-all border ${activeTab === tab
                                         ? 'bg-[#4169E1] border-[#4169E1] text-white'
                                         : 'bg-white border-[#e5e5e5] text-[#666666] hover:border-[#4169E1] hover:text-[#111111]'
                                         }`}

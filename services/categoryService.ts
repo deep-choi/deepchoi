@@ -90,11 +90,8 @@ export const categoryService = {
         }
     },
 
-    deleteCategory: async (id: string, replacementCategoryId?: string): Promise<void> => {
-        const query = replacementCategoryId
-            ? `?replacementCategoryId=${encodeURIComponent(replacementCategoryId)}`
-            : '';
-        const res = await fetch(`${API_URL}/${encodeURIComponent(id)}${query}`, { method: 'DELETE' });
+    deleteCategory: async (id: string): Promise<void> => {
+        const res = await fetch(`${API_URL}/${encodeURIComponent(id)}`, { method: 'DELETE' });
         if (!res.ok) {
             throw new Error(await readError(res, '카테고리 삭제에 실패했습니다.'));
         }

@@ -1,176 +1,57 @@
-import React, { useEffect, useRef } from 'react';
-import { EditorContent, useEditor, type Editor as TiptapEditor } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Link from '@tiptap/extension-link';
-import Image from '@tiptap/extension-image';
-import { TextStyle } from '@tiptap/extension-text-style';
-import Color from '@tiptap/extension-color';
-import Underline from '@tiptap/extension-underline';
+import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { moveCarousel, setupCarousel } from '../utils/carousel';
-import { ImageCarousel, ImageGrid, StyledHeading, StyledParagraph, Video } from './tiptapExtensions';
 
 interface RichEditorProps {
     initialContent: string;
     onContentChange: (content: string) => void;
     className?: string;
     editorRef?: React.RefObject<HTMLDivElement | null>;
-    onEditorReady?: (editor: TiptapEditor | null) => void;
 }
-
-const isIgnorableEmptyLineChild = (node: Node): boolean => {
-    if (node.nodeType === Node.TEXT_NODE) {
-        return !node.textContent?.replace(/\u00a0/g, ' ').trim();
-    }
-
-    if (node.nodeType !== Node.ELEMENT_NODE) {
-        return true;
-    }
-
-    const element = node as HTMLElement;
-    if (element.matches('br')) {
-        return true;
-    }
-
-    if (element.matches('span,b,strong,i,em,u,font')) {
-        return Array.from(element.childNodes).every(isIgnorableEmptyLineChild);
-    }
-
-    return false;
-};
-
-const normalizeHtmlForTiptap = (html: string): string => {
-    if (!html) return '';
-
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-
-    const emptyBlocks = Array.from(doc.body.querySelectorAll('p,div,h1,h2,h3,h4,h5,h6,blockquote,li')) as HTMLElement[];
-    emptyBlocks.forEach(block => {
-        if (
-            block.closest('.image-grid,.image-carousel,.image-carousel-track,.image-carousel-slide') ||
-            block.querySelector('img,video,hr')
-        ) {
-            return;
-        }
-
-        const isEmptyLine = Array.from(block.childNodes).every(isIgnorableEmptyLineChild);
-        if (!isEmptyLine) return;
-
-        const paragraph = doc.createElement('p');
-        const style = block.getAttribute('style');
-        if (style && /line-height\s*:/i.test(style)) {
-            paragraph.setAttribute('style', style);
-        }
-
-        block.parentNode?.replaceChild(paragraph, block);
-    });
-
-    Array.from(doc.body.childNodes).forEach(node => {
-        if (node.nodeName !== 'BR') return;
-        const paragraph = doc.createElement('p');
-        node.parentNode?.replaceChild(paragraph, node);
-    });
-
-    return doc.body.innerHTML;
-};
 
 export const RichEditor: React.FC<RichEditorProps> = ({
     initialContent,
     onContentChange,
     className = '',
-    editorRef: externalEditorRef,
-    onEditorReady,
+    editorRef: externalEditorRef
 }) => {
-    const containerRef = useRef<HTMLDivElement>(null);
+    const fallbackEditorRef = useRef<HTMLDivElement>(null);
+    const editorRef = externalEditorRef || fallbackEditorRef;
+    const initializedRef = useRef(false);
     const hasUserEditedRef = useRef(false);
+    const [selectedMedia, setSelectedMedia] = useState<HTMLElement | null>(null);
 
-    const syncHtml = (editor: TiptapEditor) => {
-        const html = editor.getHTML();
-        if (containerRef.current) {
-            containerRef.current.dataset.editorHtml = html;
+    // Set initial content only once on mount
+    useEffect(() => {
+        if (editorRef.current && !initializedRef.current && !hasUserEditedRef.current && initialContent) {
+            editorRef.current.innerHTML = initialContent;
+            initializedRef.current = true;
         }
-        onContentChange(html);
-    };
+    }, [initialContent]);
 
-    const editor = useEditor({
-        extensions: [
-            StarterKit.configure({
-                heading: false,
-                paragraph: false,
-            }),
-            StyledParagraph,
-            StyledHeading.configure({
-                levels: [1, 2, 3],
-            }),
-            TextStyle,
-            Color,
-            Underline,
-            Link.configure({
-                openOnClick: false,
-                autolink: true,
-                linkOnPaste: true,
-                HTMLAttributes: {
-                    rel: 'noopener noreferrer',
-                    target: '_blank',
-                },
-            }),
-            Image.configure({
-                allowBase64: true,
-                HTMLAttributes: {
-                    class: 'full-width',
-                },
-            }),
-            Video,
-            ImageGrid,
-            ImageCarousel,
-        ],
-        content: normalizeHtmlForTiptap(initialContent),
-        editorProps: {
-            attributes: {
-                spellcheck: 'true',
-            },
-        },
-        onCreate: ({ editor }) => {
-            syncHtml(editor);
-        },
-        onUpdate: ({ editor }) => {
-            hasUserEditedRef.current = true;
-            syncHtml(editor);
-        },
-        onBlur: ({ editor }) => {
-            syncHtml(editor);
-        },
-    });
-
+    // Reset initialization flag when component unmounts
     useEffect(() => {
-        if (!editor) return;
-        onEditorReady?.(editor);
-
         return () => {
-            onEditorReady?.(null);
+            initializedRef.current = false;
         };
-    }, [editor, onEditorReady]);
+    }, []);
 
+    // Handle click outside to deselect media
     useEffect(() => {
-        if (!externalEditorRef) return;
-        (externalEditorRef as React.MutableRefObject<HTMLDivElement | null>).current = containerRef.current;
-
-        return () => {
-            (externalEditorRef as React.MutableRefObject<HTMLDivElement | null>).current = null;
+        const handleClickOutside = (e: MouseEvent) => {
+            if (selectedMedia && !selectedMedia.contains(e.target as Node)) {
+                // Check if click is on delete button
+                const target = e.target as HTMLElement;
+                if (!target.closest('.media-delete-btn')) {
+                    setSelectedMedia(null);
+                }
+            }
         };
-    }, [externalEditorRef]);
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, [selectedMedia]);
 
     useEffect(() => {
-        if (!editor || hasUserEditedRef.current) return;
-        const nextContent = normalizeHtmlForTiptap(initialContent);
-        if (editor.getHTML() !== nextContent) {
-            editor.commands.setContent(nextContent, { emitUpdate: false });
-            syncHtml(editor);
-        }
-    }, [editor, initialContent]);
-
-    useEffect(() => {
-        const root = containerRef.current;
+        const root = editorRef.current;
         if (!root) return;
 
         let frame = 0;
@@ -200,28 +81,213 @@ export const RichEditor: React.FC<RichEditorProps> = ({
         };
     }, []);
 
-    const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
-        const target = event.target as HTMLElement;
+    const handleBlur = useCallback(() => {
+        if (editorRef.current) {
+            onContentChange(editorRef.current.innerHTML);
+        }
+    }, [onContentChange]);
+
+    const handleInput = useCallback(() => {
+        hasUserEditedRef.current = true;
+        if (editorRef.current) {
+            onContentChange(editorRef.current.innerHTML);
+        }
+    }, [onContentChange]);
+
+    const handleEditorClick = (e: React.MouseEvent) => {
+        const target = e.target as HTMLElement;
+
         const carouselNav = target.closest('.image-carousel-nav') as HTMLElement | null;
-        if (!carouselNav) return;
+        if (carouselNav) {
+            e.preventDefault();
+            e.stopPropagation();
 
-        event.preventDefault();
-        event.stopPropagation();
+            const carousel = carouselNav.closest('.image-carousel') as HTMLElement | null;
+            if (carousel) {
+                const direction = carouselNav.dataset.carouselAction === 'prev' ? -1 : 1;
+                moveCarousel(carousel, direction);
+            }
+            return;
+        }
 
-        const carousel = carouselNav.closest('.image-carousel') as HTMLElement | null;
-        if (carousel) {
-            const direction = carouselNav.dataset.carouselAction === 'prev' ? -1 : 1;
-            moveCarousel(carousel, direction);
+        // Remove previous selection highlight
+        if (selectedMedia) {
+            selectedMedia.classList.remove('selected-media');
+        }
+
+        // Check if clicked on video or image
+        if (target.tagName === 'VIDEO' || target.tagName === 'IMG') {
+            e.preventDefault();
+            e.stopPropagation();
+            target.classList.add('selected-media');
+            setSelectedMedia(target);
+        } else if (!target.closest('.media-delete-btn')) {
+            setSelectedMedia(null);
         }
     };
 
+    const removeMediaElement = (media: HTMLElement) => {
+        const carousel = media.closest('.image-carousel') as HTMLElement | null;
+        const carouselSlide = media.closest('.image-carousel-slide') as HTMLElement | null;
+
+        if (carousel && carouselSlide) {
+            carouselSlide.parentNode?.removeChild(carouselSlide);
+            const remainingSlides = carousel.querySelectorAll('.image-carousel-slide').length;
+
+            if (remainingSlides === 0) {
+                carousel.parentNode?.removeChild(carousel);
+            } else {
+                carousel.setAttribute('data-count', String(remainingSlides));
+            }
+            return;
+        }
+
+        media.parentNode?.removeChild(media);
+    };
+
+    const handleDeleteMedia = () => {
+        if (selectedMedia) {
+            removeMediaElement(selectedMedia);
+            setSelectedMedia(null);
+            // Trigger content change
+            if (editorRef.current) {
+                onContentChange(editorRef.current.innerHTML);
+            }
+        }
+    };
+
+    // Calculate delete button position
+    const getDeleteButtonPosition = () => {
+        if (!selectedMedia || !editorRef.current) return null;
+
+        const editorRect = editorRef.current.getBoundingClientRect();
+        const mediaRect = selectedMedia.getBoundingClientRect();
+
+        return {
+            top: mediaRect.top - editorRect.top + 8,
+            right: editorRect.right - mediaRect.right + 8
+        };
+    };
+
+    const deleteButtonPos = getDeleteButtonPosition();
+
     return (
-        <div
-            ref={containerRef}
-            onClick={handleClick}
-            className={`editor-prose w-full min-h-[620px] p-5 md:p-8 rounded-2xl border border-[#e5e5e5] bg-[#ffffff] focus-within:outline-none focus-within:border-[#4169E1] focus-within:ring-2 focus-within:ring-[#4169E1]/20 transition-all ${className}`}
-        >
-            <EditorContent editor={editor} />
+        <div className="relative">
+            <div
+                ref={editorRef}
+                contentEditable
+                suppressContentEditableWarning
+                onBlur={handleBlur}
+                onInput={handleInput}
+                onClick={handleEditorClick}
+                onKeyDown={(e) => {
+                    // Handle deletion of media elements (video, img)
+                    if (e.key === 'Backspace' || e.key === 'Delete') {
+                        if (selectedMedia) {
+                            e.preventDefault();
+                            handleDeleteMedia();
+                            return;
+                        }
+
+                        const selection = window.getSelection();
+                        if (selection && selection.rangeCount > 0) {
+                            const range = selection.getRangeAt(0);
+
+                            // Check if selection is collapsed (cursor position)
+                            if (range.collapsed) {
+                                // Get the node before cursor for Backspace, after for Delete
+                                let targetNode: Node | null = null;
+
+                                if (e.key === 'Backspace') {
+                                    // Check previous sibling or parent's previous content
+                                    let node = range.startContainer;
+                                    if (node.nodeType === Node.TEXT_NODE && range.startOffset === 0) {
+                                        // At start of text node, check previous sibling
+                                        targetNode = node.previousSibling;
+                                    } else if (node.nodeType === Node.ELEMENT_NODE) {
+                                        const element = node as HTMLElement;
+                                        if (range.startOffset > 0) {
+                                            targetNode = element.childNodes[range.startOffset - 1];
+                                        }
+                                    }
+                                } else {
+                                    // Delete key - check next sibling
+                                    let node = range.startContainer;
+                                    if (node.nodeType === Node.TEXT_NODE && range.startOffset === node.textContent?.length) {
+                                        targetNode = node.nextSibling;
+                                    } else if (node.nodeType === Node.ELEMENT_NODE) {
+                                        const element = node as HTMLElement;
+                                        targetNode = element.childNodes[range.startOffset];
+                                    }
+                                }
+
+                                // If target is a video or image, delete it
+                                if (targetNode && targetNode.nodeType === Node.ELEMENT_NODE) {
+                                    const el = targetNode as HTMLElement;
+                                    if (el.tagName === 'VIDEO' || el.tagName === 'IMG') {
+                                        e.preventDefault();
+                                        removeMediaElement(el);
+                                        if (editorRef.current) {
+                                            onContentChange(editorRef.current.innerHTML);
+                                        }
+                                        return;
+                                    }
+                                }
+                            } else {
+                                // Selection is not collapsed - check if it contains media
+                                const container = range.commonAncestorContainer;
+                                if (container.nodeType === Node.ELEMENT_NODE) {
+                                    const el = container as HTMLElement;
+                                    if (el.tagName === 'VIDEO' || el.tagName === 'IMG') {
+                                        e.preventDefault();
+                                        removeMediaElement(el);
+                                        if (editorRef.current) {
+                                            onContentChange(editorRef.current.innerHTML);
+                                        }
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        document.execCommand('insertParagraph', false);
+                    }
+                }}
+                className={`editor-prose w-full min-h-[620px] p-5 md:p-8 rounded-2xl border border-[#e5e5e5] bg-[#ffffff] focus:outline-none focus:border-[#4169E1] focus:ring-2 focus:ring-[#4169E1]/20 transition-all ${className}`}
+            />
+
+            {/* Delete button overlay for selected media */}
+            {selectedMedia && deleteButtonPos && (
+                <button
+                    className="media-delete-btn absolute z-50 w-9 h-9 bg-[#ff453a] text-white rounded-full shadow-lg shadow-[#ff453a]/20 flex items-center justify-center hover:bg-[#ff6961] hover:scale-105 transition-all"
+                    style={{
+                        top: deleteButtonPos.top,
+                        right: deleteButtonPos.right
+                    }}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleDeleteMedia();
+                    }}
+                    title="삭제"
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            )}
+
+            {/* Selection highlight style */}
+            <style>{`
+                [contenteditable] img.selected-media,
+                [contenteditable] video.selected-media {
+                    outline: 3px solid #4169E1;
+                    outline-offset: 2px;
+                }
+            `}</style>
         </div>
     );
 };

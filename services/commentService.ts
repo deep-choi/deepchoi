@@ -48,7 +48,7 @@ export const commentService = {
 
     deleteComment: async (commentId: string): Promise<boolean> => {
         try {
-            const res = await fetch(`${API_COMMENTS}/delete/${encodeURIComponent(commentId)}`, {
+            const res = await fetch(`${API_COMMENTS}/delete/${commentId}`, {
                 method: 'DELETE'
             });
             if (!res.ok) {
@@ -59,24 +59,6 @@ export const commentService = {
         } catch (err) {
             console.error(err);
             return false;
-        }
-    },
-
-    updateComment: async (commentId: string, content: string): Promise<Comment | null> => {
-        try {
-            const res = await fetch(`${API_COMMENTS}/edit/${encodeURIComponent(commentId)}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content })
-            });
-            if (!res.ok) {
-                const errorText = await res.text();
-                throw new Error(errorText || 'Failed to update comment');
-            }
-            return await res.json();
-        } catch (err) {
-            console.error(err);
-            return null;
         }
     },
 

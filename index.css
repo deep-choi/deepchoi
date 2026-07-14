@@ -2,15 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-.no-scrollbar {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-}
-
-.no-scrollbar::-webkit-scrollbar {
-    display: none;
-}
-
 html.smooth-scroll-enabled,
 html.smooth-scroll-enabled body {
     min-height: 100%;
@@ -42,17 +33,6 @@ html.smooth-scroll-enabled .smooth-scroll-content {
     will-change: transform;
     backface-visibility: hidden;
     transform: translate3d(0, 0, 0);
-}
-
-@media (max-width: 1023px) {
-    html.smooth-scroll-enabled .smooth-scroll-content {
-        position: relative;
-        transform: none !important;
-    }
-
-    html.smooth-scroll-enabled .smooth-scroll-spacer {
-        display: none;
-    }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -198,7 +178,7 @@ img {
 .prose h1 {
     font-size: 28px;
     font-weight: 600;
-    line-height: 1.2;
+    line-height: 1.5;
     color: #111111;
     margin-top: 16px;
     margin-bottom: 16px;
@@ -208,7 +188,7 @@ img {
 .prose h2 {
     font-size: 24px;
     font-weight: 600;
-    line-height: 1.2;
+    line-height: 1.5;
     color: #111111;
     margin-top: 16px;
     margin-bottom: 16px;
@@ -224,7 +204,7 @@ img {
 .prose h6 {
     font-size: 20px;
     font-weight: 600;
-    line-height: 1.2;
+    line-height: 1.5;
     color: #111111;
     margin-top: 16px;
     margin-bottom: 16px;
@@ -326,24 +306,6 @@ img {
     background: #ffffff;
 }
 
-.editor-prose .ProseMirror {
-    min-height: 100%;
-    outline: none;
-}
-
-.editor-prose .ProseMirror>*:first-child {
-    margin-top: 0 !important;
-}
-
-.editor-prose .ProseMirror>*:last-child {
-    margin-bottom: 0 !important;
-}
-
-.editor-prose .ProseMirror-selectednode {
-    outline: 3px solid #4169E1;
-    outline-offset: 2px;
-}
-
 .editor-prose::-webkit-scrollbar {
     width: 10px;
 }
@@ -373,7 +335,7 @@ img {
 .editor-prose h1 {
     font-size: 28px;
     font-weight: 600;
-    line-height: 1.2;
+    line-height: 1.5;
     color: #111111;
     margin: 16px auto;
     max-width: 700px;
@@ -382,7 +344,7 @@ img {
 .editor-prose h2 {
     font-size: 24px;
     font-weight: 600;
-    line-height: 1.2;
+    line-height: 1.5;
     color: #111111;
     margin: 16px auto;
     max-width: 700px;
@@ -394,7 +356,7 @@ img {
 .editor-prose h6 {
     font-size: 20px;
     font-weight: 600;
-    line-height: 1.2;
+    line-height: 1.5;
     color: #111111;
     margin: 16px auto;
     max-width: 700px;
@@ -836,38 +798,6 @@ img {
 [contenteditable="true"] div:has(> br:only-child) {
     min-height: 1.5em !important;
     display: block;
-}
-
-.editor-prose .ProseMirror p:has(> br.ProseMirror-trailingBreak:only-child),
-.editor-prose .ProseMirror div:has(> br.ProseMirror-trailingBreak:only-child) {
-    height: 1.5em !important;
-    min-height: 1.5em !important;
-}
-
-.editor-prose .ProseMirror p>br.ProseMirror-trailingBreak:only-child,
-.editor-prose .ProseMirror div>br.ProseMirror-trailingBreak:only-child {
-    height: 0 !important;
-    min-height: 0 !important;
-    line-height: 0 !important;
-}
-
-.editor-prose .ProseMirror br {
-    display: inline !important;
-    height: auto !important;
-    min-height: 0 !important;
-    line-height: normal !important;
-}
-
-.editor-prose .ProseMirror p[data-empty-line="true"],
-.editor-prose .ProseMirror div[data-empty-line="true"],
-.editor-prose .ProseMirror p:has(> br:only-child),
-.editor-prose .ProseMirror div:has(> br:only-child),
-.editor-prose .ProseMirror p:has(> br.ProseMirror-trailingBreak:only-child),
-.editor-prose .ProseMirror div:has(> br.ProseMirror-trailingBreak:only-child) {
-    display: block !important;
-    height: 1.5em !important;
-    min-height: 1.5em !important;
-    line-height: 1.5 !important;
 }
 
 /* Zero-width space placeholders for empty lines */
