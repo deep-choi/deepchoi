@@ -56,6 +56,7 @@ interface AdminSummary {
         previousUniqueVisitors: number;
         viewChangeRate: number | null;
         uniqueVisitorChangeRate: number | null;
+        botViews: number;
         lastTrackedAt?: string | null;
         topEntries: Array<{
             id: string;
@@ -82,6 +83,9 @@ interface AdminSummary {
         deviceBreakdown: AnalyticsMetric[];
         browserBreakdown: AnalyticsMetric[];
         osBreakdown: AnalyticsMetric[];
+        countryBreakdown: AnalyticsMetric[];
+        regionBreakdown: AnalyticsMetric[];
+        campaignBreakdown: AnalyticsMetric[];
     };
     recentComments: Array<{
         id: string;
@@ -104,6 +108,25 @@ interface AnalyticsMetric {
     label: string;
     views: number;
     uniqueVisitors: number;
+}
+
+interface SearchConsoleMetric {
+    key: string;
+    clicks: number;
+    impressions: number;
+    ctr: number;
+    position: number;
+}
+
+interface SearchConsoleSummary {
+    configured: boolean;
+    message?: string;
+    error?: string;
+    rangeDays?: number;
+    startDate?: string;
+    endDate?: string;
+    keywords?: SearchConsoleMetric[];
+    pages?: SearchConsoleMetric[];
 }
 
 type ChartMetric = Record<string, string | number>;
@@ -131,8 +154,15 @@ const visitRanges = [
 type VisitRange = typeof visitRanges[number]['value'];
 
 const numberFormat = new Intl.NumberFormat('ko-KR');
+const countryNameFormat = new Intl.DisplayNames(['ko-KR'], { type: 'region' });
 
 const formatNumber = (value: number): string => numberFormat.format(value);
+const formatPercent = (value: number): string => `${(value * 100).toFixed(1)}%`;
+const formatLocation = (value: string): string => {
+    const [country, ...details] = value.split(' · ');
+    const countryLabel = /^[A-Z]{2}$/.test(country) ? (countryNameFormat.of(country) || country) : country;
+    return [countryLabel, ...details].join(' · ');
+};
 
 const chartColors = ['#4169E1', '#34c759', '#ff9500', '#af52de', '#ff3b30', '#5ac8fa'];
 
@@ -249,6 +279,8 @@ const Panel: React.FC<{ title: string; action?: React.ReactNode; children: React
 export const Admin: React.FC = () => {
     const [summary, setSummary] = useState<AdminSummary | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [searchConsole, setSearchConsole] = useState<SearchConsoleSummary | null>(null);
+    const [isSearchConsoleLoading, setIsSearchConsoleLoading] = useState(true);
     const [error, setError] = useState('');
     const [activeTab, setActiveTab] = useState<AdminTab>('visitors');
     const [visitRange, setVisitRange] = useState<VisitRange>('14');
@@ -275,6 +307,11 @@ export const Admin: React.FC = () => {
         setSummary(data);
     };
 
+    const loadSearchConsole = async (range: VisitRange = visitRange): Promise<SearchConsoleSummary> => {
+        const res = await fetch(`/api/admin/search-console?range=${encodeURIComponent(range)}`);
+        return res.json() as Promise<SearchConsoleSummary>;
+    };
+
     useEffect(() => {
         let isMounted = true;
 
@@ -287,6 +324,26 @@ export const Admin: React.FC = () => {
             })
             .finally(() => {
                 if (isMounted) setIsLoading(false);
+            });
+
+        return () => {
+            isMounted = false;
+        };
+    }, [visitRange]);
+
+    useEffect(() => {
+        let isMounted = true;
+        setIsSearchConsoleLoading(true);
+
+        loadSearchConsole(visitRange)
+            .then(data => {
+                if (isMounted) setSearchConsole(data);
+            })
+            .catch(() => {
+                if (isMounted) setSearchConsole({ configured: true, error: 'Google 검색 성과를 불러오지 못했습니다.' });
+            })
+            .finally(() => {
+                if (isMounted) setIsSearchConsoleLoading(false);
             });
 
         return () => {
@@ -450,12 +507,17 @@ export const Admin: React.FC = () => {
     const todayKey = new Date().toISOString().slice(0, 10);
     const todayCommentCount = summary.recentComments.filter(comment => comment.date?.slice(0, 10) === todayKey).length;
     const selectedVisitRangeLabel = visitRanges.find(range => range.value === visitRange)?.label || '14일';
-    const visitTrendTitle = visitRange === 'all' ? '전체 방문 추이' : `최근 ${selectedVisitRangeLabel} 방문 추이`;
+    const visitTrendTitle = visitRange === 'all' ? '전체 조회수 추이' : `최근 ${selectedVisitRangeLabel} 조회수 추이`;
     const sourceBreakdown = summary.analytics.sourceBreakdown || [];
     const referrerHosts = summary.analytics.referrerHosts || [];
     const deviceBreakdown = summary.analytics.deviceBreakdown || [];
     const browserBreakdown = summary.analytics.browserBreakdown || [];
     const osBreakdown = summary.analytics.osBreakdown || [];
+    const countryBreakdown = summary.analytics.countryBreakdown || [];
+    const regionBreakdown = summary.analytics.regionBreakdown || [];
+    const campaignBreakdown = summary.analytics.campaignBreakdown || [];
+    const countryMetrics = countryBreakdown.map(item => ({ ...item, label: formatLocation(item.key) }));
+    const regionMetrics = regionBreakdown.map(item => ({ ...item, label: formatLocation(item.key) }));
     const sourceChartData = toChartMetrics(sourceBreakdown);
     const deviceChartData = toChartMetrics(deviceBreakdown);
 
@@ -517,7 +579,7 @@ export const Admin: React.FC = () => {
                                     관리자와 로그인/어드민 페이지 방문은 제외하고, 수집 기능 적용 이후의 일반 방문만 집계합니다.
                                 </p>
                                 <p className="mt-1 text-xs font-bold text-[#888888]">
-                                    마지막 수집: {formatDateTime(summary.analytics.lastTrackedAt)}
+                                    마지막 수집: {formatDateTime(summary.analytics.lastTrackedAt)} · 봇 조회 {formatNumber(summary.analytics.botViews)}건은 방문 통계에서 제외
                                 </p>
                             </div>
                             <div className="flex rounded-[8px] border border-[#e5e5e5] bg-[#fafafa] p-1">
@@ -538,20 +600,20 @@ export const Admin: React.FC = () => {
                         </div>
                         <section className="grid gap-3 md:grid-cols-4">
                             <AnalyticsStatCard
-                                label="기간 방문"
+                                label="조회수"
                                 value={summary.analytics.totalViews}
                                 change={visitRange === 'all' ? undefined : summary.analytics.viewChangeRate}
-                                helper={visitRange === 'all' ? '전체 누적' : '이전 같은 기간 대비'}
+                                helper={visitRange === 'all' ? '전체 누적 조회수' : '이전 같은 기간 대비'}
                                 tone="blue"
                             />
-                            <AnalyticsStatCard label="오늘 방문" value={summary.analytics.todayViews} helper="오늘 수집된 일반 방문" />
+                            <AnalyticsStatCard label="오늘 조회수" value={summary.analytics.todayViews} helper="오늘 수집된 일반 조회수" />
                             <AnalyticsStatCard
-                                label="순 방문자"
+                                label="순 방문자 수"
                                 value={summary.analytics.uniqueVisitors}
                                 change={visitRange === 'all' ? undefined : summary.analytics.uniqueVisitorChangeRate}
                                 helper={visitRange === 'all' ? '전체 고유 방문자' : '이전 같은 기간 대비'}
                             />
-                            <AnalyticsStatCard label="이전 기간 방문" value={summary.analytics.previousTotalViews} helper={visitRange === 'all' ? '전체 보기에서는 비교 없음' : `${selectedVisitRangeLabel} 전 구간`} />
+                            <AnalyticsStatCard label="이전 기간 조회수" value={summary.analytics.previousTotalViews} helper={visitRange === 'all' ? '전체 보기에서는 비교 없음' : `${selectedVisitRangeLabel} 전 구간`} />
                         </section>
 
                         <section className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(360px,0.7fr)]">
@@ -568,9 +630,9 @@ export const Admin: React.FC = () => {
                                                 <Tooltip
                                                     contentStyle={{ border: '1px solid #e5e5e5', borderRadius: 8, boxShadow: '0 12px 28px rgba(17,17,17,0.08)' }}
                                                     labelFormatter={(_, payload) => payload?.[0]?.payload?.day || ''}
-                                                    formatter={(value: number, name: string) => [formatNumber(Number(value)), name === 'views' ? '방문' : '순 방문자']}
+                                                    formatter={(value: number, name: string) => [formatNumber(Number(value)), name === 'views' ? '조회수' : '순 방문자 수']}
                                                 />
-                                                <Legend formatter={(value) => value === 'views' ? '방문' : '순 방문자'} />
+                                                <Legend formatter={(value) => value === 'views' ? '조회수' : '순 방문자 수'} />
                                                 <Line type="monotone" dataKey="views" stroke="#4169E1" strokeWidth={3} dot={{ r: 3 }} activeDot={{ r: 5 }} />
                                                 <Line type="monotone" dataKey="uniqueVisitors" stroke="#34c759" strokeWidth={2} dot={false} />
                                             </LineChart>
@@ -591,7 +653,7 @@ export const Admin: React.FC = () => {
                                                 <YAxis type="category" dataKey="label" width={76} tick={{ fill: '#666666', fontSize: 11, fontWeight: 700 }} axisLine={false} tickLine={false} />
                                                 <Tooltip
                                                     contentStyle={{ border: '1px solid #e5e5e5', borderRadius: 8, boxShadow: '0 12px 28px rgba(17,17,17,0.08)' }}
-                                                    formatter={(value: number, name: string) => [formatNumber(Number(value)), name === 'views' ? '방문' : '순 방문자']}
+                                                    formatter={(value: number, name: string) => [formatNumber(Number(value)), name === 'views' ? '조회수' : '순 방문자 수']}
                                                 />
                                                 <Bar dataKey="views" fill="#4169E1" radius={[0, 6, 6, 0]} />
                                             </BarChart>
@@ -693,6 +755,67 @@ export const Admin: React.FC = () => {
                         <section className="mt-6">
                             <Panel title="외부 유입 도메인">
                                 <MetricList items={referrerHosts} emptyText="외부 유입 도메인이 아직 없습니다." />
+                            </Panel>
+                        </section>
+
+                        <section className="mt-6 grid gap-6 xl:grid-cols-2">
+                            <Panel title="국가별 방문">
+                                <MetricList items={countryMetrics} emptyText="지역 데이터는 수집 적용 이후부터 표시됩니다." />
+                            </Panel>
+                            <Panel title="시·도별 방문">
+                                <MetricList items={regionMetrics} emptyText="시·도 데이터는 수집 적용 이후부터 표시됩니다." />
+                            </Panel>
+                        </section>
+
+                        <section className="mt-6">
+                            <Panel title="캠페인 유입" action={<span className="text-xs font-bold text-[#666666]">UTM Campaign</span>}>
+                                <MetricList items={campaignBreakdown} emptyText="utm_campaign이 포함된 유입이 아직 없습니다." />
+                            </Panel>
+                        </section>
+
+                        <section className="mt-6">
+                            <Panel
+                                title="Google 검색 성과"
+                                action={searchConsole?.configured && searchConsole.startDate && searchConsole.endDate
+                                    ? <span className="text-xs font-bold text-[#666666]">{searchConsole.startDate} - {searchConsole.endDate}</span>
+                                    : undefined}
+                            >
+                                {isSearchConsoleLoading ? (
+                                    <div className="px-5 py-12 text-center text-sm font-medium text-[#888888]">Google 검색 성과를 불러오는 중입니다.</div>
+                                ) : !searchConsole?.configured ? (
+                                    <div className="px-5 py-12 text-center text-sm font-medium text-[#888888]">{searchConsole?.message || 'Google Search Console을 연결하면 검색어와 검색 유입 페이지를 볼 수 있습니다.'}</div>
+                                ) : searchConsole.error ? (
+                                    <div className="px-5 py-12 text-center text-sm font-medium text-[#888888]">{searchConsole.error}</div>
+                                ) : (
+                                    <div className="grid divide-y divide-[#f0f0f0] xl:grid-cols-2 xl:divide-x xl:divide-y-0">
+                                        <div>
+                                            <div className="border-b border-[#f0f0f0] px-5 py-3 text-xs font-bold text-[#666666]">상위 검색어</div>
+                                            {(searchConsole.keywords || []).length === 0 ? (
+                                                <EmptyState text="표시할 검색어가 없습니다." />
+                                            ) : searchConsole.keywords?.map(item => (
+                                                <div key={item.key} className="grid gap-2 border-b border-[#f0f0f0] px-5 py-4 sm:grid-cols-[1fr_56px_56px_64px] sm:items-center">
+                                                    <p className="truncate text-sm font-bold text-[#111111]">{item.key}</p>
+                                                    <span className="text-xs font-bold text-[#111111] sm:text-right">{formatNumber(item.clicks)} 클릭</span>
+                                                    <span className="text-xs font-bold text-[#666666] sm:text-right">{formatPercent(item.ctr)}</span>
+                                                    <span className="text-xs font-bold text-[#666666] sm:text-right">{item.position.toFixed(1)}위</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div>
+                                            <div className="border-b border-[#f0f0f0] px-5 py-3 text-xs font-bold text-[#666666]">Google 유입 페이지</div>
+                                            {(searchConsole.pages || []).length === 0 ? (
+                                                <EmptyState text="표시할 검색 유입 페이지가 없습니다." />
+                                            ) : searchConsole.pages?.map(item => (
+                                                <div key={item.key} className="grid gap-2 border-b border-[#f0f0f0] px-5 py-4 sm:grid-cols-[1fr_56px_56px_64px] sm:items-center">
+                                                    <p className="truncate text-sm font-bold text-[#111111]">{item.key}</p>
+                                                    <span className="text-xs font-bold text-[#111111] sm:text-right">{formatNumber(item.clicks)} 클릭</span>
+                                                    <span className="text-xs font-bold text-[#666666] sm:text-right">{formatPercent(item.ctr)}</span>
+                                                    <span className="text-xs font-bold text-[#666666] sm:text-right">{item.position.toFixed(1)}위</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </Panel>
                         </section>
                     </>

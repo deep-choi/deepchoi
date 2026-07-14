@@ -67,6 +67,8 @@ CREATE TABLE PageView (
     utmSource TEXT,
     utmMedium TEXT,
     utmCampaign TEXT,
+    country TEXT,
+    region TEXT,
     ipHash TEXT,
     day TEXT NOT NULL,
     createdAt TEXT NOT NULL
@@ -77,6 +79,8 @@ CREATE INDEX idx_page_view_project ON PageView(projectId);
 CREATE INDEX idx_page_view_path ON PageView(path);
 CREATE INDEX idx_page_view_source ON PageView(source);
 CREATE INDEX idx_page_view_device ON PageView(deviceType);
+CREATE INDEX idx_page_view_country ON PageView(country);
+CREATE INDEX idx_page_view_region ON PageView(region);
 
 -- Initial Data Seeding (Based on db.json)
 

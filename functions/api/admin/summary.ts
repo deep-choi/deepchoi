@@ -55,7 +55,10 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         const rangeDateModifier = rangeDays ? `-${rangeDays - 1} days` : null;
         const previousStartModifier = rangeDays ? `-${(rangeDays * 2) - 1} days` : null;
         const previousEndModifier = rangeDays ? `-${rangeDays} days` : null;
-        const rangeWhere = rangeDays ? "WHERE day >= date('now', ?)" : '';
+        const humanVisitorFilter = "COALESCE(deviceType, '') != 'bot'";
+        const rangeWhere = rangeDays
+            ? `WHERE ${humanVisitorFilter} AND day >= date('now', ?)`
+            : `WHERE ${humanVisitorFilter}`;
         const rangeJoin = rangeDays ? "AND v.day >= date('now', ?)" : '';
 
         const totals: any = await context.env.DB.prepare(`
@@ -98,9 +101,20 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
                     COUNT(*) AS totalViews,
                     COUNT(DISTINCT ipHash) AS uniqueVisitors
                 FROM PageView
-                WHERE day BETWEEN date('now', ?) AND date('now', ?)
+                WHERE ${humanVisitorFilter}
+                    AND day BETWEEN date('now', ?) AND date('now', ?)
             `).bind(previousStartModifier, previousEndModifier).first()
             : null;
+
+        const botViewsStatement = context.env.DB.prepare(`
+            SELECT COUNT(*) AS botViews
+            FROM PageView
+            WHERE COALESCE(deviceType, '') = 'bot'
+            ${rangeDays ? "AND day >= date('now', ?)" : ''}
+        `);
+        const botViews: any = rangeDateModifier
+            ? await botViewsStatement.bind(rangeDateModifier).first()
+            : await botViewsStatement.first();
 
         const { results: recentEntries } = await context.env.DB.prepare(`
             SELECT id, title, category, type, date
@@ -135,7 +149,9 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
                 COUNT(DISTINCT v.ipHash) AS uniqueVisitors,
                 MAX(v.createdAt) AS lastViewedAt
             FROM Project p
-            LEFT JOIN PageView v ON v.projectId = p.id ${rangeJoin}
+            LEFT JOIN PageView v ON v.projectId = p.id
+                AND COALESCE(v.deviceType, '') != 'bot'
+                ${rangeJoin}
             GROUP BY p.id
             ORDER BY views DESC, p.date DESC
             LIMIT 10
@@ -249,9 +265,61 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
             ? await osBreakdownStatement.bind(rangeDateModifier).all()
             : await osBreakdownStatement.all();
 
+        const countryBreakdownStatement = context.env.DB.prepare(`
+            SELECT
+                country AS key,
+                COUNT(*) AS views,
+                COUNT(DISTINCT ipHash) AS uniqueVisitors
+            FROM PageView
+            ${rangeWhere ? `${rangeWhere} AND` : 'WHERE'} country IS NOT NULL
+                AND country != ''
+            GROUP BY country
+            ORDER BY views DESC
+            LIMIT 8
+        `);
+        const { results: countryBreakdown } = rangeDateModifier
+            ? await countryBreakdownStatement.bind(rangeDateModifier).all()
+            : await countryBreakdownStatement.all();
+
+        const regionBreakdownStatement = context.env.DB.prepare(`
+            SELECT
+                CASE
+                    WHEN country IS NULL OR country = '' THEN region
+                    ELSE country || ' · ' || region
+                END AS key,
+                COUNT(*) AS views,
+                COUNT(DISTINCT ipHash) AS uniqueVisitors
+            FROM PageView
+            ${rangeWhere ? `${rangeWhere} AND` : 'WHERE'} region IS NOT NULL
+                AND region != ''
+            GROUP BY country, region
+            ORDER BY views DESC
+            LIMIT 8
+        `);
+        const { results: regionBreakdown } = rangeDateModifier
+            ? await regionBreakdownStatement.bind(rangeDateModifier).all()
+            : await regionBreakdownStatement.all();
+
+        const campaignBreakdownStatement = context.env.DB.prepare(`
+            SELECT
+                utmCampaign AS key,
+                COUNT(*) AS views,
+                COUNT(DISTINCT ipHash) AS uniqueVisitors
+            FROM PageView
+            ${rangeWhere ? `${rangeWhere} AND` : 'WHERE'} utmCampaign IS NOT NULL
+                AND utmCampaign != ''
+            GROUP BY utmCampaign
+            ORDER BY views DESC
+            LIMIT 8
+        `);
+        const { results: campaignBreakdown } = rangeDateModifier
+            ? await campaignBreakdownStatement.bind(rangeDateModifier).all()
+            : await campaignBreakdownStatement.all();
+
         const lastTracked: any = await context.env.DB.prepare(`
             SELECT MAX(createdAt) AS lastTrackedAt
             FROM PageView
+            WHERE ${humanVisitorFilter}
         `).first();
 
         const totalViews = Number(views?.totalViews || 0);
@@ -299,6 +367,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
                 previousUniqueVisitors,
                 viewChangeRate: percentageChange(totalViews, previousTotalViews),
                 uniqueVisitorChangeRate: percentageChange(uniqueVisitors, previousUniqueVisitors),
+                botViews: Number(botViews?.botViews || 0),
                 lastTrackedAt: lastTracked?.lastTrackedAt || null,
                 topEntries: topEntries.map((entry: any) => ({
                     ...entry,
@@ -319,7 +388,10 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
                 referrerHosts: toMetricRows(referrerHosts),
                 deviceBreakdown: toMetricRows(deviceBreakdown, deviceLabels),
                 browserBreakdown: toMetricRows(browserBreakdown),
-                osBreakdown: toMetricRows(osBreakdown)
+                osBreakdown: toMetricRows(osBreakdown),
+                countryBreakdown: toMetricRows(countryBreakdown),
+                regionBreakdown: toMetricRows(regionBreakdown),
+                campaignBreakdown: toMetricRows(campaignBreakdown)
             },
             recentComments: recentComments.map((comment: any) => ({
                 ...comment,

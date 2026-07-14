@@ -73,7 +73,9 @@ const ensurePageViewAnalyticsColumns = async (db: D1Database): Promise<void> => 
         ['os', 'TEXT'],
         ['utmSource', 'TEXT'],
         ['utmMedium', 'TEXT'],
-        ['utmCampaign', 'TEXT']
+        ['utmCampaign', 'TEXT'],
+        ['country', 'TEXT'],
+        ['region', 'TEXT']
     ] as const;
 
     for (const [name, definition] of columnDefinitions) {
@@ -120,6 +122,8 @@ export const ensureAdminDataSchema = async (db: D1Database): Promise<void> => {
                 utmSource TEXT,
                 utmMedium TEXT,
                 utmCampaign TEXT,
+                country TEXT,
+                region TEXT,
                 ipHash TEXT,
                 day TEXT NOT NULL,
                 createdAt TEXT NOT NULL
@@ -141,7 +145,9 @@ export const ensureAdminDataSchema = async (db: D1Database): Promise<void> => {
 
     await db.batch([
         db.prepare('CREATE INDEX IF NOT EXISTS idx_page_view_source ON PageView(source)'),
-        db.prepare('CREATE INDEX IF NOT EXISTS idx_page_view_device ON PageView(deviceType)')
+        db.prepare('CREATE INDEX IF NOT EXISTS idx_page_view_device ON PageView(deviceType)'),
+        db.prepare('CREATE INDEX IF NOT EXISTS idx_page_view_country ON PageView(country)'),
+        db.prepare('CREATE INDEX IF NOT EXISTS idx_page_view_region ON PageView(region)')
     ]);
 
     const now = new Date().toISOString();

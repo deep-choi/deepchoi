@@ -3,6 +3,11 @@ interface Env {
     ADMIN_SESSION_SECRET?: string;
 }
 
+type CloudflareLocation = {
+    country?: string | null;
+    region?: string | null;
+};
+
 import { getSessionUser, isAllowedAdmin } from '../../_utils/auth';
 import { ensureAdminDataSchema } from '../../_utils/schema';
 
@@ -124,6 +129,9 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
             || context.request.headers.get('x-forwarded-for')
             || 'unknown';
         const userAgent = context.request.headers.get('user-agent') || '';
+        const location = (context.request as Request & { cf?: CloudflareLocation }).cf;
+        const country = location?.country || context.request.headers.get('CF-IPCountry') || null;
+        const region = location?.region || null;
         const secret = context.env.ADMIN_SESSION_SECRET || 'local-analytics-secret';
         const ipHash = await hashValue(`${secret}:${ip}:${userAgent}`);
 
@@ -141,11 +149,13 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
                 utmSource,
                 utmMedium,
                 utmCampaign,
+                country,
+                region,
                 ipHash,
                 day,
                 createdAt
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `).bind(
             crypto.randomUUID(),
             projectId,
@@ -159,6 +169,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
             utmSource,
             utmMedium,
             utmCampaign,
+            country,
+            region,
             ipHash,
             now.toISOString().slice(0, 10),
             now.toISOString()

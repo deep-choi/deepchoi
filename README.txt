@@ -40,3 +40,15 @@
 1. 터미널을 엽니다.
 2. `npm run dev` 명령어를 입력합니다.
 3. 브라우저에서 `http://localhost:3000`으로 접속합니다.
+
+## Google Search Console 연동
+어드민 방문자 탭에서 검색어, Google 검색 유입 페이지, 클릭률, 평균 순위를 보려면 Google Cloud OAuth 클라이언트와 Search Console 속성 읽기 권한이 필요합니다. 아래 값은 Cloudflare Pages 비밀값으로 등록합니다.
+
+```text
+GOOGLE_SEARCH_CONSOLE_SITE_URL
+GOOGLE_SEARCH_CONSOLE_CLIENT_ID
+GOOGLE_SEARCH_CONSOLE_CLIENT_SECRET
+GOOGLE_SEARCH_CONSOLE_REFRESH_TOKEN
+```
+
+권한 범위는 `https://www.googleapis.com/auth/webmasters.readonly`를 사용합니다. 이 값들이 없으면 방문자 통계는 정상 작동하고, 검색 성과 영역만 연결 안내를 표시합니다.
