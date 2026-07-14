@@ -181,6 +181,55 @@ export const RichEditor: React.FC<RichEditorProps> = ({
                 onInput={handleInput}
                 onClick={handleEditorClick}
                 onKeyDown={(e) => {
+                    const selection = window.getSelection();
+                    const selectionElement = selection?.anchorNode?.nodeType === Node.ELEMENT_NODE
+                        ? selection.anchorNode as HTMLElement
+                        : selection?.anchorNode?.parentElement;
+                    const isInCodeBlock = Boolean(selectionElement?.closest('pre'));
+
+                    if (e.key === 'Tab' && isInCodeBlock) {
+                        e.preventDefault();
+                        document.execCommand('insertText', false, '  ');
+                        return;
+                    }
+
+                    if ((e.key === 'Enter' && !e.shiftKey && isInCodeBlock) || ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && isInCodeBlock)) {
+                        e.preventDefault();
+
+                        const pre = selectionElement?.closest('pre');
+                        const code = pre?.querySelector(':scope > code');
+                        const range = selection?.rangeCount ? selection.getRangeAt(0) : null;
+                        let isAtCodeEnd = false;
+                        if (range?.collapsed && code?.contains(range.startContainer)) {
+                            const tailRange = document.createRange();
+                            tailRange.setStart(range.startContainer, range.startOffset);
+                            tailRange.setEnd(code, code.childNodes.length);
+                            isAtCodeEnd = tailRange.toString().length === 0 && (code.textContent || '').endsWith('\n');
+                        }
+
+                        // Ctrl/Cmd+Enter always exits. A second Enter on an empty final
+                        // line does the same, matching common rich-text editor behavior.
+                        if ((e.ctrlKey || e.metaKey || isAtCodeEnd) && pre?.parentNode) {
+                            let paragraph = pre.nextElementSibling;
+                            if (!paragraph || paragraph.tagName !== 'P') {
+                                paragraph = document.createElement('p');
+                                paragraph.appendChild(document.createElement('br'));
+                                pre.parentNode.insertBefore(paragraph, pre.nextSibling);
+                            }
+
+                            const nextRange = document.createRange();
+                            nextRange.setStart(paragraph, 0);
+                            nextRange.collapse(true);
+                            selection?.removeAllRanges();
+                            selection?.addRange(nextRange);
+                            onContentChange(editorRef.current?.innerHTML || '');
+                            return;
+                        }
+
+                        document.execCommand('insertText', false, '\n');
+                        return;
+                    }
+
                     // Handle deletion of media elements (video, img)
                     if (e.key === 'Backspace' || e.key === 'Delete') {
                         if (selectedMedia) {
@@ -189,7 +238,6 @@ export const RichEditor: React.FC<RichEditorProps> = ({
                             return;
                         }
 
-                        const selection = window.getSelection();
                         if (selection && selection.rangeCount > 0) {
                             const range = selection.getRangeAt(0);
 

@@ -455,7 +455,7 @@ export const linkifyHtml = (html: string): string => {
     while (walker.nextNode()) {
         const node = walker.currentNode;
 
-        if (node.parentElement && ['A', 'SCRIPT', 'STYLE', 'BUTTON', 'TEXTAREA'].includes(node.parentElement.tagName)) {
+        if (node.parentElement && ['A', 'SCRIPT', 'STYLE', 'BUTTON', 'TEXTAREA', 'PRE', 'CODE'].includes(node.parentElement.tagName)) {
             continue;
         }
 

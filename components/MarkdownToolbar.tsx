@@ -13,6 +13,7 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
     const carouselInputRef = useRef<HTMLInputElement>(null);
     const savedRangeRef = useRef<Range | null>(null);
     const [gridColumns, setGridColumns] = useState<number>(2);
+    const [codeLanguage, setCodeLanguage] = useState('plaintext');
 
     const saveSelection = () => {
         const selection = window.getSelection();
@@ -401,6 +402,54 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
         }
     };
 
+    const insertCodeBlock = () => {
+        const selection = window.getSelection();
+        if (!selection) return;
+
+        if (savedRangeRef.current) {
+            selection.removeAllRanges();
+            selection.addRange(savedRangeRef.current);
+        }
+
+        if (!selection.rangeCount) return;
+
+        // formatBlock keeps the browser's current paragraph selection intact.
+        // We then normalize it to the semantic <pre><code> shape used by posts.
+        document.execCommand('formatBlock', false, 'pre');
+
+        const anchor = selection.anchorNode?.nodeType === Node.ELEMENT_NODE
+            ? selection.anchorNode as HTMLElement
+            : selection.anchorNode?.parentElement;
+        const pre = anchor?.closest('pre');
+        if (!pre) return;
+
+        pre.dataset.language = codeLanguage;
+        if (!pre.querySelector(':scope > code')) {
+            const code = document.createElement('code');
+            while (pre.firstChild) code.appendChild(pre.firstChild);
+            pre.appendChild(code);
+        }
+
+        // Keep real, clickable writing space on both sides of a code block.
+        // Without these paragraphs a contentEditable surface has no reliable
+        // caret target when the author clicks directly above or below the block.
+        const createEmptyParagraph = () => {
+            const paragraph = document.createElement('p');
+            paragraph.appendChild(document.createElement('br'));
+            return paragraph;
+        };
+
+        if (pre.previousElementSibling?.tagName !== 'P') {
+            pre.parentNode?.insertBefore(createEmptyParagraph(), pre);
+        }
+
+        if (pre.nextElementSibling?.tagName !== 'P') {
+            pre.parentNode?.insertBefore(createEmptyParagraph(), pre.nextSibling);
+        }
+
+        savedRangeRef.current = null;
+    };
+
     const editorColors = ['#111111', '#2b2b2b', '#666666', '#4169E1', '#3fb950'];
     const groupClass = "flex gap-1 pr-2 border-r border-[#e5e5e5] items-center";
     const textButtonClass = "min-h-9 px-2.5 py-1.5 text-[#2b2b2b] hover:text-[#111111] hover:bg-[#f5f5f5] rounded-lg font-semibold transition-colors";
@@ -488,6 +537,31 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
                     title="구분선"
                 >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" /></svg>
+                </button>
+                <select
+                    value={codeLanguage}
+                    onMouseDown={saveSelection}
+                    onChange={(e) => setCodeLanguage(e.target.value)}
+                    className="h-9 max-w-[112px] rounded-lg border border-[#e5e5e5] bg-[#ffffff] px-2 text-xs font-semibold text-[#2b2b2b] outline-none focus:border-[#4169E1]"
+                    title="코드 언어"
+                    aria-label="코드 언어"
+                >
+                    <option value="plaintext">텍스트</option>
+                    <option value="typescript">TypeScript</option>
+                    <option value="javascript">JavaScript</option>
+                    <option value="html">HTML</option>
+                    <option value="css">CSS</option>
+                    <option value="python">Python</option>
+                    <option value="bash">Bash</option>
+                </select>
+                <button
+                    type="button"
+                    onMouseDown={(e) => { e.preventDefault(); saveSelection(); insertCodeBlock(); }}
+                    className={`${textButtonClass} font-mono`}
+                    title="현재 문단을 코드블럭으로 전환"
+                    aria-label="코드블럭"
+                >
+                    {'</>'}
                 </button>
             </div>
 

@@ -99,6 +99,24 @@ export const PostDetail: React.FC = () => {
         };
     }, [project?.content, isEditing]);
 
+    useEffect(() => {
+        if (isEditing) return;
+
+        const root = contentDisplayRef.current;
+        if (!root) return;
+
+        root.querySelectorAll('pre').forEach(pre => {
+            if (pre.querySelector(':scope > .code-copy-button')) return;
+
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'code-copy-button';
+            button.textContent = '복사';
+            button.setAttribute('aria-label', '코드 복사');
+            pre.appendChild(button);
+        });
+    }, [project?.content, isEditing]);
+
     const handleMouseDown = (e: React.MouseEvent) => {
         clickStartPosRef.current = { x: e.clientX, y: e.clientY };
         e.preventDefault();
@@ -262,6 +280,39 @@ export const PostDetail: React.FC = () => {
 
     const handleContentClick = (e: React.MouseEvent) => {
         const target = e.target as HTMLElement;
+
+        const copyButton = target.closest('.code-copy-button') as HTMLButtonElement | null;
+        if (copyButton) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const code = copyButton.closest('pre')?.querySelector('code')?.textContent || '';
+            if (!code) return;
+
+            const markCopied = () => {
+                copyButton.textContent = '복사됨';
+                window.setTimeout(() => {
+                    copyButton.textContent = '복사';
+                }, 1600);
+            };
+
+            const fallbackCopy = () => {
+                const textarea = document.createElement('textarea');
+                textarea.value = code;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                textarea.remove();
+                markCopied();
+            };
+
+            if (navigator.clipboard?.writeText) {
+                navigator.clipboard.writeText(code).then(markCopied).catch(fallbackCopy);
+            } else {
+                fallbackCopy();
+            }
+            return;
+        }
 
         const carouselNav = target.closest('.image-carousel-nav') as HTMLElement | null;
         if (carouselNav) {
