@@ -34,6 +34,37 @@ const absoluteUrl = (value?: string): string => {
 const jsonForScript = (value: unknown): string =>
     JSON.stringify(value).replace(/</g, '\\u003c');
 
+const escapeHtml = (value?: string): string =>
+    String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+
+const buildArticleFallback = (project: any, description: string, publishedAt?: string): string => {
+    // The React application replaces this immediately for visitors. Keeping the
+    // same public text in the initial HTML gives crawlers a complete document
+    // without relying on a later JavaScript rendering pass.
+    const body = stripHtml(project.content) || description;
+    const safeBody = escapeHtml(truncate(body, 30000));
+    const safeTitle = escapeHtml(project.title || SITE_NAME);
+    const safeDescription = escapeHtml(description);
+    const safeDate = escapeHtml(publishedAt || '');
+    const dateMarkup = publishedAt
+        ? `<p style="margin:0 0 28px;color:#666;font-size:14px"><time datetime="${safeDate}">${safeDate}</time></p>`
+        : '';
+
+    return `<article data-server-rendered-content="true" style="max-width:1000px;margin:0 auto;padding:120px 24px 64px;color:#111;font-family:system-ui,sans-serif;line-height:1.75">
+  <header>
+    <h1 style="margin:0 0 12px;font-size:clamp(30px,5vw,48px);line-height:1.2">${safeTitle}</h1>
+    <p style="margin:0 0 12px;color:#555;font-size:18px">${safeDescription}</p>
+    ${dateMarkup}
+  </header>
+  <div><p style="white-space:pre-wrap">${safeBody}</p></div>
+</article>`;
+};
+
 const decodePathPart = (value: string): string => {
     try {
         return decodeURIComponent(value);
@@ -98,6 +129,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
             `<meta property="article:published_time" content="${publishedAt || ''}">`,
             `<script id="project-server-structured-data" type="application/ld+json">${jsonForScript(structuredData)}</script>`
         ].join('');
+        const articleFallback = buildArticleFallback(project, description, publishedAt);
 
         return new HTMLRewriter()
             .on('title', {
@@ -173,6 +205,11 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
             .on('head', {
                 element(element) {
                     element.append(articleMeta, { html: true });
+                }
+            })
+            .on('div#root', {
+                element(element) {
+                    element.setInnerContent(articleFallback, { html: true });
                 }
             })
             .transform(response);
