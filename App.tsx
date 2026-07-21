@@ -13,6 +13,7 @@ import { Admin } from './pages/Admin';
 import { authService } from './services/authService';
 import { analyticsService } from './services/analyticsService';
 import { SmoothScroll } from './components/SmoothScroll';
+import { FloatingContact } from './components/FloatingContact';
 
 const Navbar: React.FC<{ isScrolled: boolean }> = ({ isScrolled }) => {
   const isLoggedIn = authService.isAuthenticated();
@@ -52,9 +53,8 @@ const Navbar: React.FC<{ isScrolled: boolean }> = ({ isScrolled }) => {
 
           {/* Left Side: Logo & Navigation */}
           <div className="flex items-center gap-8">
-            <Link to="/" className="flex items-center gap-2" onClick={closeMobileMenu}>
-              <span className="h-3 w-3 rounded-full bg-[#4169E1]"></span>
-              <span className="font-semibold text-[18px] tracking-tight">Choi Portfolio</span>
+            <Link to="/" className="flex items-center" onClick={closeMobileMenu} aria-label="Choi Portfolio 홈">
+              <img src="/logo.svg" alt="Deepchoi" draggable={false} className="h-6 w-auto object-contain" />
             </Link>
 
             {/* Desktop Navigation Links */}
@@ -238,6 +238,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         </div>
         <Footer />
       </SmoothScroll>
+      <FloatingContact />
     </div>
   );
 };
