@@ -59,9 +59,9 @@ const Navbar: React.FC<{ isScrolled: boolean }> = ({ isScrolled }) => {
 
             {/* Desktop Navigation Links */}
             <div className="hidden md:flex gap-7 items-center">
-              <Link to="/work" className="text-[14px] font-medium text-[#111111] hover:text-[#4169E1] transition-colors">Work</Link>
-              <Link to="/blog" className="text-[14px] font-medium text-[#111111] hover:text-[#4169E1] transition-colors">Blog</Link>
-              <Link to="/contact" className="text-[14px] font-medium text-[#111111] hover:text-[#4169E1] transition-colors">Contact</Link>
+              <Link to="/work" className="text-[15px] font-medium text-[#111111] hover:text-[#4169E1] transition-colors">Work</Link>
+              <Link to="/blog" className="text-[15px] font-medium text-[#111111] hover:text-[#4169E1] transition-colors">Blog</Link>
+              <Link to="/contact" className="text-[15px] font-medium text-[#111111] hover:text-[#4169E1] transition-colors">Contact</Link>
             </div>
           </div>
 

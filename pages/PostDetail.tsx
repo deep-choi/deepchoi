@@ -692,7 +692,7 @@ export const PostDetail: React.FC = () => {
                         </div>
                     ) : (
                         <div className="flex flex-col items-center">
-                            <h1 className="text-[28px] md:text-[40px] font-bold text-[#111111] tracking-tightest leading-[1.2] mb-3">
+                            <h1 className="mb-3 text-[28px] font-semibold leading-[1.2] tracking-tightest text-[#111111] md:text-[40px]">
                                 {project.title}
                             </h1>
                             {project.subtitle && (
