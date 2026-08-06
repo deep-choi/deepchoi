@@ -35,6 +35,17 @@ html.smooth-scroll-enabled .smooth-scroll-content {
     transform: translate3d(0, 0, 0);
 }
 
+@media (max-width: 1023px) {
+    html.smooth-scroll-enabled .smooth-scroll-content {
+        position: relative;
+        transform: none !important;
+    }
+
+    html.smooth-scroll-enabled .smooth-scroll-spacer {
+        display: none;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     html.smooth-scroll-enabled .smooth-scroll-content {
         position: relative;
