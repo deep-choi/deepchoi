@@ -63,7 +63,7 @@ export const FloatingContact: React.FC = () => {
   return (
     <div
       ref={containerRef}
-      className="fixed bottom-4 right-4 z-[70] flex flex-col items-end gap-3 md:bottom-6 md:right-6"
+      className="pointer-events-none fixed bottom-4 right-4 z-[70] flex flex-col items-end gap-3 md:bottom-6 md:right-6"
     >
       <div
         id="floating-contact-panel"
@@ -71,8 +71,8 @@ export const FloatingContact: React.FC = () => {
         aria-label="문의 방법"
         aria-hidden={!isOpen}
         className={`w-[min(360px,calc(100vw-32px))] origin-bottom-right overflow-hidden rounded-2xl border border-[#e5e5e5] bg-white shadow-[0_20px_60px_rgba(17,17,17,0.16)] transition-all duration-200 ease-out ${isOpen
-          ? 'visible translate-y-0 scale-100 opacity-100'
-          : 'invisible translate-y-2 scale-[0.98] opacity-0'
+          ? 'pointer-events-auto visible translate-y-0 scale-100 opacity-100'
+          : 'pointer-events-none invisible translate-y-2 scale-[0.98] opacity-0'
           }`}
       >
         <div className="border-b border-[#eeeeee] px-5 py-5">
@@ -124,7 +124,7 @@ export const FloatingContact: React.FC = () => {
         aria-label={isOpen ? '문의 메뉴 닫기' : '문의 메뉴 열기'}
         aria-expanded={isOpen}
         aria-controls="floating-contact-panel"
-        className={`flex h-14 w-14 items-center justify-center rounded-full text-white transition-all duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#4169E1]/25 active:translate-y-0 ${isOpen ? 'rotate-90 bg-[#111111]' : 'bg-[#4169E1] hover:bg-[#3458c7]'}`}
+        className={`pointer-events-auto flex h-14 w-14 items-center justify-center rounded-full text-white transition-all duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#4169E1]/25 active:translate-y-0 ${isOpen ? 'rotate-90 bg-[#111111]' : 'bg-[#4169E1] hover:bg-[#3458c7]'}`}
       >
         {isOpen ? (
           <svg aria-hidden="true" className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

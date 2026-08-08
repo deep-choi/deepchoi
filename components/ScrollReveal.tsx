@@ -19,16 +19,12 @@ export const ScrollReveal: React.FC<ScrollRevealProps> = ({
         const motionElement = motionRef.current;
         if (!element || !motionElement) return;
 
-        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (prefersReducedMotion) {
-            motionElement.style.transform = 'translate3d(0, 0, 0) scale(1)';
-            return;
-        }
-
         let frameId = 0;
         let currentProgress = 0;
         let targetProgress = 0;
         const staggerOffset = Math.min(delay * 0.16, 64);
+        const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+        const desktopQuery = window.matchMedia('(min-width: 1024px)');
 
         const measureTarget = () => {
             const rect = element.getBoundingClientRect();
@@ -56,13 +52,34 @@ export const ScrollReveal: React.FC<ScrollRevealProps> = ({
             frameId = window.requestAnimationFrame(render);
         };
 
-        measureTarget();
-        currentProgress = targetProgress;
-        render();
+        const stopAnimation = () => {
+            if (frameId) window.cancelAnimationFrame(frameId);
+            frameId = 0;
+            motionElement.style.transform = '';
+        };
+
+        const syncAnimationState = () => {
+            const shouldAnimate = !reducedMotionQuery.matches && desktopQuery.matches;
+
+            if (!shouldAnimate) {
+                stopAnimation();
+                return;
+            }
+
+            if (frameId) return;
+            measureTarget();
+            currentProgress = targetProgress;
+            render();
+        };
+
+        syncAnimationState();
+        reducedMotionQuery.addEventListener('change', syncAnimationState);
+        desktopQuery.addEventListener('change', syncAnimationState);
 
         return () => {
-            if (frameId) window.cancelAnimationFrame(frameId);
-            motionElement.style.transform = '';
+            reducedMotionQuery.removeEventListener('change', syncAnimationState);
+            desktopQuery.removeEventListener('change', syncAnimationState);
+            stopAnimation();
         };
     }, [delay]);
 
