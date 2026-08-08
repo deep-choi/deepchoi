@@ -95,6 +95,13 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         );
         const slug = project.slug || project.id;
         const url = `${SITE_ORIGIN}/post/${encodeURIComponent(slug)}`;
+
+        // Legacy ID URLs remain valid entry points, but search engines and
+        // visitors should always land on the one canonical slug URL.
+        if (id !== slug) {
+            return Response.redirect(url, 301);
+        }
+
         const image = absoluteUrl(project.seoImage || project.imageUrl);
         const publishedAt = String(project.date || '').slice(0, 10) || undefined;
         const isBlogPost = project.type === 'blog';

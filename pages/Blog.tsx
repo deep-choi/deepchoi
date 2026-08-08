@@ -3,8 +3,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { Project } from '../types';
 import { projectService } from '../services/projectService';
 import { ProjectCard } from '../components/ProjectCard';
-import { authService } from '../services/authService';
 import { categoryLabel, categoryService, findCategoryByQuery } from '../services/categoryService';
+import { useAuthUser } from '../hooks/useAuthUser';
 
 export const Blog: React.FC = () => {
     const [posts, setPosts] = useState<Project[]>([]);
@@ -12,7 +12,8 @@ export const Blog: React.FC = () => {
     const [activeTab, setActiveTab] = useState('전체보기');
     const [tabs, setTabs] = useState<string[]>(['전체보기']);
     const location = useLocation();
-    const isAdmin = authService.isAdmin();
+    const currentUser = useAuthUser();
+    const isAdmin = currentUser?.role === 'admin';
 
     useEffect(() => {
         let isMounted = true;

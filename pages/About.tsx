@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { projectService } from '../services/projectService';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { isProjectAuthenticationError, projectService } from '../services/projectService';
 import { Project } from '../types';
-import { authService } from '../services/authService';
 import { MarkdownToolbar } from '../components/MarkdownToolbar';
 import { RichEditor } from '../components/RichEditor';
 import { imageService } from '../services/imageService';
 import { linkifyHtml, normalizeEditorHtml } from '../utils/contentProcessor';
 import { moveCarousel, setupCarousel } from '../utils/carousel';
+import { useAuthUser } from '../hooks/useAuthUser';
 
 export const About: React.FC = () => {
     const [project, setProject] = useState<Project | null>(null);
@@ -18,7 +18,9 @@ export const About: React.FC = () => {
     const editorRef = useRef<HTMLDivElement>(null);
     const contentDisplayRef = useRef<HTMLDivElement>(null);
     const [searchParams, setSearchParams] = useSearchParams();
-    const isAdmin = authService.isAdmin();
+    const navigate = useNavigate();
+    const currentUser = useAuthUser();
+    const isAdmin = currentUser?.role === 'admin';
 
     useEffect(() => {
         setIsLoading(true);
@@ -76,6 +78,11 @@ export const About: React.FC = () => {
             setTimeout(() => setEditForm({}), 100);
         } catch (error) {
             console.error('Save failed:', error);
+            if (isProjectAuthenticationError(error)) {
+                alert('로그인 세션이 만료되었습니다. 다시 로그인한 뒤 저장해 주세요.');
+                navigate('/login', { state: { from: { pathname: '/about', search: '?edit=1' } } });
+                return;
+            }
             alert(`Failed to save about page: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     };

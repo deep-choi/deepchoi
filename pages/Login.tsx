@@ -12,12 +12,20 @@ export const Login: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const isLocalDev = ['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname);
-    const redirectTo = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname || '/admin';
+    const from = (location.state as { from?: { pathname?: string; search?: string } } | null)?.from;
+    const redirectTo = `${from?.pathname || '/admin'}${from?.search || ''}`;
 
     React.useEffect(() => {
-        if (authService.isAuthenticated()) {
-            navigate(authService.isAdmin() ? redirectTo : '/');
-        }
+        let isMounted = true;
+
+        authService.getSession().then(user => {
+            if (!isMounted || !user) return;
+            navigate(user.role === 'admin' ? redirectTo : '/', { replace: true });
+        });
+
+        return () => {
+            isMounted = false;
+        };
     }, [navigate, redirectTo]);
 
     const handleSubmit = (e: React.FormEvent) => {

@@ -11,15 +11,21 @@ import { Blog } from './pages/Blog';
 import { Contact } from './pages/Contact';
 import { Admin } from './pages/Admin';
 import { authService } from './services/authService';
+import { useAuthUser } from './hooks/useAuthUser';
 import { analyticsService } from './services/analyticsService';
 import { SmoothScroll } from './components/SmoothScroll';
 import { FloatingContact } from './components/FloatingContact';
 
 const Navbar: React.FC<{ isScrolled: boolean }> = ({ isScrolled }) => {
-  const isLoggedIn = authService.isAuthenticated();
+  const currentUser = useAuthUser();
+  const isLoggedIn = currentUser !== null;
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    void authService.getSession();
+  }, []);
 
   // Lock body scroll when mobile menu is open
   useEffect(() => {
@@ -71,8 +77,8 @@ const Navbar: React.FC<{ isScrolled: boolean }> = ({ isScrolled }) => {
             <div className="flex items-center gap-3">
               {isLoggedIn ? (
                 <>
-                  <span className="text-[14px] font-medium text-[#111111]">{authService.getCurrentUser()?.name}님</span>
-                  {authService.isAdmin() && (
+                  <span className="text-[14px] font-medium text-[#111111]">{currentUser?.name}님</span>
+                  {currentUser?.role === 'admin' && (
                     <Link to="/admin" className="rounded-full bg-[#111111] px-5 py-2.5 text-[14px] font-medium text-white transition-colors hover:bg-[#333333]">Admin</Link>
                   )}
                   <button onClick={handleLogout} className="rounded-full bg-[#f5f5f5] px-5 py-2.5 text-[14px] font-medium text-[#111111] transition-colors hover:bg-[#ededed]">로그아웃</button>
@@ -123,10 +129,10 @@ const Navbar: React.FC<{ isScrolled: boolean }> = ({ isScrolled }) => {
               {isLoggedIn ? (
                 <>
                   <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#4169E1] text-sm font-bold text-white">{authService.getCurrentUser()?.name?.[0]}</div>
-                    <span className="text-sm font-semibold text-[#111111]">{authService.getCurrentUser()?.name}님</span>
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#4169E1] text-sm font-bold text-white">{currentUser?.name?.[0]}</div>
+                    <span className="text-sm font-semibold text-[#111111]">{currentUser?.name}님</span>
                   </div>
-                  {authService.isAdmin() && (
+                  {currentUser?.role === 'admin' && (
                     <Link to="/admin" onClick={closeMobileMenu} className="w-fit rounded-full bg-[#111111] px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[#333333]">Admin</Link>
                   )}
                   <button onClick={() => { handleLogout(); closeMobileMenu(); }} className="w-fit text-left text-[13px] font-medium text-[#86868b] transition-colors hover:text-[#111111]">로그아웃</button>

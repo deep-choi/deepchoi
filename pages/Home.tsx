@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { projectService } from '../services/projectService';
 import { Project } from '../types';
 import { ScrollReveal } from '../components/ScrollReveal';
+import { getProjectPath } from '../utils/seo';
 
 const HeroParticleField = React.lazy(() =>
     import('../components/HeroParticleField').then((module) => ({ default: module.HeroParticleField }))
@@ -144,7 +145,7 @@ const WorkShowcase: React.FC = () => {
                                     delay={Math.min(index * 100, 400)}
                                 >
                                     <Link
-                                        to={`/post/${project.id}`}
+                                        to={getProjectPath(project)}
                                         className="group block w-full"
                                     >
                                         <div className="relative aspect-[16/9] overflow-hidden rounded-[8px] bg-[#ffffff] md:rounded-[16px]">

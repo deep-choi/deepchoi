@@ -3,8 +3,8 @@ import { useLocation, Link } from 'react-router-dom';
 import { projectService } from '../services/projectService';
 import { Project } from '../types';
 import { ProjectCard } from './ProjectCard';
-import { authService } from '../services/authService';
 import { categoryLabel, categoryService, findCategoryByQuery } from '../services/categoryService';
+import { useAuthUser } from '../hooks/useAuthUser';
 
 
 export const ProjectGrid: React.FC<{ isPage?: boolean }> = ({ isPage = false }) => {
@@ -13,7 +13,8 @@ export const ProjectGrid: React.FC<{ isPage?: boolean }> = ({ isPage = false }) 
   const [tabs, setTabs] = useState<string[]>(['전체보기']);
   const [isLoading, setIsLoading] = useState(true);
   const location = useLocation();
-  const isAdmin = authService.isAdmin();
+  const currentUser = useAuthUser();
+  const isAdmin = currentUser?.role === 'admin';
 
   useEffect(() => {
     let isMounted = true;

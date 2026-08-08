@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { projectService } from '../services/projectService';
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { isProjectAuthenticationError, projectService } from '../services/projectService';
 import { Project } from '../types';
 import { MarkdownToolbar } from '../components/MarkdownToolbar';
 import { ImageUploader } from '../components/ImageUploader';
@@ -14,6 +14,7 @@ import { categoryLabel, categoryService, CategoryRecord, EntryType } from '../se
 export const Editor: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const location = useLocation();
     const [searchParams] = useSearchParams();
     const isEdit = !!id;
     const requestedType = searchParams.get('type') === 'blog' ? 'blog' : 'work';
@@ -128,6 +129,11 @@ export const Editor: React.FC = () => {
             }
         } catch (error) {
             console.error('Save failed:', error);
+            if (isProjectAuthenticationError(error)) {
+                alert('로그인 세션이 만료되었습니다. 다시 로그인한 뒤 저장해 주세요.');
+                navigate('/login', { state: { from: { pathname: location.pathname, search: location.search } } });
+                return;
+            }
             alert(`Failed to save project: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     };

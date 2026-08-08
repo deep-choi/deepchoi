@@ -17,8 +17,17 @@ const normalizeProject = (project: any) => ({
     author: JSON.parse(project.author as string || '{}')
 });
 
+const decodePathPart = (value: string): string => {
+    try {
+        return decodeURIComponent(value);
+    } catch {
+        return value;
+    }
+};
+
 export const onRequestGet: PagesFunction<Env> = async (context) => {
-    const id = context.params.id;
+    const rawId = Array.isArray(context.params.id) ? context.params.id.join('/') : context.params.id;
+    const id = decodePathPart(String(rawId || ''));
     try {
         await ensureAdminDataSchema(context.env.DB);
         const project: any = await context.env.DB.prepare("SELECT * FROM Project WHERE id = ? OR slug = ?").bind(id, id).first();

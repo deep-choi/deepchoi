@@ -5,11 +5,36 @@ const API_Auth = '/api/auth';
 const USER_STORAGE_KEY = 'portfolio_user';
 const OWNER_ANALYTICS_EXCLUDED_KEY = 'deepchoi_owner_analytics_excluded';
 
+const readStoredUser = (): User | null => {
+    try {
+        const value = localStorage.getItem(USER_STORAGE_KEY);
+        return value ? JSON.parse(value) as User : null;
+    } catch {
+        localStorage.removeItem(USER_STORAGE_KEY);
+        return null;
+    }
+};
+
+let currentUser = readStoredUser();
+const authListeners = new Set<() => void>();
+
+const notifyAuthListeners = () => {
+    authListeners.forEach(listener => listener());
+};
+
 const persistUser = (user: User) => {
+    currentUser = user;
     localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
     if (user.role === 'admin') {
         localStorage.setItem(OWNER_ANALYTICS_EXCLUDED_KEY, 'true');
     }
+    notifyAuthListeners();
+};
+
+const clearPersistedUser = () => {
+    currentUser = null;
+    localStorage.removeItem(USER_STORAGE_KEY);
+    notifyAuthListeners();
 };
 
 export const authService = {
@@ -17,6 +42,7 @@ export const authService = {
         try {
             const res = await fetch(`${API_Auth}/login`, {
                 method: 'POST',
+                credentials: 'same-origin',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password })
             });
@@ -33,6 +59,7 @@ export const authService = {
         try {
             const res = await fetch(`${API_Auth}/google`, {
                 method: 'POST',
+                credentials: 'same-origin',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ accessToken })
             });
@@ -50,6 +77,7 @@ export const authService = {
         try {
             const res = await fetch(`${API_Auth}/signup`, {
                 method: 'POST',
+                credentials: 'same-origin',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, email, password })
             });
@@ -65,9 +93,9 @@ export const authService = {
 
     getSession: async (): Promise<User | null> => {
         try {
-            const res = await fetch(`${API_Auth}/me`);
+            const res = await fetch(`${API_Auth}/me`, { credentials: 'same-origin' });
             if (!res.ok) {
-                localStorage.removeItem(USER_STORAGE_KEY);
+                clearPersistedUser();
                 return null;
             }
             const user: User = await res.json();
@@ -75,27 +103,25 @@ export const authService = {
             return user;
         } catch (err) {
             console.error(err);
-            localStorage.removeItem(USER_STORAGE_KEY);
             return null;
         }
     },
 
     logout: async () => {
         try {
-            await fetch(`${API_Auth}/logout`, { method: 'POST' });
+            await fetch(`${API_Auth}/logout`, { method: 'POST', credentials: 'same-origin' });
         } catch (err) {
             console.error(err);
         }
-        localStorage.removeItem(USER_STORAGE_KEY);
+        clearPersistedUser();
     },
 
     getCurrentUser: (): User | null => {
-        const userStr = localStorage.getItem(USER_STORAGE_KEY);
-        return userStr ? JSON.parse(userStr) : null;
+        return currentUser;
     },
 
     isAuthenticated: (): boolean => {
-        return !!localStorage.getItem(USER_STORAGE_KEY);
+        return currentUser !== null;
     },
 
     isAdmin: (): boolean => {
@@ -105,5 +131,14 @@ export const authService = {
 
     isOwnerAnalyticsExcluded: (): boolean => {
         return localStorage.getItem(OWNER_ANALYTICS_EXCLUDED_KEY) === 'true';
+    },
+
+    clearLocalSession: () => {
+        clearPersistedUser();
+    },
+
+    subscribe: (listener: () => void): (() => void) => {
+        authListeners.add(listener);
+        return () => authListeners.delete(listener);
     }
 };

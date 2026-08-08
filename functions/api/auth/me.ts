@@ -3,7 +3,7 @@ interface Env {
     ADMIN_SESSION_SECRET?: string;
 }
 
-import { getSessionUser } from '../../_utils/auth';
+import { createSessionCookie, getSessionUser } from '../../_utils/auth';
 
 export const onRequestGet: PagesFunction<Env> = async (context) => {
     try {
@@ -11,7 +11,11 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         if (!user) {
             return Response.json({ error: 'Authentication required' }, { status: 401 });
         }
-        return Response.json(user);
+        return Response.json(user, {
+            headers: {
+                'Set-Cookie': await createSessionCookie(user, context.env, context.request)
+            }
+        });
     } catch (err) {
         const message = err instanceof Error ? err.message : 'Authentication failed';
         return Response.json({ error: message }, { status: 500 });

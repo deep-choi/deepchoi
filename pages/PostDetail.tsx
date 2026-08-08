@@ -2,9 +2,8 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
-import { projectService } from '../services/projectService';
+import { isProjectAuthenticationError, projectService } from '../services/projectService';
 import { Project } from '../types';
-import { authService } from '../services/authService';
 import { commentService, Comment } from '../services/commentService';
 import { MarkdownToolbar } from '../components/MarkdownToolbar';
 import { RichEditor } from '../components/RichEditor';
@@ -14,6 +13,7 @@ import { CommentInput } from '../components/CommentInput';
 import { moveCarousel, setupCarousel } from '../utils/carousel';
 import { categoryLabel, categoryService, CategoryRecord, EntryType } from '../services/categoryService';
 import { applyDefaultSeo, applyProjectSeo } from '../utils/seo';
+import { useAuthUser } from '../hooks/useAuthUser';
 
 export const PostDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -31,7 +31,8 @@ export const PostDetail: React.FC = () => {
     const coverInputRef = useRef<HTMLInputElement>(null);
     const [editSessionId, setEditSessionId] = useState(0); // Used as key for contentEditable remount
     const [isCoverUploading, setIsCoverUploading] = useState(false);
-    const isAdmin = authService.isAdmin();
+    const currentUser = useAuthUser();
+    const isAdmin = currentUser?.role === 'admin';
 
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [zoomLevel, setZoomLevel] = useState(1);
@@ -42,8 +43,6 @@ export const PostDetail: React.FC = () => {
 
     // Comments Logic
     const [comments, setComments] = useState<Comment[]>([]);
-    const currentUser = authService.getCurrentUser();
-
     useEffect(() => {
         let isMounted = true;
 
@@ -63,9 +62,12 @@ export const PostDetail: React.FC = () => {
             projectService.getProjectById(id).then(data => {
                 setProject(data);
                 setIsLoading(false);
+                if (data) {
+                    commentService.getComments(data.id).then(setComments);
+                } else {
+                    setComments([]);
+                }
             });
-            // Fetch Comments
-            commentService.getComments(id).then(setComments);
         }
     }, [id]);
 
@@ -216,6 +218,13 @@ export const PostDetail: React.FC = () => {
             setTimeout(() => setEditForm({}), 100);
         } catch (error) {
             console.error('Save failed:', error);
+            if (isProjectAuthenticationError(error)) {
+                alert('로그인 세션이 만료되었습니다. 다시 로그인한 뒤 저장해 주세요.');
+                navigate('/login', {
+                    state: { from: { pathname: `/post/${encodeURIComponent(id || project.id)}` } }
+                });
+                return;
+            }
             alert(`Failed to save project: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     };

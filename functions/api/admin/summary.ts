@@ -170,9 +170,40 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
             GROUP BY day
             ORDER BY day ASC
         `);
-        const { results: dailyViews } = rangeDateModifier
+        const { results: dailyViewRows } = rangeDateModifier
             ? await dailyViewsStatement.bind(rangeDateModifier).all()
             : await dailyViewsStatement.all();
+
+        const dailyViewMap = new Map((dailyViewRows as any[]).map(row => [row.day, row]));
+        const todayDate = new Date();
+        todayDate.setUTCHours(0, 0, 0, 0);
+        const todayDay = todayDate.toISOString().slice(0, 10);
+        const firstTrackedDay = (dailyViewRows as any[])[0]?.day || todayDay;
+        const firstDate = new Date(`${firstTrackedDay}T00:00:00Z`);
+        const startDate = rangeDays
+            ? new Date(todayDate)
+            : (Number.isNaN(firstDate.getTime()) ? new Date(todayDate) : firstDate);
+
+        if (rangeDays) {
+            startDate.setUTCDate(startDate.getUTCDate() - (rangeDays - 1));
+        }
+
+        const dayCount = rangeDays || Math.max(
+            1,
+            Math.floor((todayDate.getTime() - startDate.getTime()) / 86400000) + 1
+        );
+        const dailyViews = Array.from({ length: dayCount }, (_, index) => {
+            const dayDate = new Date(startDate);
+            dayDate.setUTCDate(dayDate.getUTCDate() + index);
+            const day = dayDate.toISOString().slice(0, 10);
+            const row = dailyViewMap.get(day);
+
+            return {
+                day,
+                views: Number(row?.views || 0),
+                uniqueVisitors: Number(row?.uniqueVisitors || 0)
+            };
+        });
 
         const popularPathsStatement = context.env.DB.prepare(`
             SELECT
