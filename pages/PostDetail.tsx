@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useLayoutEffect, useState, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
 import { isProjectAuthenticationError, projectService } from '../services/projectService';
@@ -14,6 +14,21 @@ import { moveCarousel, setupCarousel } from '../utils/carousel';
 import { categoryLabel, categoryService, CategoryRecord, EntryType } from '../services/categoryService';
 import { applyDefaultSeo, applyProjectSeo } from '../utils/seo';
 import { useAuthUser } from '../hooks/useAuthUser';
+
+const dismissInitialPostLoader = () => {
+    const loader = document.getElementById('post-initial-loader');
+    const root = document.getElementById('root');
+
+    document.documentElement.removeAttribute('data-post-loading');
+    root?.removeAttribute('aria-busy');
+
+    if (!loader) return;
+
+    loader.setAttribute('data-ready', 'true');
+    const removeLoader = () => loader.remove();
+    loader.addEventListener('transitionend', removeLoader, { once: true });
+    window.setTimeout(removeLoader, 260);
+};
 
 export const PostDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -70,6 +85,11 @@ export const PostDetail: React.FC = () => {
             });
         }
     }, [id]);
+
+    useLayoutEffect(() => {
+        if (isLoading) return;
+        dismissInitialPostLoader();
+    }, [isLoading]);
 
     useEffect(() => {
         if (project) {

@@ -65,6 +65,77 @@ const buildArticleFallback = (project: any, description: string, publishedAt?: s
 </article>`;
 };
 
+const POST_INITIAL_LOADER_STYLE = `<style id="post-initial-loader-style">
+  html[data-post-loading="true"],
+  html[data-post-loading="true"] body {
+    overflow: hidden !important;
+  }
+
+  #post-initial-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483647;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    color: #111111;
+    font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    opacity: 1;
+    transition: opacity 180ms ease;
+  }
+
+  #post-initial-loader[data-ready="true"] {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .post-initial-loader-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .post-initial-loader-spinner {
+    width: 32px;
+    height: 32px;
+    box-sizing: border-box;
+    border: 4px solid #dce5ff;
+    border-top-color: #4169e1;
+    border-radius: 50%;
+    animation: post-initial-loader-spin 720ms linear infinite;
+  }
+
+  .post-initial-loader-label {
+    margin: 0;
+    color: #666666;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  @keyframes post-initial-loader-spin {
+    to { transform: rotate(360deg); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #post-initial-loader { transition: none; }
+    .post-initial-loader-spinner { animation-duration: 1400ms; }
+  }
+</style>`;
+
+const POST_INITIAL_LOADER_MARKUP = `<div id="post-initial-loader" role="status" aria-live="polite" aria-label="게시글을 불러오는 중입니다">
+  <div class="post-initial-loader-content">
+    <div class="post-initial-loader-spinner" aria-hidden="true"></div>
+    <p class="post-initial-loader-label">게시글을 불러오는 중입니다.</p>
+  </div>
+</div>
+<noscript><style>
+  #post-initial-loader { display: none !important; }
+  html[data-post-loading="true"], html[data-post-loading="true"] body { overflow: auto !important; }
+</style></noscript>`;
+
 const decodePathPart = (value: string): string => {
     try {
         return decodeURIComponent(value);
@@ -134,11 +205,17 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         const robots = project.noIndex ? 'noindex, nofollow' : 'index, follow';
         const articleMeta = [
             `<meta property="article:published_time" content="${publishedAt || ''}">`,
-            `<script id="project-server-structured-data" type="application/ld+json">${jsonForScript(structuredData)}</script>`
+            `<script id="project-server-structured-data" type="application/ld+json">${jsonForScript(structuredData)}</script>`,
+            POST_INITIAL_LOADER_STYLE
         ].join('');
         const articleFallback = buildArticleFallback(project, description, publishedAt);
 
         return new HTMLRewriter()
+            .on('html', {
+                element(element) {
+                    element.setAttribute('data-post-loading', 'true');
+                }
+            })
             .on('title', {
                 element(element) {
                     element.setInnerContent(title);
@@ -216,7 +293,13 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
             })
             .on('div#root', {
                 element(element) {
+                    element.setAttribute('aria-busy', 'true');
                     element.setInnerContent(articleFallback, { html: true });
+                }
+            })
+            .on('body', {
+                element(element) {
+                    element.prepend(POST_INITIAL_LOADER_MARKUP, { html: true });
                 }
             })
             .transform(response);
