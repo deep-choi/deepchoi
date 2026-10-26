@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
     Bar,
     BarChart,
@@ -17,6 +17,7 @@ import {
 } from 'recharts';
 import { categoryLabel, categoryService, EntryType } from '../services/categoryService';
 import { commentService } from '../services/commentService';
+import { authService } from '../services/authService';
 
 interface AdminSummary {
     user: {
@@ -132,7 +133,7 @@ interface SearchConsoleSummary {
 type ChartMetric = Record<string, string | number>;
 
 type AdminCategory = AdminSummary['categories'][number];
-type AdminTab = 'visitors' | 'categories' | 'comments';
+type AdminTab = 'overview' | 'visitors' | 'search' | 'categories' | 'comments';
 
 const contentCategoryTypes = ['work', 'blog'] as const;
 const entryTypeLabels: Record<EntryType, string> = {
@@ -140,10 +141,37 @@ const entryTypeLabels: Record<EntryType, string> = {
     blog: 'Blog',
     page: 'Page'
 };
-const adminTabs: Array<{ id: AdminTab; label: string }> = [
-    { id: 'visitors', label: '방문자' },
-    { id: 'categories', label: '카테고리' },
-    { id: 'comments', label: '댓글' }
+const adminTabs: Array<{ id: AdminTab; label: string; description: string; icon: string }> = [
+    {
+        id: 'overview',
+        label: '개요',
+        description: '핵심 지표와 최근 활동을 한눈에 확인합니다.',
+        icon: 'M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z'
+    },
+    {
+        id: 'visitors',
+        label: '방문자 분석',
+        description: '조회수, 유입 경로, 기기와 지역별 방문 현황입니다.',
+        icon: 'M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z'
+    },
+    {
+        id: 'search',
+        label: '검색 성과',
+        description: 'Google 검색어와 검색 유입 페이지입니다.',
+        icon: 'M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z'
+    },
+    {
+        id: 'categories',
+        label: '카테고리',
+        description: 'Work와 Blog 카테고리를 추가하고 순서를 정리합니다.',
+        icon: 'M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3zM6 6h.008v.008H6V6z'
+    },
+    {
+        id: 'comments',
+        label: '댓글',
+        description: '댓글을 확인하고 숨김·삭제를 관리합니다.',
+        icon: 'M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.076-4.076a1.526 1.526 0 011.037-.443 48.282 48.282 0 005.68-.494c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z'
+    }
 ];
 const visitRanges = [
     { value: '7', label: '7일' },
@@ -276,13 +304,29 @@ const Panel: React.FC<{ title: string; action?: React.ReactNode; children: React
     </div>
 );
 
+const NavIcon: React.FC<{ d: string }> = ({ d }) => (
+    <svg className="h-[18px] w-[18px] shrink-0" fill="none" stroke="currentColor" strokeWidth={1.7} viewBox="0 0 24 24" aria-hidden="true">
+        <path strokeLinecap="round" strokeLinejoin="round" d={d} />
+    </svg>
+);
+
+const plusIcon = 'M12 4.5v15m7.5-7.5h-15';
+const externalIcon = 'M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25';
+const logoutIcon = 'M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9';
+
 export const Admin: React.FC = () => {
     const [summary, setSummary] = useState<AdminSummary | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [searchConsole, setSearchConsole] = useState<SearchConsoleSummary | null>(null);
     const [isSearchConsoleLoading, setIsSearchConsoleLoading] = useState(true);
     const [error, setError] = useState('');
-    const [activeTab, setActiveTab] = useState<AdminTab>('visitors');
+    const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const tabParam = searchParams.get('tab');
+    const activeTab: AdminTab = adminTabs.find(tab => tab.id === tabParam)?.id ?? 'overview';
+    const setActiveTab = (tab: AdminTab) => {
+        setSearchParams(tab === 'overview' ? {} : { tab }, { replace: true });
+    };
     const [visitRange, setVisitRange] = useState<VisitRange>('14');
     const [categoryName, setCategoryName] = useState('');
     const [categoryType, setCategoryType] = useState<EntryType>('work');
@@ -455,6 +499,12 @@ export const Admin: React.FC = () => {
         }
     };
 
+    const handleLogout = async () => {
+        await authService.logout();
+        navigate('/');
+        window.location.reload();
+    };
+
     const handleDeleteComment = async (commentId: string) => {
         if (!window.confirm('이 댓글을 삭제할까요?')) return;
 
@@ -521,82 +571,370 @@ export const Admin: React.FC = () => {
     const sourceChartData = toChartMetrics(sourceBreakdown);
     const deviceChartData = toChartMetrics(deviceBreakdown);
 
-    return (
-        <main className="min-h-screen bg-[#ffffff] px-4 pb-20 pt-32 md:px-[20px]">
-            <div className="mx-auto max-w-[1200px]">
-                <div className="mb-8 flex flex-col gap-5 border-b border-[#e5e5e5] pb-8 md:flex-row md:items-end md:justify-between">
-                    <div>
-                        <p className="text-[12px] font-bold uppercase text-[#666666]">Admin</p>
-                        <h1 className="mt-2 text-[32px] font-bold tracking-tight text-[#111111] md:text-[44px]">
-                            관리자 페이지
-                        </h1>
-                        <p className="mt-2 text-[15px] font-medium text-[#666666]">{summary.user.name}님으로 로그인됨</p>
+    const rangeSelector = (
+        <div className="flex rounded-[8px] border border-[#e5e5e5] bg-white p-1">
+            {visitRanges.map(range => (
+                <button
+                    key={range.value}
+                    type="button"
+                    onClick={() => setVisitRange(range.value)}
+                    className={`h-9 rounded-[6px] px-3 text-xs font-bold transition-colors ${visitRange === range.value
+                        ? 'bg-[#4169E1] text-white'
+                        : 'text-[#666666] hover:bg-[#f5f5f5] hover:text-[#111111]'
+                        }`}
+                >
+                    {range.label}
+                </button>
+            ))}
+        </div>
+    );
+    const activeTabMeta = adminTabs.find(tab => tab.id === activeTab) || adminTabs[0];
+    const showsRange = activeTab === 'overview' || activeTab === 'visitors' || activeTab === 'search';
+    const topEntries = summary.analytics.topEntries.slice(0, 5);
+    const latestEntries = summary.recentEntries.slice(0, 6);
+    const latestComments = summary.recentComments.slice(0, 5);
+    const topKeywords = (searchConsole?.keywords || []).slice(0, 5);
+
+    const trendPanel = (
+                <Panel title={visitTrendTitle}>
+                    <div className="h-[300px] px-3 py-5">
+                        {dailyChartData.length === 0 ? (
+                            <EmptyState text="아직 수집된 방문 데이터가 없습니다." />
+                        ) : (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={dailyChartData} margin={{ top: 10, right: 18, left: -18, bottom: 0 }}>
+                                    <CartesianGrid stroke="#f0f0f0" vertical={false} />
+                                    <XAxis dataKey="label" tick={{ fill: '#666666', fontSize: 11, fontWeight: 700 }} axisLine={false} tickLine={false} />
+                                    <YAxis allowDecimals={false} tick={{ fill: '#888888', fontSize: 11, fontWeight: 700 }} axisLine={false} tickLine={false} />
+                                    <Tooltip
+                                        contentStyle={{ border: '1px solid #e5e5e5', borderRadius: 8, boxShadow: '0 12px 28px rgba(17,17,17,0.08)' }}
+                                        labelFormatter={(_, payload) => payload?.[0]?.payload?.day || ''}
+                                        formatter={(value: number, name: string) => [formatNumber(Number(value)), name === 'views' ? '조회수' : '순 방문자 수']}
+                                    />
+                                    <Legend formatter={(value) => value === 'views' ? '조회수' : '순 방문자 수'} />
+                                    <Line type="monotone" dataKey="views" stroke="#4169E1" strokeWidth={3} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                                    <Line type="monotone" dataKey="uniqueVisitors" stroke="#34c759" strokeWidth={2} dot={false} />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        )}
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                </Panel>
+    );
+    const sourcePanel = (
+                <Panel title="유입 소스">
+                    <div className="h-[300px] px-3 py-5">
+                        {sourceBreakdown.length === 0 ? (
+                            <EmptyState text="유입 데이터가 아직 없습니다." />
+                        ) : (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={sourceChartData} layout="vertical" margin={{ top: 0, right: 16, left: 28, bottom: 0 }}>
+                                    <CartesianGrid stroke="#f0f0f0" horizontal={false} />
+                                    <XAxis type="number" allowDecimals={false} tick={{ fill: '#888888', fontSize: 11, fontWeight: 700 }} axisLine={false} tickLine={false} />
+                                    <YAxis type="category" dataKey="label" width={76} tick={{ fill: '#666666', fontSize: 11, fontWeight: 700 }} axisLine={false} tickLine={false} />
+                                    <Tooltip
+                                        contentStyle={{ border: '1px solid #e5e5e5', borderRadius: 8, boxShadow: '0 12px 28px rgba(17,17,17,0.08)' }}
+                                        formatter={(value: number, name: string) => [formatNumber(Number(value)), name === 'views' ? '조회수' : '순 방문자 수']}
+                                    />
+                                    <Bar dataKey="views" fill="#4169E1" radius={[0, 6, 6, 0]} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        )}
+                    </div>
+                </Panel>
+    );
+
+    return (
+        <div className="min-h-screen bg-[#f6f7fb] lg:pl-[248px]">
+            <aside className="border-b border-[#e5e5e5] bg-white lg:fixed lg:inset-y-0 lg:left-0 lg:z-30 lg:flex lg:w-[248px] lg:flex-col lg:border-b-0 lg:border-r">
+                <div className="flex h-14 items-center justify-between px-4 lg:h-[72px] lg:px-5">
+                    <Link to="/" className="flex items-center gap-2">
+                        <span className="h-6 w-6 rounded-full bg-[#4169E1]" aria-hidden="true" />
+                        <span className="text-[18px] font-bold tracking-tight text-[#111111]">Deepchoi</span>
+                        <span className="rounded-full bg-[#f0f4ff] px-2 py-0.5 text-[10px] font-bold uppercase text-[#4169E1]">Admin</span>
+                    </Link>
+                    <div className="flex items-center gap-1 lg:hidden">
+                        <Link to="/" className="flex h-9 w-9 items-center justify-center rounded-lg text-[#666666] hover:bg-[#f5f5f5]" aria-label="사이트 보기">
+                            <NavIcon d={externalIcon} />
+                        </Link>
+                        <button type="button" onClick={handleLogout} className="flex h-9 w-9 items-center justify-center rounded-lg text-[#666666] hover:bg-[#f5f5f5]" aria-label="로그아웃">
+                            <NavIcon d={logoutIcon} />
+                        </button>
+                    </div>
+                </div>
+
+                <p className="hidden px-6 pb-2 pt-2 text-[11px] font-bold uppercase text-[#888888] lg:block">Menu</p>
+                <nav className="flex gap-1 overflow-x-auto px-3 pb-3 lg:flex-col lg:overflow-visible lg:pb-0" role="tablist" aria-label="관리자 섹션">
+                    {adminTabs.map(tab => (
+                        <button
+                            key={tab.id}
+                            type="button"
+                            role="tab"
+                            aria-selected={activeTab === tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`flex h-10 shrink-0 items-center gap-2.5 rounded-[6px] px-3 text-sm font-bold transition-colors ${activeTab === tab.id
+                                ? 'bg-[#f0f4ff] text-[#4169E1]'
+                                : 'text-[#666666] hover:bg-[#f5f5f5] hover:text-[#111111]'
+                                }`}
+                        >
+                            <NavIcon d={tab.icon} />
+                            <span className="whitespace-nowrap">{tab.label}</span>
+                        </button>
+                    ))}
+                </nav>
+
+                <div className="hidden lg:block">
+                    <p className="px-6 pb-2 pt-6 text-[11px] font-bold uppercase text-[#888888]">Create</p>
+                    <div className="flex flex-col gap-1 px-3">
                         <Link
                             to="/admin/create?type=work"
-                            className="inline-flex h-10 items-center rounded-lg bg-[#4169E1] px-4 text-sm font-bold text-white"
+                            className="flex h-10 items-center gap-2.5 rounded-[6px] px-3 text-sm font-bold text-[#666666] transition-colors hover:bg-[#f5f5f5] hover:text-[#111111]"
                         >
+                            <NavIcon d={plusIcon} />
                             프로젝트 작성
                         </Link>
                         <Link
                             to="/admin/create?type=blog"
-                            className="inline-flex h-10 items-center rounded-lg border border-[#e5e5e5] bg-white px-4 text-sm font-bold text-[#111111]"
+                            className="flex h-10 items-center gap-2.5 rounded-[6px] px-3 text-sm font-bold text-[#666666] transition-colors hover:bg-[#f5f5f5] hover:text-[#111111]"
                         >
+                            <NavIcon d={plusIcon} />
                             글 작성
                         </Link>
                     </div>
                 </div>
 
-                <div className="mb-8 border-b border-[#e5e5e5]" role="tablist" aria-label="관리자 섹션">
-                    <div className="flex min-w-max gap-1 overflow-x-auto">
-                        {adminTabs.map(tab => (
-                            <button
-                                key={tab.id}
-                                type="button"
-                                role="tab"
-                                aria-selected={activeTab === tab.id}
-                                onClick={() => setActiveTab(tab.id)}
-                                className={`relative flex h-12 shrink-0 items-center gap-2 px-4 text-left transition-colors ${activeTab === tab.id
-                                    ? 'text-[#111111]'
-                                    : 'text-[#666666] hover:text-[#111111]'
-                                    }`}
-                            >
-                                <span className="text-sm font-bold">{tab.label}</span>
-                                {activeTab === tab.id && (
-                                    <span className="absolute inset-x-0 bottom-[-1px] h-[2px] bg-[#4169E1]" aria-hidden="true" />
-                                )}
-                            </button>
-                        ))}
+                <div className="mt-auto hidden border-t border-[#f0f0f0] p-3 lg:block">
+                    <div className="flex items-center gap-3 px-2 py-2">
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#111111] text-sm font-bold text-white">
+                            {summary.user.name.slice(0, 1).toUpperCase()}
+                        </span>
+                        <div className="min-w-0">
+                            <p className="truncate text-sm font-bold text-[#111111]">{summary.user.name}</p>
+                            <p className="truncate text-xs font-medium text-[#888888]">{summary.user.email}</p>
+                        </div>
+                    </div>
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                        <Link
+                            to="/"
+                            className="flex h-9 items-center justify-center gap-1.5 rounded-lg border border-[#e5e5e5] text-xs font-bold text-[#111111] hover:bg-[#f5f5f5]"
+                        >
+                            사이트 보기
+                        </Link>
+                        <button
+                            type="button"
+                            onClick={handleLogout}
+                            className="flex h-9 items-center justify-center gap-1.5 rounded-lg border border-[#e5e5e5] text-xs font-bold text-[#111111] hover:bg-[#f5f5f5]"
+                        >
+                            로그아웃
+                        </button>
                     </div>
                 </div>
+            </aside>
+
+            <main className="min-w-0 px-4 pb-16 pt-6 md:px-8 lg:pt-8">
+                <div className="mx-auto max-w-[1280px]">
+                    <header className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <h1 className="text-[26px] font-bold tracking-tight text-[#111111] md:text-[30px]">{activeTabMeta.label}</h1>
+                            <p className="mt-1 text-sm font-medium text-[#666666]">{activeTabMeta.description}</p>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                            {showsRange && rangeSelector}
+                            {activeTab === 'overview' && (
+                                <div className="flex gap-2 lg:hidden">
+                                    <Link
+                                        to="/admin/create?type=work"
+                                        className="inline-flex h-10 items-center rounded-lg bg-[#4169E1] px-4 text-sm font-bold text-white"
+                                    >
+                                        프로젝트 작성
+                                    </Link>
+                                    <Link
+                                        to="/admin/create?type=blog"
+                                        className="inline-flex h-10 items-center rounded-lg border border-[#e5e5e5] bg-white px-4 text-sm font-bold text-[#111111]"
+                                    >
+                                        글 작성
+                                    </Link>
+                                </div>
+                            )}
+                        </div>
+                    </header>
+
+                {activeTab === 'overview' && (
+                    <>
+                        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                            <AnalyticsStatCard
+                                label="조회수"
+                                value={summary.analytics.totalViews}
+                                change={visitRange === 'all' ? undefined : summary.analytics.viewChangeRate}
+                                helper={visitRange === 'all' ? '전체 누적 조회수' : '이전 같은 기간 대비'}
+                                tone="blue"
+                            />
+                            <AnalyticsStatCard
+                                label="순 방문자 수"
+                                value={summary.analytics.uniqueVisitors}
+                                change={visitRange === 'all' ? undefined : summary.analytics.uniqueVisitorChangeRate}
+                                helper={visitRange === 'all' ? '전체 고유 방문자' : '이전 같은 기간 대비'}
+                            />
+                            <AnalyticsStatCard label="오늘 조회수" value={summary.analytics.todayViews} helper="오늘 수집된 일반 조회수" />
+                            <AnalyticsStatCard
+                                label="콘텐츠"
+                                value={summary.totals.totalEntries}
+                                helper={`Work ${formatNumber(summary.totals.workEntries)} · Blog ${formatNumber(summary.totals.blogEntries)}`}
+                            />
+                            <AnalyticsStatCard
+                                label="댓글"
+                                value={summary.totals.totalComments}
+                                helper={`오늘 ${formatNumber(todayCommentCount)}개 · 숨김 ${formatNumber(summary.totals.hiddenComments)}개`}
+                            />
+                        </section>
+
+                        <section className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(320px,1fr)]">
+                            {trendPanel}
+                            {sourcePanel}
+                        </section>
+
+                        <section className="mt-6 grid gap-6 xl:grid-cols-2">
+                            <Panel
+                                title="인기 콘텐츠"
+                                action={<button type="button" onClick={() => setActiveTab('visitors')} className="text-xs font-bold text-[#4169E1]">방문자 분석</button>}
+                            >
+                                <div className="divide-y divide-[#f0f0f0]">
+                                    {topEntries.length === 0 ? (
+                                        <EmptyState text="조회 데이터가 아직 없습니다." />
+                                    ) : (
+                                        topEntries.map((entry, index) => (
+                                            <div key={entry.id} className="flex items-center gap-4 px-5 py-3.5">
+                                                <span className="w-5 shrink-0 text-sm font-bold text-[#b0b0b0]">{index + 1}</span>
+                                                <div className="min-w-0 flex-1">
+                                                    <Link to={`/post/${entry.id}`} className="block truncate text-sm font-bold text-[#111111] hover:text-[#4169E1]">
+                                                        {entry.title}
+                                                    </Link>
+                                                    <p className="mt-0.5 text-xs font-medium text-[#666666]">
+                                                        {categoryLabel(entry.category)} · {entryTypeLabels[entry.type || 'work']}
+                                                    </p>
+                                                </div>
+                                                <div className="shrink-0 text-right">
+                                                    <p className="text-sm font-bold text-[#111111]">{formatNumber(entry.views)}</p>
+                                                    <p className="text-xs font-bold text-[#666666]">{formatNumber(entry.uniqueVisitors)} UV</p>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </Panel>
+
+                            <Panel title="최근 콘텐츠">
+                                <div className="divide-y divide-[#f0f0f0]">
+                                    {latestEntries.length === 0 ? (
+                                        <EmptyState text="작성된 콘텐츠가 없습니다." />
+                                    ) : (
+                                        latestEntries.map(entry => (
+                                            <div key={entry.id} className="flex items-center gap-4 px-5 py-3.5">
+                                                <div className="min-w-0 flex-1">
+                                                    <Link to={`/post/${entry.id}`} className="block truncate text-sm font-bold text-[#111111] hover:text-[#4169E1]">
+                                                        {entry.title}
+                                                    </Link>
+                                                    <p className="mt-0.5 text-xs font-medium text-[#666666]">
+                                                        {categoryLabel(entry.category)} · {entryTypeLabels[entry.type || 'work']} · {new Date(entry.date).toLocaleDateString('ko-KR')}
+                                                    </p>
+                                                </div>
+                                                <Link
+                                                    to={`/admin/edit/${entry.id}`}
+                                                    className="h-8 shrink-0 rounded-lg border border-[#e5e5e5] px-3 text-xs font-bold leading-8 text-[#111111] hover:bg-[#f5f5f5]"
+                                                >
+                                                    수정
+                                                </Link>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </Panel>
+                        </section>
+
+                        <section className="mt-6 grid gap-6 xl:grid-cols-2">
+                            <Panel
+                                title="최근 댓글"
+                                action={<button type="button" onClick={() => setActiveTab('comments')} className="text-xs font-bold text-[#4169E1]">전체 보기</button>}
+                            >
+                                {actionError && (
+                                    <div className="border-b border-[#ffd9d6] bg-[#fff5f5] px-5 py-3 text-xs font-bold text-[#ff3b30]">
+                                        {actionError}
+                                    </div>
+                                )}
+                                <div className="divide-y divide-[#f0f0f0]">
+                                    {latestComments.length === 0 ? (
+                                        <EmptyState text="아직 댓글이 없습니다." />
+                                    ) : (
+                                        latestComments.map(comment => (
+                                            <div key={comment.id} className="flex items-start gap-4 px-5 py-3.5">
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <p className="text-sm font-bold text-[#111111]">{comment.author?.name || 'Unknown'}</p>
+                                                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${comment.status === 'hidden'
+                                                            ? 'bg-[#fff5f5] text-[#ff3b30]'
+                                                            : 'bg-[#f5f5f5] text-[#666666]'
+                                                            }`}>
+                                                            {comment.status === 'hidden' ? '숨김' : '노출'}
+                                                        </span>
+                                                        <span className="text-xs font-medium text-[#888888]">
+                                                            {new Date(comment.date).toLocaleDateString('ko-KR')}
+                                                        </span>
+                                                    </div>
+                                                    <p className="mt-1 line-clamp-2 text-sm font-medium text-[#2b2b2b]">{comment.content}</p>
+                                                    <Link to={`/post/${comment.projectId}`} className="mt-1 inline-flex max-w-full text-xs font-bold text-[#4169E1]">
+                                                        <span className="truncate">{comment.projectTitle || comment.projectId}</span>
+                                                    </Link>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleUpdateCommentStatus(comment.id, comment.status === 'hidden' ? 'visible' : 'hidden')}
+                                                    className="h-8 shrink-0 rounded-lg border border-[#e5e5e5] px-3 text-xs font-bold text-[#111111] hover:bg-[#f5f5f5]"
+                                                >
+                                                    {comment.status === 'hidden' ? '복구' : '숨김'}
+                                                </button>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </Panel>
+
+                            <Panel
+                                title="상위 검색어"
+                                action={<button type="button" onClick={() => setActiveTab('search')} className="text-xs font-bold text-[#4169E1]">전체 보기</button>}
+                            >
+                                {isSearchConsoleLoading ? (
+                                    <EmptyState text="Google 검색 성과를 불러오는 중입니다." />
+                                ) : !searchConsole?.configured ? (
+                                    <EmptyState text={searchConsole?.message || 'Google Search Console을 연결하면 검색어를 볼 수 있습니다.'} />
+                                ) : searchConsole.error ? (
+                                    <EmptyState text={searchConsole.error} />
+                                ) : topKeywords.length === 0 ? (
+                                    <EmptyState text="표시할 검색어가 없습니다." />
+                                ) : (
+                                    <div className="divide-y divide-[#f0f0f0]">
+                                        {topKeywords.map(item => (
+                                            <div key={item.key} className="grid gap-2 px-5 py-3.5 sm:grid-cols-[1fr_72px_64px] sm:items-center">
+                                                <p className="truncate text-sm font-bold text-[#111111]">{item.key}</p>
+                                                <span className="text-xs font-bold text-[#111111] sm:text-right">{formatNumber(item.clicks)} 클릭</span>
+                                                <span className="text-xs font-bold text-[#666666] sm:text-right">{item.position.toFixed(1)}위</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </Panel>
+                        </section>
+                    </>
+                )}
+
 
                 {activeTab === 'visitors' && (
                     <>
-                        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                            <div>
-                                <p className="text-sm font-bold text-[#666666]">
-                                    관리자와 로그인/어드민 페이지 방문은 제외하고, 수집 기능 적용 이후의 일반 방문만 집계합니다.
-                                </p>
-                                <p className="mt-1 text-xs font-bold text-[#888888]">
-                                    마지막 수집: {formatDateTime(summary.analytics.lastTrackedAt)} · 봇 조회 {formatNumber(summary.analytics.botViews)}건은 방문 통계에서 제외
-                                </p>
-                            </div>
-                            <div className="flex rounded-[8px] border border-[#e5e5e5] bg-[#fafafa] p-1">
-                                {visitRanges.map(range => (
-                                    <button
-                                        key={range.value}
-                                        type="button"
-                                        onClick={() => setVisitRange(range.value)}
-                                        className={`h-9 rounded-[6px] px-3 text-xs font-bold transition-colors ${visitRange === range.value
-                                            ? 'bg-[#4169E1] text-white'
-                                            : 'text-[#666666] hover:bg-white hover:text-[#111111]'
-                                            }`}
-                                    >
-                                        {range.label}
-                                    </button>
-                                ))}
-                            </div>
+                        <div className="mb-4">
+                            <p className="text-sm font-bold text-[#666666]">
+                                관리자와 로그인/어드민 페이지 방문은 제외하고, 수집 기능 적용 이후의 일반 방문만 집계합니다.
+                            </p>
+                            <p className="mt-1 text-xs font-bold text-[#888888]">
+                                마지막 수집: {formatDateTime(summary.analytics.lastTrackedAt)} · 봇 조회 {formatNumber(summary.analytics.botViews)}건은 방문 통계에서 제외
+                            </p>
                         </div>
                         <section className="grid gap-3 md:grid-cols-4">
                             <AnalyticsStatCard
@@ -617,50 +955,8 @@ export const Admin: React.FC = () => {
                         </section>
 
                         <section className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(360px,0.7fr)]">
-                            <Panel title={visitTrendTitle}>
-                                <div className="h-[300px] px-3 py-5">
-                                    {dailyChartData.length === 0 ? (
-                                        <EmptyState text="아직 수집된 방문 데이터가 없습니다." />
-                                    ) : (
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <LineChart data={dailyChartData} margin={{ top: 10, right: 18, left: -18, bottom: 0 }}>
-                                                <CartesianGrid stroke="#f0f0f0" vertical={false} />
-                                                <XAxis dataKey="label" tick={{ fill: '#666666', fontSize: 11, fontWeight: 700 }} axisLine={false} tickLine={false} />
-                                                <YAxis allowDecimals={false} tick={{ fill: '#888888', fontSize: 11, fontWeight: 700 }} axisLine={false} tickLine={false} />
-                                                <Tooltip
-                                                    contentStyle={{ border: '1px solid #e5e5e5', borderRadius: 8, boxShadow: '0 12px 28px rgba(17,17,17,0.08)' }}
-                                                    labelFormatter={(_, payload) => payload?.[0]?.payload?.day || ''}
-                                                    formatter={(value: number, name: string) => [formatNumber(Number(value)), name === 'views' ? '조회수' : '순 방문자 수']}
-                                                />
-                                                <Legend formatter={(value) => value === 'views' ? '조회수' : '순 방문자 수'} />
-                                                <Line type="monotone" dataKey="views" stroke="#4169E1" strokeWidth={3} dot={{ r: 3 }} activeDot={{ r: 5 }} />
-                                                <Line type="monotone" dataKey="uniqueVisitors" stroke="#34c759" strokeWidth={2} dot={false} />
-                                            </LineChart>
-                                        </ResponsiveContainer>
-                                    )}
-                                </div>
-                            </Panel>
-
-                            <Panel title="유입 소스">
-                                <div className="h-[300px] px-3 py-5">
-                                    {sourceBreakdown.length === 0 ? (
-                                        <EmptyState text="유입 데이터가 아직 없습니다." />
-                                    ) : (
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <BarChart data={sourceChartData} layout="vertical" margin={{ top: 0, right: 16, left: 28, bottom: 0 }}>
-                                                <CartesianGrid stroke="#f0f0f0" horizontal={false} />
-                                                <XAxis type="number" allowDecimals={false} tick={{ fill: '#888888', fontSize: 11, fontWeight: 700 }} axisLine={false} tickLine={false} />
-                                                <YAxis type="category" dataKey="label" width={76} tick={{ fill: '#666666', fontSize: 11, fontWeight: 700 }} axisLine={false} tickLine={false} />
-                                                <Tooltip
-                                                    contentStyle={{ border: '1px solid #e5e5e5', borderRadius: 8, boxShadow: '0 12px 28px rgba(17,17,17,0.08)' }}
-                                                    formatter={(value: number, name: string) => [formatNumber(Number(value)), name === 'views' ? '조회수' : '순 방문자 수']}
-                                                />
-                                                <Bar dataKey="views" fill="#4169E1" radius={[0, 6, 6, 0]} />
-                                            </BarChart>
-                                        </ResponsiveContainer>
-                                    )}
-                                </div>
-                            </Panel>
+                            {trendPanel}
+                            {sourcePanel}
                         </section>
 
                         <section className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
@@ -773,6 +1069,11 @@ export const Admin: React.FC = () => {
                             </Panel>
                         </section>
 
+                    </>
+                )}
+
+                {activeTab === 'search' && (
+                    <>
                         <section className="mt-6">
                             <Panel
                                 title="Google 검색 성과"
@@ -1063,7 +1364,8 @@ export const Admin: React.FC = () => {
                         </section>
                     </>
                 )}
-            </div>
-        </main>
+                </div>
+            </main>
+        </div>
     );
 };

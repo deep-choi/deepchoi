@@ -225,6 +225,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const shouldDisableSmoothScroll = location.pathname === '/login'
     || location.pathname === '/signup'
     || location.pathname.startsWith('/admin');
+  const isAdminDashboard = location.pathname === '/admin';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -237,12 +238,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <div className="relative min-h-screen bg-[#ffffff] selection:bg-[#4169E1] selection:text-white font-sans flex flex-col">
       <ScrollToTop />
-      <Navbar isScrolled={isScrolled} />
+      {!isAdminDashboard && <Navbar isScrolled={isScrolled} />}
       <SmoothScroll disabled={shouldDisableSmoothScroll}>
         <div className="flex-grow">
           {children}
         </div>
-        <Footer />
+        {!isAdminDashboard && <Footer />}
       </SmoothScroll>
       <FloatingContact />
     </div>
