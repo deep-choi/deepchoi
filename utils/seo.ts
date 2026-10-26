@@ -4,7 +4,7 @@ const SITE_NAME = 'Deepchoi';
 const SITE_ORIGIN = 'https://deepchoi.com';
 const DEFAULT_TITLE = 'Deepchoi | Portfolio';
 const DEFAULT_DESCRIPTION = 'UI/UX 디자인, 프론트엔드 구현, 바이브코딩 프로젝트를 정리한 Choi의 포트폴리오입니다.';
-const DEFAULT_IMAGE = `${SITE_ORIGIN}/social/portfolio.png`;
+const DEFAULT_IMAGE = `${SITE_ORIGIN}/social/portfolio-og.png`;
 
 const stripHtml = (value: string): string =>
     value

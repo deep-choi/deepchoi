@@ -6,7 +6,7 @@ import { ensureAdminDataSchema } from '../_utils/schema';
 
 const SITE_NAME = 'Deepchoi';
 const SITE_ORIGIN = 'https://deepchoi.com';
-const DEFAULT_IMAGE = `${SITE_ORIGIN}/social/portfolio.png`;
+const DEFAULT_IMAGE = `${SITE_ORIGIN}/social/portfolio-og.png`;
 
 const stripHtml = (value?: string): string =>
     String(value || '')
