@@ -14,8 +14,6 @@ interface ActiveFormats {
     italic: boolean;
     underline: boolean;
     strike: boolean;
-    unorderedList: boolean;
-    orderedList: boolean;
     inlineCode: boolean;
     link: boolean;
 }
@@ -26,8 +24,6 @@ const emptyFormats: ActiveFormats = {
     italic: false,
     underline: false,
     strike: false,
-    unorderedList: false,
-    orderedList: false,
     inlineCode: false,
     link: false
 };
@@ -46,8 +42,6 @@ const icons = {
     undo: 'M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3',
     redo: 'M15 15l6-6m0 0l-6-6m6 6H9a6 6 0 000 12h3',
     inlineCode: 'M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5',
-    bulletList: 'M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z',
-    numberList: 'M8.242 5.992h12m-12 6.003H20.24m-12 5.999h12M4.117 7.495v-3.75H2.99m1.125 3.75H2.99m1.125 0H5.24m-1.92 2.577a1.125 1.125 0 111.591 1.59l-1.83 1.83h2.16M2.99 15.745h1.125a1.125 1.125 0 010 2.25H3.74m0-.002h.375a1.125 1.125 0 010 2.25H2.99',
     quote: 'M7.5 8.25h-3v4.5h3v-4.5zm0 0c0 3-1.5 4.5-3 5.25M16.5 8.25h-3v4.5h3v-4.5zm0 0c0 3-1.5 4.5-3 5.25',
     divider: 'M4 12h16',
     codeBlock: 'M14.25 9.75L16.5 12l-2.25 2.25m-4.5 0L7.5 12l2.25-2.25M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z',
@@ -159,33 +153,7 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
 
     const runCommand = (command: string, value?: string) => {
         document.execCommand(command, false, value);
-        if (command === 'insertUnorderedList' || command === 'insertOrderedList') liftListOutOfParagraph();
         refreshFormats();
-    };
-
-    // Chrome wraps a list created from a paragraph as <p><ol>…</ol></p>, which is invalid HTML
-    // and gets split apart when the post is rendered. Move the list up and keep the caret in it.
-    const liftListOutOfParagraph = () => {
-        const element = selectionElement();
-        const list = element?.closest('ul, ol');
-        const paragraph = list?.parentElement;
-        if (!list || !paragraph || paragraph.tagName !== 'P') return;
-
-        const item = element?.closest('li');
-        paragraph.parentNode?.insertBefore(list, paragraph);
-        if (!(paragraph.textContent || '').trim() && !paragraph.querySelector('img, video')) {
-            paragraph.remove();
-        }
-
-        if (item) {
-            const range = document.createRange();
-            range.selectNodeContents(item);
-            range.collapse(false);
-            const selection = window.getSelection();
-            selection?.removeAllRanges();
-            selection?.addRange(range);
-        }
-        notifyChange();
     };
 
     const refreshFormats = () => {
@@ -198,8 +166,6 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
             italic: document.queryCommandState('italic'),
             underline: document.queryCommandState('underline'),
             strike: document.queryCommandState('strikeThrough'),
-            unorderedList: document.queryCommandState('insertUnorderedList'),
-            orderedList: document.queryCommandState('insertOrderedList'),
             inlineCode: Boolean(element.closest('code') && !element.closest('pre')),
             link: Boolean(element.closest('a'))
         });
@@ -810,8 +776,6 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
             <Divider />
 
             {/* Blocks */}
-            <ToolButton label="글머리 목록" active={formats.unorderedList} onPress={() => runCommand('insertUnorderedList')}><Icon d={icons.bulletList} /></ToolButton>
-            <ToolButton label="번호 목록" active={formats.orderedList} onPress={() => runCommand('insertOrderedList')}><Icon d={icons.numberList} /></ToolButton>
             <ToolButton
                 label="인용"
                 active={formats.block === 'BLOCKQUOTE'}

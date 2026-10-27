@@ -974,30 +974,9 @@ img {
     }
 }
 
-/* Lists, quotes, inline code and image captions, shared by the editor surface and published posts.
-   Tailwind preflight strips list markers and the CDN build has no typography plugin. */
-.dual-prose ul,
-.editor-prose ul {
-    list-style: disc;
-    padding-left: 1.5em;
-}
-
-.dual-prose ol,
-.editor-prose ol {
-    list-style: decimal;
-    padding-left: 1.5em;
-}
-
-.dual-prose ul ul,
-.editor-prose ul ul {
-    list-style: circle;
-}
-
-.dual-prose li + li,
-.editor-prose li + li {
-    margin-top: 0.3em;
-}
-
+/* Quotes, inline code and image captions, shared by the editor surface and published posts.
+   Lists are deliberately unstyled: older posts type their own numbers inside <ol>/<li>,
+   so showing list markers would double them. */
 .dual-prose blockquote {
     border-left: 3px solid #e5e5e5;
     padding-left: 16px;
