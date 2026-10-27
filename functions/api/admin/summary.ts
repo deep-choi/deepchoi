@@ -117,7 +117,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
             : await botViewsStatement.first();
 
         const { results: recentEntries } = await context.env.DB.prepare(`
-            SELECT id, title, category, type, date
+            SELECT id, title, category, type, COALESCE(isPrivate, 0) AS isPrivate, date
             FROM Project
             ORDER BY date DESC
             LIMIT 8

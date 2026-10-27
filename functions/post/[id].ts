@@ -158,6 +158,16 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
 
         if (!project) return context.next();
 
+        if (project.isPrivate) {
+            // Serve the bare app shell: no title, description or image of a private entry
+            // may reach crawlers or link previews. The app itself asks the API, which checks the session.
+            const shell = await context.next();
+            const headers = new Headers(shell.headers);
+            headers.set('X-Robots-Tag', 'noindex, nofollow');
+            headers.set('Cache-Control', 'private, no-store');
+            return new Response(shell.body, { status: shell.status, headers });
+        }
+
         const author = JSON.parse(project.author || '{}') as { name?: string };
         const title = truncate(project.seoTitle || `${project.title} | ${SITE_NAME}`, 70);
         const description = truncate(

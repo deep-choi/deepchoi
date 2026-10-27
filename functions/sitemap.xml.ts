@@ -36,6 +36,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
             SELECT id, slug, type, date
             FROM Project
             WHERE COALESCE(noIndex, 0) = 0
+                AND COALESCE(isPrivate, 0) = 0
                 AND COALESCE(NULLIF(type, ''), 'work') IN ('work', 'blog')
             ORDER BY date DESC
         `).all();

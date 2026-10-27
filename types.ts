@@ -32,6 +32,8 @@ export interface Project {
   /** Also list this entry under the other content type, with its own category there. */
   secondaryType?: 'work' | 'blog' | null;
   secondaryCategory?: string | null;
+  /** Visible to the admin only; hidden from lists, search engines and direct links. */
+  isPrivate?: boolean;
   link?: string;
   date: string;
   content: string;

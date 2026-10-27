@@ -14,6 +14,7 @@ import { CommentInput } from '../components/CommentInput';
 import { moveCarousel, setupCarousel } from '../utils/carousel';
 import { categoryLabel, categoryService, CategoryRecord } from '../services/categoryService';
 import { isListedIn, placementSummary } from '../utils/entryPlacement';
+import { PrivateBadge } from '../components/PrivateBadge';
 import { applyDefaultSeo, applyProjectSeo } from '../utils/seo';
 import { useAuthUser } from '../hooks/useAuthUser';
 
@@ -221,7 +222,8 @@ export const PostDetail: React.FC = () => {
     };
 
     const handleSave = () => {
-        if (isListedIn({ ...project, ...editor.form }, 'blog')) setReviewOpen(true);
+        const next = { ...project, ...editor.form };
+        if (isListedIn(next, 'blog') && !next.isPrivate) setReviewOpen(true);
         else void saveProject();
     };
 
@@ -366,6 +368,12 @@ export const PostDetail: React.FC = () => {
 
     return (
         <div className="bg-[#ffffff] min-h-screen pt-32 pb-20 px-4 animate-in fade-in duration-700" onClick={() => setIsMenuOpen(false)}>
+            {project.isPrivate && (
+                <div role="note" className="mx-auto mb-6 flex max-w-[800px] items-center gap-3 rounded-xl border border-[#e5e5e5] bg-[#fafafa] px-4 py-3 text-sm text-[#444444]">
+                    <PrivateBadge />
+                    <span>관리자에게만 보이는 글이에요. 목록, 검색엔진, 링크 미리보기에는 나오지 않아요.</span>
+                </div>
+            )}
             {saveNotice && !isEditing && <div role="status" className="mx-auto mb-6 flex max-w-[800px] items-center justify-between rounded-xl border border-[#b9d5c3] bg-[#f0faf3] px-4 py-3 text-sm text-[#245c36]"><span>{saveNotice}</span><button type="button" onClick={() => setSaveNotice('')} aria-label="알림 닫기">닫기</button></div>}
             {/* Image Lightbox Modal */}
             {selectedImage && createPortal(

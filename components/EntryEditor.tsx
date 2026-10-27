@@ -7,6 +7,9 @@ import { linkifyHtml, normalizeEditorHtml } from '../utils/contentProcessor';
 import { setupCarousel } from '../utils/carousel';
 import { useSuspendSmoothScroll } from './SmoothScroll';
 import { ContentType, secondaryTypeOf } from '../utils/entryPlacement';
+import { lockIconPath } from './PrivateBadge';
+
+const globeIconPath = 'M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418';
 
 interface EntryEditorProps {
     state: EntryEditorState;
@@ -225,6 +228,27 @@ export const EntryEditor: React.FC<EntryEditorProps> = ({
                         </div>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
+                        {!isStaticPage && (
+                            <button
+                                type="button"
+                                role="switch"
+                                aria-checked={Boolean(form.isPrivate)}
+                                aria-label="비공개"
+                                onClick={() => update(prev => ({ ...prev, isPrivate: !prev.isPrivate }))}
+                                title={form.isPrivate
+                                    ? '관리자에게만 보입니다. 누르면 공개로 바뀝니다.'
+                                    : '누구나 볼 수 있습니다. 누르면 비공개로 바뀝니다.'}
+                                className={`flex h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-bold transition-colors ${form.isPrivate
+                                    ? 'border-[#111111] bg-[#111111] text-white hover:bg-[#333333]'
+                                    : 'border-[#e5e5e5] bg-white text-[#444444] hover:bg-[#f5f5f5]'
+                                    }`}
+                            >
+                                <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24" aria-hidden="true">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d={form.isPrivate ? lockIconPath : globeIconPath} />
+                                </svg>
+                                <span className="hidden sm:inline">{form.isPrivate ? '비공개' : '공개'}</span>
+                            </button>
+                        )}
                         <div className="flex rounded-lg border border-[#e5e5e5] bg-[#fafafa] p-0.5" role="tablist" aria-label="보기 전환">
                             <button
                                 type="button"

@@ -1,14 +1,19 @@
 
 interface Env {
     DB: D1Database;
+    ADMIN_SESSION_SECRET?: string;
 }
 
+import { isEntryHiddenFrom } from '../../_utils/auth';
 import { ensureAdminDataSchema } from '../../_utils/schema';
 
 export const onRequestGet: PagesFunction<Env> = async (context) => {
     const projectId = context.params.projectId;
     try {
         await ensureAdminDataSchema(context.env.DB);
+        if (await isEntryHiddenFrom(context.request, context.env, String(projectId || ''))) {
+            return Response.json({ error: 'Not found' }, { status: 404 });
+        }
 
         const { results } = await context.env.DB.prepare(`
             SELECT *

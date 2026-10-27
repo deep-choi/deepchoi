@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Project } from '../types';
 import { ScrollReveal } from './ScrollReveal';
 import { getProjectPath } from '../utils/seo';
+import { PrivateBadge } from './PrivateBadge';
 
 interface ProjectCardProps {
     project: Project;
@@ -33,6 +34,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, index }) => {
 
                     {/* Category Tag Overlay */}
                     {/* Category Tag Overlay Removed */}
+                    {project.isPrivate && <PrivateBadge className="absolute left-3 top-3" />}
                 </div>
 
                 <div>

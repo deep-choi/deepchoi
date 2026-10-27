@@ -20,7 +20,8 @@ export const BlogSection: React.FC = () => {
             categoryService.getCategories('blog')
         ]).then(([data, categories]) => {
             if (!isMounted) return;
-            const blogPosts = data.filter(p => isListedIn(p, 'blog'));
+            // Home page section: private entries stay off it even for the admin.
+            const blogPosts = data.filter(p => isListedIn(p, 'blog') && !p.isPrivate);
             setPosts(blogPosts);
             const categoryNames = Array.from(new Set([
                 ...categories.map(category => category.name),

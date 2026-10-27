@@ -1,8 +1,10 @@
 
 interface Env {
     DB: D1Database;
+    ADMIN_SESSION_SECRET?: string;
 }
 
+import { isEntryHiddenFrom } from '../../_utils/auth';
 import { ensureAdminDataSchema } from '../../_utils/schema';
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {
@@ -10,6 +12,9 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         await ensureAdminDataSchema(context.env.DB);
 
         const { projectId, content, author, date } = await context.request.json() as any;
+        if (await isEntryHiddenFrom(context.request, context.env, String(projectId || ''))) {
+            return Response.json({ error: 'Not found' }, { status: 404 });
+        }
         const id = Date.now().toString(); // Simple ID generation
 
         await context.env.DB.prepare(

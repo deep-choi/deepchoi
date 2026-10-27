@@ -23,6 +23,7 @@ CREATE TABLE Project (
     type TEXT, -- 'work' or 'blog'
     secondaryType TEXT, -- optional: also list under the other type ('work' or 'blog')
     secondaryCategory TEXT, -- category within secondaryType
+    isPrivate INTEGER NOT NULL DEFAULT 0, -- 1: visible to the admin only
     date TEXT,
     content TEXT,
     author TEXT -- JSON string (Author object)

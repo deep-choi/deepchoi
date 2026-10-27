@@ -40,7 +40,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         const { results } = await context.env.DB.prepare(`
             SELECT id, slug, title, subtitle, description, seoDescription, date
             FROM Project
-            WHERE (type = 'blog' OR secondaryType = 'blog') AND COALESCE(noIndex, 0) = 0
+            WHERE (type = 'blog' OR secondaryType = 'blog') AND COALESCE(noIndex, 0) = 0 AND COALESCE(isPrivate, 0) = 0
             ORDER BY date DESC
         `).all();
 

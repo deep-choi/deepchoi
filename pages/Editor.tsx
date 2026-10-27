@@ -79,7 +79,8 @@ export const Editor: React.FC = () => {
     }, [categories, form.category, form.type, isEdit, isStaticPage, patch]);
 
     const handleSave = () => {
-        if (isListedIn(form, 'blog') && !isStaticPage) {
+        // The review confirms what goes public; a private entry skips it.
+        if (isListedIn(form, 'blog') && !isStaticPage && !form.isPrivate) {
             setReviewOpen(true);
             return;
         }
@@ -116,7 +117,13 @@ export const Editor: React.FC = () => {
             } else if (id === 'contact') {
                 navigate('/contact');
             } else if (projectData.type === 'blog') {
-                navigate('/blog', { state: { publicationNotice: isEdit ? '블로그 글을 저장했습니다.' : '블로그 글을 게시했습니다.' } });
+                navigate('/blog', {
+                    state: {
+                        publicationNotice: projectData.isPrivate
+                            ? '비공개로 저장했습니다. 관리자에게만 보입니다.'
+                            : isEdit ? '블로그 글을 저장했습니다.' : '블로그 글을 게시했습니다.'
+                    }
+                });
             } else if (projectData.type === 'work') {
                 navigate('/work');
             } else {
@@ -154,7 +161,7 @@ export const Editor: React.FC = () => {
                 categories={categories}
                 isStaticPage={isStaticPage}
                 saving={saving}
-                saveLabel={isEdit ? '저장' : '게시'}
+                saveLabel={isEdit || form.isPrivate ? '저장' : '게시'}
                 onSave={handleSave}
                 onExit={() => navigate(cancelTarget)}
                 onImageUpload={handleImageUpload}

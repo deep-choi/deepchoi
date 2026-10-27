@@ -119,7 +119,8 @@ const WorkShowcase: React.FC = () => {
     useEffect(() => {
         projectService.getAllProjects()
             .then((data) => {
-                setProjects(data.filter((project) => isListedIn(project, 'work')));
+                // The home page is the public face, so private entries stay off it even for the admin.
+                setProjects(data.filter((project) => isListedIn(project, 'work') && !project.isPrivate));
             })
             .finally(() => setIsLoading(false));
     }, []);

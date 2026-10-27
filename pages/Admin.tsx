@@ -18,6 +18,7 @@ import {
 import { categoryLabel, categoryService, EntryType } from '../services/categoryService';
 import { commentService } from '../services/commentService';
 import { authService } from '../services/authService';
+import { PrivateBadge } from '../components/PrivateBadge';
 
 interface AdminSummary {
     user: {
@@ -39,6 +40,7 @@ interface AdminSummary {
         title: string;
         category: string;
         type?: 'work' | 'blog' | 'page';
+        isPrivate?: number | boolean;
         date: string;
     }>;
     categories: Array<{
@@ -833,7 +835,8 @@ export const Admin: React.FC = () => {
                                                     <Link to={`/post/${entry.id}`} className="block truncate text-sm font-bold text-[#111111] hover:text-[#4169E1]">
                                                         {entry.title}
                                                     </Link>
-                                                    <p className="mt-0.5 text-xs font-medium text-[#666666]">
+                                                    <p className="mt-0.5 flex items-center gap-1.5 text-xs font-medium text-[#666666]">
+                                                        {Boolean(entry.isPrivate) && <PrivateBadge className="px-1.5 text-[10px]" />}
                                                         {categoryLabel(entry.category)} · {entryTypeLabels[entry.type || 'work']} · {new Date(entry.date).toLocaleDateString('ko-KR')}
                                                     </p>
                                                 </div>

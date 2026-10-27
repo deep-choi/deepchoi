@@ -73,7 +73,8 @@ const ensureProjectSeoColumns = async (db: D1Database): Promise<void> => {
         ['seoKeywords', 'TEXT'],
         ['noIndex', 'INTEGER NOT NULL DEFAULT 0'],
         ['secondaryType', 'TEXT'],
-        ['secondaryCategory', 'TEXT']
+        ['secondaryCategory', 'TEXT'],
+        ['isPrivate', 'INTEGER NOT NULL DEFAULT 0']
     ] as const;
 
     for (const [name, definition] of columnDefinitions) {

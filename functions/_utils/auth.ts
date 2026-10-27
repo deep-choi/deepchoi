@@ -122,6 +122,23 @@ export const getSessionUser = async (request: Request, env: SessionEnv): Promise
     return user ? publicUser(user) : null;
 };
 
+/** True when the request carries a valid admin session. Never throws; used to reveal private entries. */
+export const isAdminRequest = async (request: Request, env: SessionEnv): Promise<boolean> => {
+    try {
+        const user = await getSessionUser(request, env);
+        return Boolean(user && isAllowedAdmin(user));
+    } catch {
+        return false;
+    }
+};
+
+/** A private entry, and everything attached to it such as comments, exists only for the admin. */
+export const isEntryHiddenFrom = async (request: Request, env: SessionEnv, projectId: string): Promise<boolean> => {
+    const entry: any = await env.DB.prepare('SELECT isPrivate FROM Project WHERE id = ?').bind(projectId).first();
+    if (!entry?.isPrivate) return false;
+    return !(await isAdminRequest(request, env));
+};
+
 export const requireAdmin = async (
     context: EventContext<SessionEnv, string, unknown>
 ): Promise<{ user: SessionUser } | { response: Response }> => {

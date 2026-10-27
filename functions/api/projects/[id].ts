@@ -4,7 +4,7 @@ interface Env {
     ADMIN_SESSION_SECRET?: string;
 }
 
-import { requireAdmin } from '../../_utils/auth';
+import { isAdminRequest, requireAdmin } from '../../_utils/auth';
 import { ensureAdminDataSchema, normalizeSecondaryPlacement } from '../../_utils/schema';
 import { buildAutomaticSeo } from '../../_utils/seo';
 
@@ -15,6 +15,7 @@ const normalizeProject = (project: any) => ({
     tags: JSON.parse(project.tags as string || '[]'),
     seoKeywords: JSON.parse(project.seoKeywords as string || '[]'),
     noIndex: Boolean(project.noIndex),
+    isPrivate: Boolean(project.isPrivate),
     author: JSON.parse(project.author as string || '{}')
 });
 
@@ -34,6 +35,13 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         const project: any = await context.env.DB.prepare("SELECT * FROM Project WHERE id = ? OR slug = ?").bind(id, id).first();
         if (!project) {
             return Response.json({ error: "Not found" }, { status: 404 });
+        }
+        if (project.isPrivate) {
+            // Private entries look exactly like missing ones to everyone but the admin.
+            if (!(await isAdminRequest(context.request, context.env))) {
+                return Response.json({ error: "Not found" }, { status: 404 });
+            }
+            return Response.json(normalizeProject(project), { headers: { 'Cache-Control': 'private, no-store', Vary: 'Cookie' } });
         }
         return Response.json(normalizeProject(project));
     } catch (err) {
@@ -55,7 +63,7 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
         console.log('[API] Content length:', project.content?.length);
 
         const info = await context.env.DB.prepare(
-            `UPDATE Project SET slug=?, title=?, subtitle=?, description=?, seoTitle=?, seoDescription=?, seoImage=?, seoKeywords=?, noIndex=?, tech=?, tags=?, imageUrl=?, category=?, type=?, secondaryType=?, secondaryCategory=?, date=?, content=?, author=? WHERE id=?`
+            `UPDATE Project SET slug=?, title=?, subtitle=?, description=?, seoTitle=?, seoDescription=?, seoImage=?, seoKeywords=?, noIndex=?, tech=?, tags=?, imageUrl=?, category=?, type=?, secondaryType=?, secondaryCategory=?, isPrivate=?, date=?, content=?, author=? WHERE id=?`
         )
             .bind(
                 project.slug || '',
@@ -74,6 +82,8 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
                 project.type || 'work',
                 project.secondaryType,
                 project.secondaryCategory,
+                // Older clients omit the flag; keep the stored value instead of publishing by accident.
+                (payload.isPrivate === undefined ? (existingProject as any)?.isPrivate : payload.isPrivate) ? 1 : 0,
                 project.date,
                 project.content,
                 JSON.stringify(project.author),
