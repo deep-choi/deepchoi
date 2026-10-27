@@ -693,8 +693,16 @@ img {
     }
 }
 
+/* Published posts need this too: the prose-a:* classes on the post body come from the typography
+   plugin, which the Tailwind CDN build does not include, so links inherited the body text color. */
+.dual-prose a,
 .editor-prose a {
     color: #4169E1;
+    text-underline-offset: 3px;
+}
+
+.dual-prose a:hover {
+    text-decoration: underline;
 }
 
 .editor-prose strong,
