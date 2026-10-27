@@ -4,7 +4,7 @@ interface Env {
 }
 
 import { requireAdmin } from '../../_utils/auth';
-import { ensureAdminDataSchema } from '../../_utils/schema';
+import { ensureAdminDataSchema, projectInCategorySql } from '../../_utils/schema';
 
 const sourceLabels: Record<string, string> = {
     direct: '직접 방문',
@@ -64,8 +64,8 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         const totals: any = await context.env.DB.prepare(`
             SELECT
                 COUNT(*) AS totalEntries,
-                SUM(CASE WHEN type = 'blog' THEN 1 ELSE 0 END) AS blogEntries,
-                SUM(CASE WHEN type = 'work' OR type IS NULL OR type = '' THEN 1 ELSE 0 END) AS workEntries,
+                SUM(CASE WHEN type = 'blog' OR secondaryType = 'blog' THEN 1 ELSE 0 END) AS blogEntries,
+                SUM(CASE WHEN type = 'work' OR type IS NULL OR type = '' OR secondaryType = 'work' THEN 1 ELSE 0 END) AS workEntries,
                 SUM(CASE WHEN type = 'page' THEN 1 ELSE 0 END) AS pageEntries,
                 COUNT(DISTINCT category) AS categoryCount
             FROM Project
@@ -132,8 +132,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
                 COUNT(p.id) AS entryCount
             FROM Category c
             LEFT JOIN Project p
-                ON p.category = c.name
-                AND COALESCE(NULLIF(p.type, ''), 'work') = c.type
+                ON ${projectInCategorySql('p', 'c')}
             WHERE c.type IN ('work', 'blog')
             GROUP BY c.id
             ORDER BY c.type, c.sortOrder, c.name

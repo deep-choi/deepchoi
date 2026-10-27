@@ -5,6 +5,7 @@ import { Project } from '../types';
 import { ProjectCard } from './ProjectCard';
 import { categoryLabel, categoryService, findCategoryByQuery } from '../services/categoryService';
 import { useAuthUser } from '../hooks/useAuthUser';
+import { categoryIn, isListedIn } from '../utils/entryPlacement';
 
 
 export const ProjectGrid: React.FC<{ isPage?: boolean }> = ({ isPage = false }) => {
@@ -25,11 +26,11 @@ export const ProjectGrid: React.FC<{ isPage?: boolean }> = ({ isPage = false }) 
       categoryService.getCategories('work')
     ]).then(([data, categories]) => {
       if (!isMounted) return;
-      const workProjects = data.filter(p => !p.type || p.type === 'work');
+      const workProjects = data.filter(p => isListedIn(p, 'work'));
       setProjects(workProjects);
       const categoryNames = Array.from(new Set([
         ...categories.map(category => category.name),
-        ...workProjects.map(project => project.category).filter(Boolean)
+        ...workProjects.map(project => categoryIn(project, 'work')).filter(Boolean)
       ]));
       setTabs(['전체보기', ...categoryNames]);
       setIsLoading(false);
@@ -53,7 +54,7 @@ export const ProjectGrid: React.FC<{ isPage?: boolean }> = ({ isPage = false }) 
 
   const filteredProjects = activeTab === '전체보기'
     ? projects
-    : projects.filter(p => p.category === activeTab);
+    : projects.filter(p => categoryIn(p, 'work') === activeTab);
 
   return (
     <section id="projects" className={`${isPage ? 'pt-32 pb-24' : 'py-12 md:py-24'} bg-[#ffffff]`}>

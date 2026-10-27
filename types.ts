@@ -29,6 +29,9 @@ export interface Project {
   imageUrl?: string;
   category: string;
   type?: 'work' | 'blog' | 'page';
+  /** Also list this entry under the other content type, with its own category there. */
+  secondaryType?: 'work' | 'blog' | null;
+  secondaryCategory?: string | null;
   link?: string;
   date: string;
   content: string;

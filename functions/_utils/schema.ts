@@ -15,6 +15,25 @@ export const isContentEntryType = (value?: string | null): value is 'work' | 'bl
 export const categoryId = (type: string, name: string): string =>
     `${normalizeEntryType(type)}:${name.trim().toLowerCase().replace(/\s+/g, '-')}`;
 
+/**
+ * An entry can also be listed under the other content type with its own category there.
+ * Pages and same-type values are dropped so the primary type stays the single source of truth.
+ */
+export const normalizeSecondaryPlacement = (project: any): { secondaryType: 'work' | 'blog' | null; secondaryCategory: string | null } => {
+    const primary = normalizeEntryType(project?.type);
+    const secondary = project?.secondaryType;
+    if (primary === 'page' || !isContentEntryType(secondary) || secondary === primary) {
+        return { secondaryType: null, secondaryCategory: null };
+    }
+    return { secondaryType: secondary, secondaryCategory: String(project?.secondaryCategory || '').trim() };
+};
+
+/** SQL condition matching entries that belong to a category, as primary or secondary placement. */
+export const projectInCategorySql = (projectAlias: string, categoryAlias: string): string => `(
+    (${projectAlias}.category = ${categoryAlias}.name AND COALESCE(NULLIF(${projectAlias}.type, ''), 'work') = ${categoryAlias}.type)
+    OR (${projectAlias}.secondaryCategory = ${categoryAlias}.name AND ${projectAlias}.secondaryType = ${categoryAlias}.type)
+)`;
+
 const defaultCategories = [
     { id: 'work:ui-ux', name: 'UI UX', type: 'work', sortOrder: 0 },
     { id: 'work:바이브코딩', name: '바이브코딩', type: 'work', sortOrder: 1 },
@@ -52,7 +71,9 @@ const ensureProjectSeoColumns = async (db: D1Database): Promise<void> => {
         ['seoDescription', 'TEXT'],
         ['seoImage', 'TEXT'],
         ['seoKeywords', 'TEXT'],
-        ['noIndex', 'INTEGER NOT NULL DEFAULT 0']
+        ['noIndex', 'INTEGER NOT NULL DEFAULT 0'],
+        ['secondaryType', 'TEXT'],
+        ['secondaryCategory', 'TEXT']
     ] as const;
 
     for (const [name, definition] of columnDefinitions) {
@@ -172,6 +193,22 @@ export const ensureAdminDataSchema = async (db: D1Database): Promise<void> => {
             AND trim(category) != ''
             AND COALESCE(NULLIF(type, ''), 'work') IN ('work', 'blog')
         GROUP BY trim(category), COALESCE(NULLIF(type, ''), 'work')
+    `).run();
+
+    await db.prepare(`
+        INSERT OR IGNORE INTO Category (id, name, type, sortOrder, createdAt, updatedAt)
+        SELECT
+            secondaryType || ':' || lower(replace(trim(secondaryCategory), ' ', '-')) AS id,
+            trim(secondaryCategory) AS name,
+            secondaryType AS type,
+            100 AS sortOrder,
+            datetime('now') AS createdAt,
+            datetime('now') AS updatedAt
+        FROM Project
+        WHERE secondaryCategory IS NOT NULL
+            AND trim(secondaryCategory) != ''
+            AND secondaryType IN ('work', 'blog')
+        GROUP BY trim(secondaryCategory), secondaryType
     `).run();
 
     await normalizeContentCategorySortOrders(db);

@@ -12,7 +12,8 @@ import { imageService } from '../services/imageService';
 import { linkifyHtml, normalizeEditorHtml } from '../utils/contentProcessor';
 import { CommentInput } from '../components/CommentInput';
 import { moveCarousel, setupCarousel } from '../utils/carousel';
-import { categoryService, CategoryRecord } from '../services/categoryService';
+import { categoryLabel, categoryService, CategoryRecord } from '../services/categoryService';
+import { isListedIn, placementSummary } from '../utils/entryPlacement';
 import { applyDefaultSeo, applyProjectSeo } from '../utils/seo';
 import { useAuthUser } from '../hooks/useAuthUser';
 
@@ -220,7 +221,7 @@ export const PostDetail: React.FC = () => {
     };
 
     const handleSave = () => {
-        if ((editor.form.type || project?.type) === 'blog') setReviewOpen(true);
+        if (isListedIn({ ...project, ...editor.form }, 'blog')) setReviewOpen(true);
         else void saveProject();
     };
 
@@ -358,7 +359,7 @@ export const PostDetail: React.FC = () => {
                     onImageUpload={handleImageUpload}
                     onCoverUpload={handleImageUpload}
                 />
-                {reviewOpen && <PublicationReview title={editor.form.title || ''} category={editor.form.category || ''} date={editor.form.date || ''} editing saving={saving} onCancel={() => setReviewOpen(false)} onConfirm={() => void saveProject()} />}
+                {reviewOpen && <PublicationReview title={editor.form.title || ''} category={placementSummary(editor.form, categoryLabel)} date={editor.form.date || ''} editing saving={saving} onCancel={() => setReviewOpen(false)} onConfirm={() => void saveProject()} />}
             </>
         );
     }

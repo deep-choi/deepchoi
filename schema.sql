@@ -21,6 +21,8 @@ CREATE TABLE Project (
     imageUrl TEXT,
     category TEXT,
     type TEXT, -- 'work' or 'blog'
+    secondaryType TEXT, -- optional: also list under the other type ('work' or 'blog')
+    secondaryCategory TEXT, -- category within secondaryType
     date TEXT,
     content TEXT,
     author TEXT -- JSON string (Author object)

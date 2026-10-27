@@ -5,11 +5,12 @@ interface Env {
 }
 
 import { requireAdmin } from '../../_utils/auth';
-import { ensureAdminDataSchema } from '../../_utils/schema';
+import { ensureAdminDataSchema, normalizeSecondaryPlacement } from '../../_utils/schema';
 import { buildAutomaticSeo } from '../../_utils/seo';
 
 const normalizeProject = (project: any) => ({
     ...project,
+    ...normalizeSecondaryPlacement(project),
     tech: JSON.parse(project.tech as string || '[]'),
     tags: JSON.parse(project.tags as string || '[]'),
     seoKeywords: JSON.parse(project.seoKeywords as string || '[]'),
@@ -21,7 +22,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     try {
         await ensureAdminDataSchema(context.env.DB);
         const { results } = await context.env.DB.prepare(
-            "SELECT id, slug, title, subtitle, description, seoTitle, seoDescription, seoImage, seoKeywords, noIndex, tech, tags, imageUrl, category, type, date, author FROM Project"
+            "SELECT id, slug, title, subtitle, description, seoTitle, seoDescription, seoImage, seoKeywords, noIndex, tech, tags, imageUrl, category, type, secondaryType, secondaryCategory, date, author FROM Project"
         ).all();
         const projects = results.map(normalizeProject);
         return Response.json(projects);
@@ -37,9 +38,9 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     try {
         await ensureAdminDataSchema(context.env.DB);
         const payload: any = await context.request.json();
-        const project = buildAutomaticSeo(payload);
+        const project = { ...buildAutomaticSeo(payload), ...normalizeSecondaryPlacement(payload) };
         const info = await context.env.DB.prepare(
-            `INSERT INTO Project (id, slug, title, subtitle, description, seoTitle, seoDescription, seoImage, seoKeywords, noIndex, tech, tags, imageUrl, category, type, date, content, author) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+            `INSERT INTO Project (id, slug, title, subtitle, description, seoTitle, seoDescription, seoImage, seoKeywords, noIndex, tech, tags, imageUrl, category, type, secondaryType, secondaryCategory, date, content, author) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         )
             .bind(
                 project.id,
@@ -57,6 +58,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
                 project.imageUrl,
                 project.category,
                 project.type || 'work',
+                project.secondaryType,
+                project.secondaryCategory,
                 project.date,
                 project.content,
                 JSON.stringify(project.author)

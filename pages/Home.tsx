@@ -4,6 +4,7 @@ import { projectService } from '../services/projectService';
 import { Project } from '../types';
 import { ScrollReveal } from '../components/ScrollReveal';
 import { getProjectPath } from '../utils/seo';
+import { isListedIn } from '../utils/entryPlacement';
 
 const HeroParticleField = React.lazy(() =>
     import('../components/HeroParticleField').then((module) => ({ default: module.HeroParticleField }))
@@ -118,7 +119,7 @@ const WorkShowcase: React.FC = () => {
     useEffect(() => {
         projectService.getAllProjects()
             .then((data) => {
-                setProjects(data.filter((project) => !project.type || project.type === 'work'));
+                setProjects(data.filter((project) => isListedIn(project, 'work')));
             })
             .finally(() => setIsLoading(false));
     }, []);

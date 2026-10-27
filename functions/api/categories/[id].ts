@@ -24,8 +24,9 @@ const getEntryCount = async (db: D1Database, category: any): Promise<number> => 
     const result: any = await db.prepare(`
         SELECT COUNT(*) AS entryCount
         FROM Project
-        WHERE category = ? AND COALESCE(NULLIF(type, ''), 'work') = ?
-    `).bind(category.name, category.type).first();
+        WHERE (category = ? AND COALESCE(NULLIF(type, ''), 'work') = ?)
+            OR (secondaryCategory = ? AND secondaryType = ?)
+    `).bind(category.name, category.type, category.name, category.type).first();
 
     return Number(result?.entryCount || 0);
 };
@@ -74,6 +75,11 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
                 UPDATE Project
                 SET category = ?
                 WHERE category = ? AND COALESCE(NULLIF(type, ''), 'work') = ?
+            `).bind(name, category.name, category.type),
+            context.env.DB.prepare(`
+                UPDATE Project
+                SET secondaryCategory = ?
+                WHERE secondaryCategory = ? AND secondaryType = ?
             `).bind(name, category.name, category.type)
         ]);
 

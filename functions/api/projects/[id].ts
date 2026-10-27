@@ -5,11 +5,12 @@ interface Env {
 }
 
 import { requireAdmin } from '../../_utils/auth';
-import { ensureAdminDataSchema } from '../../_utils/schema';
+import { ensureAdminDataSchema, normalizeSecondaryPlacement } from '../../_utils/schema';
 import { buildAutomaticSeo } from '../../_utils/seo';
 
 const normalizeProject = (project: any) => ({
     ...project,
+    ...normalizeSecondaryPlacement(project),
     tech: JSON.parse(project.tech as string || '[]'),
     tags: JSON.parse(project.tags as string || '[]'),
     seoKeywords: JSON.parse(project.seoKeywords as string || '[]'),
@@ -49,12 +50,12 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
         await ensureAdminDataSchema(context.env.DB);
         const payload: any = await context.request.json();
         const existingProject = await context.env.DB.prepare("SELECT * FROM Project WHERE id = ?").bind(id).first();
-        const project = buildAutomaticSeo(payload, existingProject);
+        const project = { ...buildAutomaticSeo(payload, existingProject), ...normalizeSecondaryPlacement(payload) };
         console.log('[API] Updating project:', id);
         console.log('[API] Content length:', project.content?.length);
 
         const info = await context.env.DB.prepare(
-            `UPDATE Project SET slug=?, title=?, subtitle=?, description=?, seoTitle=?, seoDescription=?, seoImage=?, seoKeywords=?, noIndex=?, tech=?, tags=?, imageUrl=?, category=?, type=?, date=?, content=?, author=? WHERE id=?`
+            `UPDATE Project SET slug=?, title=?, subtitle=?, description=?, seoTitle=?, seoDescription=?, seoImage=?, seoKeywords=?, noIndex=?, tech=?, tags=?, imageUrl=?, category=?, type=?, secondaryType=?, secondaryCategory=?, date=?, content=?, author=? WHERE id=?`
         )
             .bind(
                 project.slug || '',
@@ -71,6 +72,8 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
                 project.imageUrl,
                 project.category,
                 project.type || 'work',
+                project.secondaryType,
+                project.secondaryCategory,
                 project.date,
                 project.content,
                 JSON.stringify(project.author),

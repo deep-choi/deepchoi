@@ -6,6 +6,7 @@ import { categoryLabel, CategoryRecord, EntryType } from '../services/categorySe
 import { linkifyHtml, normalizeEditorHtml } from '../utils/contentProcessor';
 import { setupCarousel } from '../utils/carousel';
 import { useSuspendSmoothScroll } from './SmoothScroll';
+import { ContentType, secondaryTypeOf } from '../utils/entryPlacement';
 
 interface EntryEditorProps {
     state: EntryEditorState;
@@ -113,8 +114,40 @@ export const EntryEditor: React.FC<EntryEditorProps> = ({
     onSaveRef.current = onSave;
     useSuspendSmoothScroll();
 
-    const entryType: EntryType = form.type === 'blog' ? 'blog' : 'work';
-    const categoryOptions = categories.filter(category => category.type === entryType);
+    const entryType: ContentType = form.type === 'blog' ? 'blog' : 'work';
+    const secondaryType = secondaryTypeOf(form);
+    // The primary type always comes first; it decides the URL, SEO type and editor label.
+    const placements: ContentType[] = secondaryType ? [entryType, secondaryType] : [entryType];
+    const typeName = (type: ContentType) => (type === 'work' ? 'Work' : 'Blog');
+    const categoryOptionsFor = (type: ContentType) => categories.filter(category => category.type === type);
+    const firstCategoryOf = (type: ContentType) => categoryOptionsFor(type)[0]?.name || (type === 'blog' ? 'AI' : 'UI UX');
+
+    const togglePlacement = (type: ContentType) => update(prev => {
+        const primary: ContentType = prev.type === 'blog' ? 'blog' : 'work';
+        const secondary = secondaryTypeOf(prev);
+        if (type !== primary && type !== secondary) {
+            return { ...prev, secondaryType: type, secondaryCategory: firstCategoryOf(type) };
+        }
+        if (type === secondary) {
+            return { ...prev, secondaryType: null, secondaryCategory: null };
+        }
+        // Removing the primary type promotes the secondary one.
+        return secondary
+            ? { ...prev, type: secondary, category: prev.secondaryCategory || firstCategoryOf(secondary), secondaryType: null, secondaryCategory: null }
+            : prev;
+    });
+
+    const swapPrimary = () => update(prev => {
+        const secondary = secondaryTypeOf(prev);
+        if (!secondary) return prev;
+        return {
+            ...prev,
+            type: secondary,
+            category: prev.secondaryCategory || firstCategoryOf(secondary),
+            secondaryType: prev.type === 'blog' ? 'blog' : 'work',
+            secondaryCategory: prev.category || ''
+        };
+    });
     const characterCount = countCharacters(form.content || '');
     const readingMinutes = Math.max(1, Math.ceil(characterCount / 500));
 
@@ -336,39 +369,78 @@ export const EntryEditor: React.FC<EntryEditorProps> = ({
                     {!isStaticPage && (
                         <section className="grid gap-4 md:grid-cols-3">
                             <div>
-                                <FieldLabel label="유형" />
-                                <div className="grid h-11 grid-cols-2 gap-1 rounded-lg border border-[#e5e5e5] bg-[#fafafa] p-1" role="radiogroup" aria-label="유형">
-                                    {(['work', 'blog'] as EntryType[]).map(type => (
+                                <FieldLabel
+                                    label="게시 위치"
+                                    right={secondaryType ? (
                                         <button
-                                            key={type}
                                             type="button"
-                                            role="radio"
-                                            aria-checked={entryType === type}
-                                            onClick={() => update(prev => ({
-                                                ...prev,
-                                                type,
-                                                category: categories.find(category => category.type === type)?.name || (type === 'blog' ? 'AI' : 'UI UX')
-                                            }))}
-                                            className={`rounded-md text-sm font-bold transition-colors ${entryType === type ? 'bg-white text-[#111111] shadow-sm' : 'text-[#666666] hover:text-[#111111]'}`}
+                                            onClick={swapPrimary}
+                                            title="기본 유형은 글 주소와 검색 노출 형식의 기준이 됩니다."
+                                            className="font-bold text-[#4169E1] hover:underline"
                                         >
-                                            {type === 'work' ? 'Work' : 'Blog'}
+                                            기본 {typeName(entryType)} · 바꾸기
                                         </button>
-                                    ))}
+                                    ) : '둘 다 선택 가능'}
+                                />
+                                <div className="grid h-11 grid-cols-2 gap-1 rounded-lg border border-[#e5e5e5] bg-[#fafafa] p-1" role="group" aria-label="게시 위치">
+                                    {(['work', 'blog'] as ContentType[]).map(type => {
+                                        const selected = placements.includes(type);
+                                        return (
+                                            <button
+                                                key={type}
+                                                type="button"
+                                                role="checkbox"
+                                                aria-checked={selected}
+                                                onClick={() => {
+                                                    if (selected && placements.length === 1) return; // keep at least one
+                                                    togglePlacement(type);
+                                                }}
+                                                className={`flex items-center justify-center gap-1.5 rounded-md text-sm font-bold transition-colors ${selected ? 'bg-white text-[#111111] shadow-sm' : 'text-[#888888] hover:text-[#111111]'}`}
+                                            >
+                                                <span className={`flex h-4 w-4 items-center justify-center rounded border ${selected ? 'border-[#4169E1] bg-[#4169E1] text-white' : 'border-[#cccccc] bg-white'}`} aria-hidden="true">
+                                                    {selected && (
+                                                        <svg className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                                    )}
+                                                </span>
+                                                {typeName(type)}
+                                                {secondaryType && type === entryType && (
+                                                    <span className="rounded bg-[#eef2ff] px-1 text-[10px] font-bold text-[#4169E1]">기본</span>
+                                                )}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
                             <div>
-                                <FieldLabel label="카테고리" htmlFor="entry-category" />
-                                <select
-                                    id="entry-category"
-                                    value={form.category || ''}
-                                    onChange={e => update(prev => ({ ...prev, category: e.target.value as any }))}
-                                    className={`${inputClass} h-11 px-3 text-sm font-bold`}
-                                >
-                                    {categoryOptions.length === 0 && <option value={form.category || ''}>{categoryLabel(form.category || '')}</option>}
-                                    {categoryOptions.map(category => (
-                                        <option key={category.id} value={category.name}>{categoryLabel(category.name)}</option>
-                                    ))}
-                                </select>
+                                <FieldLabel label="카테고리" htmlFor={`entry-category-${entryType}`} />
+                                <div className={`grid gap-2 ${placements.length > 1 ? 'grid-cols-2' : ''}`}>
+                                    {placements.map((type, index) => {
+                                        const value = (index === 0 ? form.category : form.secondaryCategory) || '';
+                                        const options = categoryOptionsFor(type);
+                                        return (
+                                            <div key={type} className="relative">
+                                                {placements.length > 1 && (
+                                                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-[#888888]">{typeName(type)}</span>
+                                                )}
+                                                <select
+                                                    id={`entry-category-${type}`}
+                                                    aria-label={`${typeName(type)} 카테고리`}
+                                                    value={value}
+                                                    onChange={e => {
+                                                        const next = e.target.value;
+                                                        update(prev => (index === 0 ? { ...prev, category: next } : { ...prev, secondaryCategory: next }));
+                                                    }}
+                                                    className={`${inputClass} h-11 pr-2 text-sm font-bold ${placements.length > 1 ? 'pl-12' : 'pl-3'}`}
+                                                >
+                                                    {!options.some(option => option.name === value) && <option value={value}>{categoryLabel(value)}</option>}
+                                                    {options.map(category => (
+                                                        <option key={category.id} value={category.name}>{categoryLabel(category.name)}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             </div>
                             <div>
                                 <FieldLabel label="공개일" htmlFor="entry-date" />
@@ -384,7 +456,7 @@ export const EntryEditor: React.FC<EntryEditorProps> = ({
                     )}
 
                     {!isStaticPage && (
-                        <section className={`grid gap-4 ${entryType === 'work' ? 'md:grid-cols-2' : ''}`}>
+                        <section className={`grid gap-4 ${placements.includes('work') ? 'md:grid-cols-2' : ''}`}>
                             <div>
                                 <FieldLabel label="태그" htmlFor="entry-tags" right="Enter 또는 쉼표로 추가" />
                                 <ChipInput
@@ -394,7 +466,7 @@ export const EntryEditor: React.FC<EntryEditorProps> = ({
                                     placeholder="예: Claude, UI UX"
                                 />
                             </div>
-                            {entryType === 'work' && (
+                            {placements.includes('work') && (
                                 <div>
                                     <FieldLabel label="기술 스택" htmlFor="entry-tech" />
                                     <ChipInput

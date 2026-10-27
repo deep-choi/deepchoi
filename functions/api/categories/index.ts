@@ -4,7 +4,7 @@ interface Env {
 }
 
 import { requireAdmin } from '../../_utils/auth';
-import { categoryId, ensureAdminDataSchema, isContentEntryType, normalizeEntryType } from '../../_utils/schema';
+import { categoryId, ensureAdminDataSchema, isContentEntryType, normalizeEntryType, projectInCategorySql } from '../../_utils/schema';
 
 const categorySelect = `
     SELECT
@@ -17,8 +17,7 @@ const categorySelect = `
         COUNT(p.id) AS entryCount
     FROM Category c
     LEFT JOIN Project p
-        ON p.category = c.name
-        AND COALESCE(NULLIF(p.type, ''), 'work') = c.type
+        ON ${projectInCategorySql('p', 'c')}
 `;
 
 export const onRequestGet: PagesFunction<Env> = async (context) => {

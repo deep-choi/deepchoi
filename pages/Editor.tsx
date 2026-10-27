@@ -7,8 +7,9 @@ import { EntryEditor } from '../components/EntryEditor';
 import { PublicationReview } from '../components/PublicationReview';
 import { imageService } from '../services/imageService';
 import { normalizeEditorHtml } from '../utils/contentProcessor';
-import { categoryService, CategoryRecord, EntryType } from '../services/categoryService';
+import { categoryLabel, categoryService, CategoryRecord, EntryType } from '../services/categoryService';
 import { useEntryEditor } from '../hooks/useEntryEditor';
+import { isListedIn, placementSummary } from '../utils/entryPlacement';
 
 const localDate = () => {
     const now = new Date();
@@ -78,7 +79,7 @@ export const Editor: React.FC = () => {
     }, [categories, form.category, form.type, isEdit, isStaticPage, patch]);
 
     const handleSave = () => {
-        if (form.type === 'blog' && !isStaticPage) {
+        if (isListedIn(form, 'blog') && !isStaticPage) {
             setReviewOpen(true);
             return;
         }
@@ -159,7 +160,7 @@ export const Editor: React.FC = () => {
                 onImageUpload={handleImageUpload}
                 onCoverUpload={handleThumbnailUpload}
             />
-            {reviewOpen && <PublicationReview title={form.title || ''} category={form.category || ''} date={form.date || ''} editing={isEdit} saving={saving} onCancel={() => setReviewOpen(false)} onConfirm={() => void saveProject()} />}
+            {reviewOpen && <PublicationReview title={form.title || ''} category={placementSummary(form, categoryLabel)} date={form.date || ''} editing={isEdit} saving={saving} onCancel={() => setReviewOpen(false)} onConfirm={() => void saveProject()} />}
         </>
     );
 };

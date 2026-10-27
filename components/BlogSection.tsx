@@ -5,6 +5,7 @@ import { projectService } from '../services/projectService';
 import { Project } from '../types';
 import { ProjectCard } from './ProjectCard';
 import { categoryLabel, categoryService } from '../services/categoryService';
+import { categoryIn, isListedIn } from '../utils/entryPlacement';
 
 export const BlogSection: React.FC = () => {
     const [posts, setPosts] = useState<Project[]>([]);
@@ -19,11 +20,11 @@ export const BlogSection: React.FC = () => {
             categoryService.getCategories('blog')
         ]).then(([data, categories]) => {
             if (!isMounted) return;
-            const blogPosts = data.filter(p => p.type === 'blog');
+            const blogPosts = data.filter(p => isListedIn(p, 'blog'));
             setPosts(blogPosts);
             const categoryNames = Array.from(new Set([
                 ...categories.map(category => category.name),
-                ...blogPosts.map(post => post.category).filter(Boolean)
+                ...blogPosts.map(post => categoryIn(post, 'blog')).filter(Boolean)
             ]));
             setTabs(['전체보기', ...categoryNames]);
         });
@@ -35,7 +36,7 @@ export const BlogSection: React.FC = () => {
 
     const filteredPosts = activeTab === '전체보기'
         ? posts.slice(0, 6)
-        : posts.filter(p => p.category === activeTab).slice(0, 6);
+        : posts.filter(p => categoryIn(p, 'blog') === activeTab).slice(0, 6);
 
     return (
         <section id="blog" className="py-16 md:py-32 bg-[#ffffff]">
