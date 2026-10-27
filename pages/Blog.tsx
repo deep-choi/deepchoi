@@ -12,6 +12,7 @@ export const Blog: React.FC = () => {
     const [activeTab, setActiveTab] = useState('전체보기');
     const [tabs, setTabs] = useState<string[]>(['전체보기']);
     const location = useLocation();
+    const [publicationNotice, setPublicationNotice] = useState<string | null>(() => (location.state as { publicationNotice?: string } | null)?.publicationNotice || null);
     const currentUser = useAuthUser();
     const isAdmin = currentUser?.role === 'admin';
 
@@ -57,6 +58,7 @@ export const Blog: React.FC = () => {
     return (
         <section className="py-32 bg-[#ffffff] min-h-screen">
             <div className="max-w-[1440px] mx-auto px-4 md:px-[20px]">
+                {publicationNotice && <div role="status" className="mb-6 flex items-center justify-between gap-4 rounded-xl border border-[#b9d5c3] bg-[#f0faf3] px-4 py-3 text-sm text-[#245c36]"><span>{publicationNotice}</span><button type="button" onClick={() => setPublicationNotice(null)} aria-label="알림 닫기">닫기</button></div>}
                 <div className="mb-4">
                     <div className="flex flex-col gap-8">
                         <div className="flex items-center justify-between">

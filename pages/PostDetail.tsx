@@ -5,13 +5,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { isProjectAuthenticationError, projectService } from '../services/projectService';
 import { Project } from '../types';
 import { commentService, Comment } from '../services/commentService';
-import { MarkdownToolbar } from '../components/MarkdownToolbar';
-import { RichEditor } from '../components/RichEditor';
+import { EntryEditor } from '../components/EntryEditor';
+import { useEntryEditor } from '../hooks/useEntryEditor';
+import { PublicationReview } from '../components/PublicationReview';
 import { imageService } from '../services/imageService';
 import { linkifyHtml, normalizeEditorHtml } from '../utils/contentProcessor';
 import { CommentInput } from '../components/CommentInput';
 import { moveCarousel, setupCarousel } from '../utils/carousel';
-import { categoryLabel, categoryService, CategoryRecord, EntryType } from '../services/categoryService';
+import { categoryService, CategoryRecord } from '../services/categoryService';
 import { applyDefaultSeo, applyProjectSeo } from '../utils/seo';
 import { useAuthUser } from '../hooks/useAuthUser';
 
@@ -38,14 +39,12 @@ export const PostDetail: React.FC = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [editForm, setEditForm] = useState<Partial<Project>>({});
     const [categories, setCategories] = useState<CategoryRecord[]>([]);
-    const [tagDraft, setTagDraft] = useState('');
-    const contentEditorRef = useRef<HTMLDivElement>(null);
     const contentDisplayRef = useRef<HTMLDivElement>(null);
-    const coverInputRef = useRef<HTMLInputElement>(null);
-    const [editSessionId, setEditSessionId] = useState(0); // Used as key for contentEditable remount
-    const [isCoverUploading, setIsCoverUploading] = useState(false);
+    const editor = useEntryEditor(`entry:${id}`, isEditing);
+    const [reviewOpen, setReviewOpen] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [saveNotice, setSaveNotice] = useState('');
     const currentUser = useAuthUser();
     const isAdmin = currentUser?.role === 'admin';
 
@@ -220,91 +219,50 @@ export const PostDetail: React.FC = () => {
         }
     };
 
-    const handleSave = async () => {
-        if (!project || !project.id) return;
+    const handleSave = () => {
+        if ((editor.form.type || project?.type) === 'blog') setReviewOpen(true);
+        else void saveProject();
+    };
 
-        const latestContent = contentEditorRef.current?.innerHTML || editForm.content || project.content || '';
+    const saveProject = async () => {
+        if (!project || !project.id) return;
+        if (saving) return;
+        setSaving(true);
+
+        const latestContent = editor.editorRef.current?.innerHTML || editor.form.content || project.content || '';
         const updatedProject: Project = {
             ...project,
-            ...editForm,
+            ...editor.form,
             content: normalizeEditorHtml(latestContent),
         };
 
         try {
             await projectService.updateProject(updatedProject);
+            editor.clearDraft();
             setProject(updatedProject);
             setIsEditing(false);
-            // Clear editForm after a delay to let contentEditable unmount first
-            setTimeout(() => setEditForm({}), 100);
+            setReviewOpen(false);
+            setSaveNotice('변경사항을 저장했습니다.');
+            window.scrollTo({ top: 0 });
         } catch (error) {
             console.error('Save failed:', error);
             if (isProjectAuthenticationError(error)) {
-                alert('로그인 세션이 만료되었습니다. 다시 로그인한 뒤 저장해 주세요.');
+                editor.flushDraft();
+                alert('로그인 세션이 만료되었습니다. 다시 로그인한 뒤 저장해 주세요.\n작성 중인 내용은 이 기기에 임시저장되어 있습니다.');
                 navigate('/login', {
                     state: { from: { pathname: `/post/${encodeURIComponent(id || project.id)}` } }
                 });
                 return;
             }
             alert(`Failed to save project: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        } finally {
+            setSaving(false);
         }
     };
 
     const handleImageUpload = (file: File): Promise<string> => {
         // Upload to R2 via server API (High Quality 1920px/0.9)
         return imageService.uploadImage(file);
-    };
-
-    const handleCoverImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        setIsCoverUploading(true);
-        try {
-            const url = await handleImageUpload(file);
-            setEditForm(prev => ({ ...prev, imageUrl: url }));
-        } catch (error) {
-            console.error('Cover image upload failed:', error);
-            alert('커버 이미지 업로드에 실패했습니다.');
-        } finally {
-            setIsCoverUploading(false);
-            if (coverInputRef.current) coverInputRef.current.value = '';
-        }
-    };
-
-    const addTagsFromDraft = () => {
-        const tags = tagDraft
-            .split(',')
-            .map(tag => tag.trim())
-            .filter(Boolean);
-
-        if (tags.length === 0) return;
-
-        setEditForm(prev => {
-            const currentTags = prev.tags || [];
-            return {
-                ...prev,
-                tags: Array.from(new Set([...currentTags, ...tags]))
-            };
-        });
-        setTagDraft('');
-    };
-
-    const removeTag = (tagToRemove: string) => {
-        setEditForm(prev => ({
-            ...prev,
-            tags: (prev.tags || []).filter(tag => tag !== tagToRemove)
-        }));
-    };
-
-    const getCategoryOptions = (type?: string): CategoryRecord[] => {
-        const entryType = (type === 'blog' ? 'blog' : 'work') as EntryType;
-        return categories.filter(category => category.type === entryType);
-    };
-
-    const firstCategoryFor = (type: EntryType): string => {
-        const option = getCategoryOptions(type)[0];
-        if (option) return option.name;
-        return type === 'blog' ? 'AI' : 'UI UX';
     };
 
     const handleContentClick = (e: React.MouseEvent) => {
@@ -383,8 +341,31 @@ export const PostDetail: React.FC = () => {
         );
     }
 
+    if (isEditing) {
+        return (
+            <>
+                <EntryEditor
+                    state={editor}
+                    heading="포스트 편집"
+                    categories={categories}
+                    saving={saving}
+                    saveLabel="저장"
+                    onSave={handleSave}
+                    onExit={() => {
+                        setIsEditing(false);
+                        window.scrollTo({ top: 0 });
+                    }}
+                    onImageUpload={handleImageUpload}
+                    onCoverUpload={handleImageUpload}
+                />
+                {reviewOpen && <PublicationReview title={editor.form.title || ''} category={editor.form.category || ''} date={editor.form.date || ''} editing saving={saving} onCancel={() => setReviewOpen(false)} onConfirm={() => void saveProject()} />}
+            </>
+        );
+    }
+
     return (
         <div className="bg-[#ffffff] min-h-screen pt-32 pb-20 px-4 animate-in fade-in duration-700" onClick={() => setIsMenuOpen(false)}>
+            {saveNotice && !isEditing && <div role="status" className="mx-auto mb-6 flex max-w-[800px] items-center justify-between rounded-xl border border-[#b9d5c3] bg-[#f0faf3] px-4 py-3 text-sm text-[#245c36]"><span>{saveNotice}</span><button type="button" onClick={() => setSaveNotice('')} aria-label="알림 닫기">닫기</button></div>}
             {/* Image Lightbox Modal */}
             {selectedImage && createPortal(
                 <div
@@ -485,47 +466,10 @@ export const PostDetail: React.FC = () => {
             )}
 
             <div className="max-w-[1200px] mx-auto relative group/page">
-                {isEditing && (
-                    <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-[#f5f5f5] px-1 py-4">
-                        <div className="flex items-center gap-3">
-                            <button
-                                type="button"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setIsEditing(false);
-                                    setEditForm(project);
-                                    setTagDraft('');
-                                }}
-                                className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#e5e5e5] bg-[#ffffff] text-[#2b2b2b] hover:bg-[#f5f5f5] hover:text-[#111111] transition-colors"
-                                aria-label="편집 종료"
-                            >
-                                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-                            </button>
-                            <div>
-                                <div className="flex flex-wrap items-center gap-2">
-                                    <h2 className="text-xl font-bold tracking-tight text-[#111111]">포스트 편집</h2>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleSave();
-                                }}
-                                className="h-10 px-4 bg-[#4169E1] rounded-lg shadow-lg shadow-[#4169E1]/20 flex items-center gap-2 justify-center text-white font-bold text-sm hover:bg-[#3458c7] active:scale-95 transition-all"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                                저장
-                            </button>
-                        </div>
-                    </div>
-                )}
-
                 {/* Meta Header */}
-                <div className={`${isEditing ? 'mb-8 max-w-[1200px] mx-auto text-left' : 'mb-12 max-w-[800px] mx-auto text-center'} relative`}>
+                <div className={`mb-12 max-w-[800px] mx-auto text-center relative`}>
                     {/* ... (Admin Actions) ... */}
-                    {isAdmin && !isEditing && (
+                    {isAdmin && (
                         <div className="absolute right-0 top-0">
                             <button
                                 onClick={(e) => {
@@ -544,9 +488,9 @@ export const PostDetail: React.FC = () => {
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            setEditSessionId(prev => prev + 1);
+                                            editor.load(project);
                                             setIsEditing(true);
-                                            setEditForm(project);
+                                            window.scrollTo({ top: 0 });
                                             setIsMenuOpen(false);
                                         }}
                                         className="w-full text-left px-4 py-3 text-[14px] font-medium text-[#111111] hover:bg-[#f5f5f5] flex items-center justify-between group"
@@ -572,154 +516,6 @@ export const PostDetail: React.FC = () => {
                         </div>
                     )}
 
-                    {isEditing ? (
-                        <div>
-                            <div className="space-y-6">
-                                <section className="space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <label className="text-sm font-bold text-[#111111]">커버 이미지</label>
-                                    </div>
-                                    <div className="group relative overflow-hidden rounded-[8px] bg-[#ffffff] aspect-[16/3] min-h-[150px] ring-1 ring-white/5 md:rounded-[16px]">
-                                        {editForm.imageUrl ? (
-                                            <img src={editForm.imageUrl} alt="" className="h-full w-full object-cover" />
-                                        ) : (
-                                            <div className="flex h-full items-center justify-center text-sm font-semibold text-[#666666]">
-                                                커버 이미지를 추가하세요
-                                            </div>
-                                        )}
-                                        <button
-                                            type="button"
-                                            onClick={() => coverInputRef.current?.click()}
-                                            className="absolute right-4 top-4 inline-flex items-center gap-2 rounded-lg bg-[#ffffff]/85 px-3 py-2 text-sm font-bold text-[#111111] backdrop-blur-md ring-1 ring-white/10 hover:bg-[#f5f5f5] transition-colors"
-                                        >
-                                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4-4a2 2 0 012.8 0L14 15m-1-1l1-1a2 2 0 012.8 0L20 16M5 20h14a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v14a1 1 0 001 1z" /></svg>
-                                            커버 변경
-                                        </button>
-                                        {editForm.imageUrl && (
-                                            <button
-                                                type="button"
-                                                onClick={() => setEditForm(prev => ({ ...prev, imageUrl: '' }))}
-                                                className="absolute bottom-4 right-4 flex h-9 w-9 items-center justify-center rounded-lg bg-[#ffffff]/85 text-[#2b2b2b] backdrop-blur-md ring-1 ring-white/10 hover:bg-[#2d1418] hover:text-[#ff7b72] transition-colors"
-                                                aria-label="커버 삭제"
-                                            >
-                                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M4 7h16m-9-3h2a1 1 0 011 1v2h-4V5a1 1 0 011-1z" /></svg>
-                                            </button>
-                                        )}
-                                        {isCoverUploading && (
-                                            <div className="absolute inset-0 flex items-center justify-center bg-[#ffffff]/70 backdrop-blur-sm">
-                                                <div className="h-7 w-7 animate-spin rounded-full border-4 border-[#4169E1] border-t-transparent"></div>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={handleCoverImageChange} />
-                                </section>
-
-                                <section className="space-y-2">
-                                    <div className="flex items-end justify-between gap-3">
-                                        <label className="text-sm font-bold text-[#111111]">제목</label>
-                                        <span className="text-xs font-medium text-[#666666]">{(editForm.title || '').length}/100</span>
-                                    </div>
-                                    <input
-                                        value={editForm.title || ''}
-                                        maxLength={100}
-                                        onChange={e => setEditForm(prev => ({ ...prev, title: e.target.value }))}
-                                        className="h-14 w-full rounded-lg border border-[#e5e5e5]/70 bg-[#ffffff]/85 px-4 text-[24px] font-bold tracking-tight text-[#111111] placeholder:text-[#888888] outline-none focus:border-[#4169E1] focus:ring-2 focus:ring-[#4169E1]/20 transition-all"
-                                        placeholder="제목"
-                                    />
-                                </section>
-
-                                <section className="space-y-2">
-                                    <div className="flex items-end justify-between gap-3">
-                                        <label className="text-sm font-bold text-[#111111]">설명 <span className="text-[#666666]">(선택)</span></label>
-                                        <span className="text-xs font-medium text-[#666666]">{(editForm.subtitle || '').length}/200</span>
-                                    </div>
-                                    <textarea
-                                        value={editForm.subtitle || ''}
-                                        maxLength={200}
-                                        onChange={e => setEditForm(prev => ({ ...prev, subtitle: e.target.value }))}
-                                        className="min-h-[78px] w-full resize-none rounded-lg border border-[#e5e5e5]/70 bg-[#ffffff]/85 px-4 py-3 text-[15px] leading-relaxed text-[#111111] placeholder:text-[#888888] outline-none focus:border-[#4169E1] focus:ring-2 focus:ring-[#4169E1]/20 transition-all"
-                                        placeholder="설명"
-                                    />
-                                </section>
-
-                                <section className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px_minmax(260px,1fr)]">
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-bold text-[#111111]">카테고리</label>
-                                        <div className="flex h-12 items-center gap-2 rounded-lg border border-[#e5e5e5]/70 bg-[#ffffff]/85 px-2">
-                                            <div className="flex bg-transparent">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setEditForm(prev => ({ ...prev, type: 'work', category: firstCategoryFor('work') }))}
-                                                    className={`h-9 px-4 rounded-lg text-sm font-bold transition-all ${editForm.type === 'work' ? 'bg-[#4169E1] text-white shadow-sm' : 'text-[#666666] hover:text-[#111111]'}`}
-                                                >
-                                                    Work
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setEditForm(prev => ({ ...prev, type: 'blog', category: firstCategoryFor('blog') }))}
-                                                    className={`h-9 px-4 rounded-lg text-sm font-bold transition-all ${editForm.type === 'blog' ? 'bg-[#4169E1] text-white shadow-sm' : 'text-[#666666] hover:text-[#111111]'}`}
-                                                >
-                                                    Blog
-                                                </button>
-                                            </div>
-                                            <select
-                                                value={editForm.category || 'UI UX'}
-                                                onChange={e => setEditForm(prev => ({ ...prev, category: e.target.value as any }))}
-                                                className="ml-auto h-9 min-w-[120px] rounded-lg border border-[#e5e5e5]/70 bg-[#ffffff] px-3 text-sm font-bold text-[#111111] outline-none focus:ring-2 focus:ring-[#4169E1]/30"
-                                            >
-                                                {getCategoryOptions(editForm.type).map(category => (
-                                                    <option key={category.id} value={category.name}>{categoryLabel(category.name)}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-bold text-[#111111]">공개일</label>
-                                        <div className="relative">
-                                            <input
-                                                type="date"
-                                                value={editForm.date}
-                                                onChange={e => setEditForm(prev => ({ ...prev, date: e.target.value }))}
-                                                className="dark-date-input h-12 w-full rounded-lg border border-[#e5e5e5]/70 bg-[#ffffff]/85 px-4 pr-11 text-sm font-bold text-[#111111] outline-none focus:border-[#4169E1] focus:ring-2 focus:ring-[#4169E1]/20 transition-all"
-                                            />
-                                            <svg className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#111111]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3M5 11h14M6 5h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2z" />
-                                            </svg>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-bold text-[#111111]">태그</label>
-                                        <div className="flex min-h-12 flex-wrap items-center gap-2 rounded-lg border border-[#e5e5e5]/70 bg-[#ffffff]/85 px-3 py-2">
-                                            {(editForm.tags || []).map(tag => (
-                                                <span key={tag} className="inline-flex items-center gap-2 rounded-lg border border-[#e5e5e5] bg-[#f5f5f5] px-3 py-1.5 text-xs font-bold text-[#111111]">
-                                                    {tag}
-                                                    <button type="button" onClick={() => removeTag(tag)} className="text-[#666666] hover:text-[#ff7b72]" aria-label={`${tag} 태그 삭제`}>
-                                                        <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                                                    </button>
-                                                </span>
-                                            ))}
-                                            <input
-                                                value={tagDraft}
-                                                onChange={e => setTagDraft(e.target.value)}
-                                                onBlur={addTagsFromDraft}
-                                                onKeyDown={e => {
-                                                    if (e.key === 'Enter' || e.key === ',') {
-                                                        e.preventDefault();
-                                                        addTagsFromDraft();
-                                                    }
-                                                }}
-                                                className="h-7 min-w-[110px] flex-1 bg-transparent text-sm font-medium text-[#111111] placeholder:text-[#888888] outline-none"
-                                                placeholder="+ 태그 추가"
-                                            />
-                                        </div>
-                                    </div>
-                                </section>
-
-                            </div>
-                        </div>
-                    ) : (
                         <div className="flex flex-col items-center">
                             <h1 className="mb-3 text-[28px] font-semibold leading-[1.2] tracking-tightest text-[#111111] md:text-[40px]">
                                 {project.title}
@@ -731,11 +527,10 @@ export const PostDetail: React.FC = () => {
                             )}
                             <p className="text-[15px] text-[#666666] font-medium tracking-tightest">{project.date}</p>
                         </div>
-                    )}
                 </div>
 
                 {/* Cover Image */}
-                {!isEditing && project.imageUrl && (
+                {project.imageUrl && (
                     <div
                         className="cover-image-container mb-16 w-full max-w-[1000px] mx-auto bg-[#ffffff] rounded-[8px] overflow-hidden shadow-sm cursor-zoom-in md:rounded-[16px]"
                         onClick={() => setSelectedImage(project.imageUrl)}
@@ -756,23 +551,7 @@ export const PostDetail: React.FC = () => {
                     className="max-w-[1000px] mx-auto [&_img]:cursor-zoom-in [&_img]:hover:opacity-95 [&_img]:transition-opacity"
                     onClick={handleContentClick}
                 >
-                    {isEditing ? (
-                        <div className="space-y-4">
-                            <div className="space-y-2">
-                                <MarkdownToolbar
-                                    onImageUpload={handleImageUpload}
-                                />
-                                <RichEditor
-                                    key={editSessionId}
-                                    editorRef={contentEditorRef}
-                                    initialContent={editForm.content || ''}
-                                    onContentChange={(content) => setEditForm(prev => ({ ...prev, content }))}
-                                />
-                            </div>
-                        </div>
-                    ) : (
                         <div ref={contentDisplayRef} className="markdown-body dual-prose prose prose-lg max-w-none prose-headings:text-[#111111] prose-p:text-[#2b2b2b] prose-strong:text-[#111111] prose-ul:text-[#2b2b2b] prose-ol:text-[#2b2b2b] prose-li:text-[#2b2b2b] prose-blockquote:text-[#2b2b2b] prose-a:text-[#4169E1] prose-img:rounded-[8px] md:prose-img:rounded-[16px] prose-headings:m-0 prose-p:m-0 prose-ul:m-0 prose-ol:m-0 prose-li:m-0 prose-blockquote:m-0 prose-pre:m-0" dangerouslySetInnerHTML={{ __html: linkifyHtml(project.content) }} />
-                    )}
                 </div>
 
                 {/* Comments Section */}

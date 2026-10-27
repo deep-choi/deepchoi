@@ -6,6 +6,25 @@ interface SmoothScrollProps {
     disabled?: boolean;
 }
 
+const SUSPEND_EVENT = 'deepchoi:smooth-scroll-suspend';
+let suspendCount = 0;
+
+/**
+ * Turn smooth scrolling off while the calling component is mounted.
+ * The transformed scroll container breaks `position: sticky`, which editors rely on.
+ */
+export const useSuspendSmoothScroll = (active = true) => {
+    useEffect(() => {
+        if (!active) return;
+        suspendCount += 1;
+        window.dispatchEvent(new Event(SUSPEND_EVENT));
+        return () => {
+            suspendCount -= 1;
+            window.dispatchEvent(new Event(SUSPEND_EVENT));
+        };
+    }, [active]);
+};
+
 export const SmoothScroll: React.FC<SmoothScrollProps> = ({ children, disabled = false }) => {
     const contentRef = useRef<HTMLDivElement | null>(null);
     const spacerRef = useRef<HTMLDivElement | null>(null);
@@ -13,13 +32,21 @@ export const SmoothScroll: React.FC<SmoothScrollProps> = ({ children, disabled =
     const frameRef = useRef(0);
     const location = useLocation();
     const [canSmoothScroll, setCanSmoothScroll] = useState(false);
+    const [suspended, setSuspended] = useState(suspendCount > 0);
+
+    useEffect(() => {
+        const syncSuspended = () => setSuspended(suspendCount > 0);
+        window.addEventListener(SUSPEND_EVENT, syncSuspended);
+        syncSuspended();
+        return () => window.removeEventListener(SUSPEND_EVENT, syncSuspended);
+    }, []);
 
     useEffect(() => {
         const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
         const desktopQuery = window.matchMedia('(min-width: 1024px)');
 
         const syncSmoothScrollState = () => {
-            setCanSmoothScroll(!disabled && !reducedMotionQuery.matches && desktopQuery.matches);
+            setCanSmoothScroll(!disabled && !suspended && !reducedMotionQuery.matches && desktopQuery.matches);
         };
 
         syncSmoothScrollState();
@@ -30,7 +57,7 @@ export const SmoothScroll: React.FC<SmoothScrollProps> = ({ children, disabled =
             reducedMotionQuery.removeEventListener('change', syncSmoothScrollState);
             desktopQuery.removeEventListener('change', syncSmoothScrollState);
         };
-    }, [disabled]);
+    }, [disabled, suspended]);
 
     useLayoutEffect(() => {
         const content = contentRef.current;

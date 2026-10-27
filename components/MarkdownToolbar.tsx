@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { imageService } from '../services/imageService';
 
 interface MarkdownToolbarProps {
@@ -6,20 +6,296 @@ interface MarkdownToolbarProps {
     onInsertContent?: (content: string) => void;
 }
 
+type ToolbarMenu = 'code' | 'grid' | 'lineHeight' | 'color' | 'link' | null;
+
+interface ActiveFormats {
+    block: string;
+    bold: boolean;
+    italic: boolean;
+    underline: boolean;
+    strike: boolean;
+    unorderedList: boolean;
+    orderedList: boolean;
+    inlineCode: boolean;
+    link: boolean;
+}
+
+const emptyFormats: ActiveFormats = {
+    block: 'P',
+    bold: false,
+    italic: false,
+    underline: false,
+    strike: false,
+    unorderedList: false,
+    orderedList: false,
+    inlineCode: false,
+    link: false
+};
+
+const codeLanguages = [
+    { value: 'plaintext', label: '텍스트' },
+    { value: 'typescript', label: 'TypeScript' },
+    { value: 'javascript', label: 'JavaScript' },
+    { value: 'html', label: 'HTML' },
+    { value: 'css', label: 'CSS' },
+    { value: 'python', label: 'Python' },
+    { value: 'bash', label: 'Bash' }
+];
+
+const icons = {
+    undo: 'M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3',
+    redo: 'M15 15l6-6m0 0l-6-6m6 6H9a6 6 0 000 12h3',
+    inlineCode: 'M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5',
+    bulletList: 'M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z',
+    numberList: 'M8.242 5.992h12m-12 6.003H20.24m-12 5.999h12M4.117 7.495v-3.75H2.99m1.125 3.75H2.99m1.125 0H5.24m-1.92 2.577a1.125 1.125 0 111.591 1.59l-1.83 1.83h2.16M2.99 15.745h1.125a1.125 1.125 0 010 2.25H3.74m0-.002h.375a1.125 1.125 0 010 2.25H2.99',
+    quote: 'M7.5 8.25h-3v4.5h3v-4.5zm0 0c0 3-1.5 4.5-3 5.25M16.5 8.25h-3v4.5h3v-4.5zm0 0c0 3-1.5 4.5-3 5.25',
+    divider: 'M4 12h16',
+    codeBlock: 'M14.25 9.75L16.5 12l-2.25 2.25m-4.5 0L7.5 12l2.25-2.25M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z',
+    link: 'M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244',
+    image: 'M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z',
+    grid: 'M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z',
+    slides: 'M6 6.878V6a2.25 2.25 0 012.25-2.25h7.5A2.25 2.25 0 0118 6v.878m-12 0c.235-.083.487-.128.75-.128h10.5c.263 0 .515.045.75.128m-12 0A2.25 2.25 0 004.5 9v.878m13.5-3A2.25 2.25 0 0119.5 9v.878m0 0a2.246 2.246 0 00-.75-.128H5.25c-.263 0-.515.045-.75.128m15 0A2.25 2.25 0 0121 12v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6c0-.98.626-1.813 1.5-2.122',
+    video: 'M21 12a9 9 0 11-18 0 9 9 0 0118 0zM15.91 11.672a.375.375 0 010 .656l-5.603 3.113a.375.375 0 01-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112z',
+    lineHeight: 'M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5',
+    chevron: 'M19.5 8.25l-7.5 7.5-7.5-7.5'
+};
+
+const escapeHtml = (value: string) =>
+    value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+const selectionElement = (): HTMLElement | null => {
+    const anchor = window.getSelection()?.anchorNode;
+    if (!anchor) return null;
+    return anchor.nodeType === Node.ELEMENT_NODE ? anchor as HTMLElement : anchor.parentElement;
+};
+
+const Icon: React.FC<{ d: string; className?: string }> = ({ d, className = 'h-[18px] w-[18px]' }) => (
+    <svg className={className} fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24" aria-hidden="true">
+        <path strokeLinecap="round" strokeLinejoin="round" d={d} />
+    </svg>
+);
+
+const ToolButton: React.FC<{
+    label: string;
+    onPress: () => void;
+    active?: boolean;
+    wide?: boolean;
+    children: React.ReactNode;
+}> = ({ label, onPress, active = false, wide = false, children }) => (
+    <button
+        type="button"
+        title={label}
+        aria-label={label}
+        aria-pressed={active}
+        // mousedown keeps the editor selection; click with detail 0 is keyboard activation.
+        onMouseDown={(e) => { e.preventDefault(); onPress(); }}
+        onClick={(e) => { if (e.detail === 0) onPress(); }}
+        className={`flex h-8 shrink-0 items-center justify-center gap-1 rounded-md text-[13px] font-semibold transition-colors ${wide ? 'px-2' : 'w-8'} ${active
+            ? 'bg-[#eef2ff] text-[#4169E1]'
+            : 'text-[#444444] hover:bg-[#f2f2f2] hover:text-[#111111]'
+            }`}
+    >
+        {children}
+    </button>
+);
+
+const Divider = () => <span className="mx-1 h-5 w-px shrink-0 bg-[#e5e5e5]" aria-hidden="true" />;
+
+const MenuPanel: React.FC<{ align?: 'left' | 'right'; className?: string; children: React.ReactNode }> = ({ align = 'left', className = '', children }) => (
+    <div className={`absolute top-full z-40 mt-2 rounded-xl border border-[#e5e5e5] bg-white p-1.5 shadow-[0_12px_32px_rgba(17,17,17,0.12)] ${align === 'right' ? 'right-0' : 'left-0'} ${className}`}>
+        {children}
+    </div>
+);
+
+const MenuItem: React.FC<{ onPress: () => void; children: React.ReactNode }> = ({ onPress, children }) => (
+    <button
+        type="button"
+        onMouseDown={(e) => { e.preventDefault(); onPress(); }}
+        onClick={(e) => { if (e.detail === 0) onPress(); }}
+        className="flex h-9 w-full items-center gap-2 whitespace-nowrap rounded-lg px-3 text-left text-sm font-medium text-[#111111] hover:bg-[#f5f5f5]"
+    >
+        {children}
+    </button>
+);
+
 export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload, onInsertContent }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const videoInputRef = useRef<HTMLInputElement>(null);
     const gridInputRef = useRef<HTMLInputElement>(null);
     const carouselInputRef = useRef<HTMLInputElement>(null);
     const savedRangeRef = useRef<Range | null>(null);
+    const toolbarRef = useRef<HTMLDivElement>(null);
     const [gridColumns, setGridColumns] = useState<number>(2);
-    const [codeLanguage, setCodeLanguage] = useState('plaintext');
+    const [openMenu, setOpenMenu] = useState<ToolbarMenu>(null);
+    const [linkUrl, setLinkUrl] = useState('');
+    const [formats, setFormats] = useState<ActiveFormats>(emptyFormats);
 
     const saveSelection = () => {
         const selection = window.getSelection();
         if (selection && selection.rangeCount > 0) {
             savedRangeRef.current = selection.getRangeAt(0).cloneRange();
         }
+    };
+
+    const restoreSelection = () => {
+        const range = savedRangeRef.current;
+        const selection = window.getSelection();
+        if (!range || !selection) return;
+        const start = range.startContainer;
+        const root = (start.nodeType === Node.ELEMENT_NODE ? start as HTMLElement : start.parentElement)
+            ?.closest('[contenteditable="true"]') as HTMLElement | null;
+        root?.focus({ preventScroll: true });
+        selection.removeAllRanges();
+        selection.addRange(range);
+    };
+
+    // Direct DOM edits (color, line height, code blocks) do not fire input events,
+    // so tell the editor about them for dirty tracking and autosave.
+    const notifyChange = () => {
+        const root = selectionElement()?.closest('[contenteditable="true"]')
+            ?? document.querySelector('.editor-prose[contenteditable="true"]');
+        root?.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+
+    const runCommand = (command: string, value?: string) => {
+        document.execCommand(command, false, value);
+        if (command === 'insertUnorderedList' || command === 'insertOrderedList') liftListOutOfParagraph();
+        refreshFormats();
+    };
+
+    // Chrome wraps a list created from a paragraph as <p><ol>…</ol></p>, which is invalid HTML
+    // and gets split apart when the post is rendered. Move the list up and keep the caret in it.
+    const liftListOutOfParagraph = () => {
+        const element = selectionElement();
+        const list = element?.closest('ul, ol');
+        const paragraph = list?.parentElement;
+        if (!list || !paragraph || paragraph.tagName !== 'P') return;
+
+        const item = element?.closest('li');
+        paragraph.parentNode?.insertBefore(list, paragraph);
+        if (!(paragraph.textContent || '').trim() && !paragraph.querySelector('img, video')) {
+            paragraph.remove();
+        }
+
+        if (item) {
+            const range = document.createRange();
+            range.selectNodeContents(item);
+            range.collapse(false);
+            const selection = window.getSelection();
+            selection?.removeAllRanges();
+            selection?.addRange(range);
+        }
+        notifyChange();
+    };
+
+    const refreshFormats = () => {
+        const element = selectionElement();
+        if (!element?.closest('[contenteditable="true"]')) return;
+        const block = element.closest('h1, h2, h3, blockquote, pre, p, li');
+        setFormats({
+            block: block?.tagName || 'P',
+            bold: document.queryCommandState('bold'),
+            italic: document.queryCommandState('italic'),
+            underline: document.queryCommandState('underline'),
+            strike: document.queryCommandState('strikeThrough'),
+            unorderedList: document.queryCommandState('insertUnorderedList'),
+            orderedList: document.queryCommandState('insertOrderedList'),
+            inlineCode: Boolean(element.closest('code') && !element.closest('pre')),
+            link: Boolean(element.closest('a'))
+        });
+    };
+
+    useEffect(() => {
+        document.addEventListener('selectionchange', refreshFormats);
+        return () => document.removeEventListener('selectionchange', refreshFormats);
+    }, []);
+
+    useEffect(() => {
+        if (!openMenu) return;
+        const close = (event: MouseEvent) => {
+            if (!toolbarRef.current?.contains(event.target as Node)) setOpenMenu(null);
+        };
+        document.addEventListener('mousedown', close);
+        return () => document.removeEventListener('mousedown', close);
+    }, [openMenu]);
+
+    const toggleMenu = (menu: Exclude<ToolbarMenu, null>) => {
+        saveSelection();
+        setOpenMenu(current => (current === menu ? null : menu));
+    };
+
+    const openLinkMenu = () => {
+        saveSelection();
+        setLinkUrl(selectionElement()?.closest('a')?.getAttribute('href') || '');
+        setOpenMenu('link');
+    };
+
+    useEffect(() => {
+        const handleShortcut = (event: KeyboardEvent) => {
+            if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 'k') return;
+            if (!(document.activeElement as HTMLElement | null)?.isContentEditable) return;
+            event.preventDefault();
+            openLinkMenu();
+        };
+        window.addEventListener('keydown', handleShortcut);
+        return () => window.removeEventListener('keydown', handleShortcut);
+    }, []);
+
+    const normalizeUrl = (value: string) => {
+        const url = value.trim();
+        if (!url) return '';
+        if (/^(https?:|mailto:|\/|#)/i.test(url)) return url;
+        return `https://${url}`;
+    };
+
+    const applyLink = () => {
+        const url = normalizeUrl(linkUrl);
+        setOpenMenu(null);
+        if (!url) return;
+        restoreSelection();
+        const existing = selectionElement()?.closest('a');
+        const range = window.getSelection()?.rangeCount ? window.getSelection()!.getRangeAt(0) : null;
+        if (existing) {
+            existing.setAttribute('href', url);
+            notifyChange();
+        } else if (!range || range.collapsed) {
+            document.execCommand('insertHTML', false, `<a href="${escapeHtml(url)}">${escapeHtml(url)}</a>`);
+        } else {
+            document.execCommand('createLink', false, url);
+        }
+        savedRangeRef.current = null;
+        refreshFormats();
+    };
+
+    const removeLink = () => {
+        setOpenMenu(null);
+        restoreSelection();
+        const existing = selectionElement()?.closest('a');
+        const selection = window.getSelection();
+        if (existing && selection) {
+            const range = document.createRange();
+            range.selectNodeContents(existing);
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
+        document.execCommand('unlink', false);
+        savedRangeRef.current = null;
+        refreshFormats();
+    };
+
+    const toggleInlineCode = () => {
+        const element = selectionElement();
+        const code = element?.closest('code');
+        if (code && !code.closest('pre')) {
+            code.replaceWith(...Array.from(code.childNodes));
+            notifyChange();
+            refreshFormats();
+            return;
+        }
+        const selection = window.getSelection();
+        if (!selection?.rangeCount || selection.getRangeAt(0).collapsed) return;
+        document.execCommand('insertHTML', false, `<code>${escapeHtml(selection.toString())}</code>`);
+        refreshFormats();
     };
 
     const insertContent = (content: string) => {
@@ -402,7 +678,7 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
         }
     };
 
-    const insertCodeBlock = () => {
+    const insertCodeBlock = (language: string) => {
         const selection = window.getSelection();
         if (!selection) return;
 
@@ -423,7 +699,7 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
         const pre = anchor?.closest('pre');
         if (!pre) return;
 
-        pre.dataset.language = codeLanguage;
+        pre.dataset.language = language;
         if (!pre.querySelector(':scope > code')) {
             const code = document.createElement('code');
             while (pre.firstChild) code.appendChild(pre.firstChild);
@@ -448,15 +724,25 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
         }
 
         savedRangeRef.current = null;
+        notifyChange();
     };
 
     const editorColors = ['#111111', '#2b2b2b', '#666666', '#4169E1', '#3fb950'];
-    const groupClass = "flex gap-1 pr-2 border-r border-[#e5e5e5] items-center";
-    const textButtonClass = "min-h-9 px-2.5 py-1.5 text-[#2b2b2b] hover:text-[#111111] hover:bg-[#f5f5f5] rounded-lg font-semibold transition-colors";
-    const mediaButtonClass = "min-h-9 px-2.5 py-1.5 hover:bg-[#f5f5f5] rounded-lg font-semibold transition-colors flex items-center gap-1.5";
+    const blockOptions = [
+        { tag: 'P', label: '본문', text: '본문' },
+        { tag: 'H1', label: '제목 1', text: 'H1' },
+        { tag: 'H2', label: '제목 2', text: 'H2' },
+        { tag: 'H3', label: '제목 3', text: 'H3' }
+    ];
+    const menuHeadingClass = 'px-3 pb-1 pt-1.5 text-[11px] font-bold text-[#888888]';
 
     return (
-        <div className="flex flex-wrap gap-2 mb-3 p-2 bg-[#ffffff]/95 rounded-2xl border border-[#e5e5e5] backdrop-blur-xl">
+        <div
+            ref={toolbarRef}
+            role="toolbar"
+            aria-label="본문 서식"
+            className="flex flex-wrap items-center gap-y-1 rounded-xl border border-[#e5e5e5] bg-white/95 px-2 py-1.5 backdrop-blur-xl"
+        >
             <input
                 type="file"
                 ref={fileInputRef}
@@ -488,205 +774,190 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
                 multiple
             />
 
-            {/* Block Format: H1, H2, H3, P */}
-            <div className={groupClass}>
-                <button
-                    type="button"
-                    onMouseDown={(e) => { e.preventDefault(); format('H1'); }}
-                    className={`${textButtonClass} text-lg`}
-                    title="제목 1"
-                >
-                    H1
-                </button>
-                <button
-                    type="button"
-                    onMouseDown={(e) => { e.preventDefault(); format('H2'); }}
-                    className={`${textButtonClass} text-base`}
-                    title="제목 2"
-                >
-                    H2
-                </button>
-                <button
-                    type="button"
-                    onMouseDown={(e) => { e.preventDefault(); format('H3'); }}
-                    className={`${textButtonClass} text-sm`}
-                    title="제목 3"
-                >
-                    H3
-                </button>
-                <button
-                    type="button"
-                    onMouseDown={(e) => { e.preventDefault(); format('P'); }}
-                    className={`${textButtonClass} text-sm`}
-                    title="본문"
-                >
-                    P
-                </button>
-                <button
-                    type="button"
-                    onMouseDown={(e) => { e.preventDefault(); document.execCommand('bold', false); }}
-                    className={textButtonClass}
-                    title="볼드"
-                >
-                    B
-                </button>
-                <button
-                    type="button"
-                    onMouseDown={(e) => { e.preventDefault(); document.execCommand('insertHorizontalRule', false); }}
-                    className={`${textButtonClass} flex items-center justify-center`}
-                    title="구분선"
-                >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" /></svg>
-                </button>
-                <select
-                    value={codeLanguage}
-                    onMouseDown={saveSelection}
-                    onChange={(e) => setCodeLanguage(e.target.value)}
-                    className="h-9 max-w-[112px] rounded-lg border border-[#e5e5e5] bg-[#ffffff] px-2 text-xs font-semibold text-[#2b2b2b] outline-none focus:border-[#4169E1]"
-                    title="코드 언어"
-                    aria-label="코드 언어"
-                >
-                    <option value="plaintext">텍스트</option>
-                    <option value="typescript">TypeScript</option>
-                    <option value="javascript">JavaScript</option>
-                    <option value="html">HTML</option>
-                    <option value="css">CSS</option>
-                    <option value="python">Python</option>
-                    <option value="bash">Bash</option>
-                </select>
-                <button
-                    type="button"
-                    onMouseDown={(e) => { e.preventDefault(); saveSelection(); insertCodeBlock(); }}
-                    className={`${textButtonClass} font-mono`}
-                    title="현재 문단을 코드블럭으로 전환"
-                    aria-label="코드블럭"
-                >
-                    {'</>'}
-                </button>
-            </div>
+            {/* History */}
+            <ToolButton label="실행 취소 (Ctrl+Z)" onPress={() => runCommand('undo')}><Icon d={icons.undo} /></ToolButton>
+            <ToolButton label="다시 실행 (Ctrl+Y)" onPress={() => runCommand('redo')}><Icon d={icons.redo} /></ToolButton>
+            <Divider />
 
-            {/* Line Height */}
-            <div className={groupClass}>
-                <span className="text-[10px] text-[#666666] font-bold uppercase mr-1">줄간격</span>
-                {['1.5', '1.6', '1.8', '2.0', '2.5'].map(val => (
-                    <button
-                        key={val}
-                        type="button"
-                        onMouseDown={(e) => { e.preventDefault(); applyLineHeight(val); }}
-                        className="px-2 py-1.5 text-[11px] font-semibold text-[#2b2b2b] hover:text-[#111111] hover:bg-[#f5f5f5] rounded-md transition-colors"
-                        title={`줄간격 ${val}`}
-                    >
-                        {val}
-                    </button>
-                ))}
-            </div>
+            {/* Block type */}
+            {blockOptions.map(option => (
+                <ToolButton
+                    key={option.tag}
+                    label={option.label}
+                    wide
+                    active={formats.block === option.tag}
+                    onPress={() => { format(option.tag); notifyChange(); refreshFormats(); }}
+                >
+                    {option.text}
+                </ToolButton>
+            ))}
+            <Divider />
 
-            {/* Color - applies to the current block (p, h1, h2, h3) */}
-            <div className={groupClass}>
-                <span className="text-[10px] text-[#666666] font-bold uppercase mr-1">색상</span>
-                {editorColors.map(color => (
-                    <button
-                        key={color}
-                        type="button"
-                        onMouseDown={(e) => { e.preventDefault(); applyColorToBlock(color); }}
-                        className="w-6 h-6 rounded-full border border-[#e5e5e5] ring-1 ring-white/10 hover:scale-110 transition-transform"
-                        style={{ backgroundColor: color }}
-                        title={`색상 ${color}`}
-                    />
-                ))}
-                <input
-                    type="color"
-                    onChange={(e) => applyColorToBlock(e.target.value)}
-                    className="w-7 h-7 p-1 bg-white cursor-pointer rounded-full border border-[#e5e5e5] hover:bg-[#f5f5f5] transition-colors"
-                    title="색상 선택"
-                />
-            </div>
+            {/* Inline formatting */}
+            <ToolButton label="굵게 (Ctrl+B)" active={formats.bold} onPress={() => runCommand('bold')}>
+                <span className="text-[15px] font-bold">B</span>
+            </ToolButton>
+            <ToolButton label="기울임 (Ctrl+I)" active={formats.italic} onPress={() => runCommand('italic')}>
+                <span className="font-serif text-[16px] italic">I</span>
+            </ToolButton>
+            <ToolButton label="밑줄 (Ctrl+U)" active={formats.underline} onPress={() => runCommand('underline')}>
+                <span className="text-[15px] underline underline-offset-2">U</span>
+            </ToolButton>
+            <ToolButton label="취소선" active={formats.strike} onPress={() => runCommand('strikeThrough')}>
+                <span className="text-[15px] line-through">S</span>
+            </ToolButton>
+            <ToolButton label="인라인 코드" active={formats.inlineCode} onPress={toggleInlineCode}><Icon d={icons.inlineCode} /></ToolButton>
+            <Divider />
 
-            {/* Media: Image, Video & Link */}
-            <div className="flex gap-1 flex-wrap">
-                <button
-                    type="button"
-                    onMouseDown={(e) => { e.preventDefault(); handleImageClick(); }}
-                    className={`${mediaButtonClass} text-[#111111]`}
-                    title="이미지"
+            {/* Blocks */}
+            <ToolButton label="글머리 목록" active={formats.unorderedList} onPress={() => runCommand('insertUnorderedList')}><Icon d={icons.bulletList} /></ToolButton>
+            <ToolButton label="번호 목록" active={formats.orderedList} onPress={() => runCommand('insertOrderedList')}><Icon d={icons.numberList} /></ToolButton>
+            <ToolButton
+                label="인용"
+                active={formats.block === 'BLOCKQUOTE'}
+                onPress={() => runCommand('formatBlock', formats.block === 'BLOCKQUOTE' ? 'P' : 'BLOCKQUOTE')}
+            >
+                <Icon d={icons.quote} />
+            </ToolButton>
+            <ToolButton label="구분선" onPress={() => runCommand('insertHorizontalRule')}><Icon d={icons.divider} /></ToolButton>
+            <div className="relative">
+                <ToolButton label="코드 블록" active={openMenu === 'code' || formats.block === 'PRE'} onPress={() => toggleMenu('code')}>
+                    <Icon d={icons.codeBlock} />
+                </ToolButton>
+                {openMenu === 'code' && (
+                    <MenuPanel className="w-44">
+                        <p className={menuHeadingClass}>코드 언어</p>
+                        {codeLanguages.map(language => (
+                            <MenuItem key={language.value} onPress={() => { setOpenMenu(null); insertCodeBlock(language.value); }}>
+                                {language.label}
+                            </MenuItem>
+                        ))}
+                    </MenuPanel>
+                )}
+            </div>
+            <Divider />
+
+            {/* Link */}
+            <div className="relative">
+                <ToolButton
+                    label="링크 (Ctrl+K)"
+                    active={openMenu === 'link' || formats.link}
+                    onPress={() => (openMenu === 'link' ? setOpenMenu(null) : openLinkMenu())}
                 >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                    이미지
-                </button>
-                {/* Grid Layout Buttons */}
-                <button
-                    type="button"
-                    onMouseDown={(e) => { e.preventDefault(); handleGridClick(2); }}
-                    className={`${mediaButtonClass} text-[#ffb454]`}
-                    title="2열 그리드 (여러 이미지 선택)"
-                >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <rect x="3" y="3" width="8" height="18" rx="1" strokeWidth={2} />
-                        <rect x="13" y="3" width="8" height="18" rx="1" strokeWidth={2} />
-                    </svg>
-                    2열
-                </button>
-                <button
-                    type="button"
-                    onMouseDown={(e) => { e.preventDefault(); handleGridClick(3); }}
-                    className={`${mediaButtonClass} text-[#d2a8ff]`}
-                    title="3열 그리드 (여러 이미지 선택)"
-                >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <rect x="2" y="3" width="6" height="18" rx="1" strokeWidth={2} />
-                        <rect x="9" y="3" width="6" height="18" rx="1" strokeWidth={2} />
-                        <rect x="16" y="3" width="6" height="18" rx="1" strokeWidth={2} />
-                    </svg>
-                    3열
-                </button>
-                <button
-                    type="button"
-                    onMouseDown={(e) => { e.preventDefault(); handleGridClick(4); }}
-                    className={`${mediaButtonClass} text-[#ff7b72]`}
-                    title="4열 그리드 (여러 이미지 선택)"
-                >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <rect x="1" y="3" width="4.5" height="18" rx="1" strokeWidth={2} />
-                        <rect x="6.5" y="3" width="4.5" height="18" rx="1" strokeWidth={2} />
-                        <rect x="12" y="3" width="4.5" height="18" rx="1" strokeWidth={2} />
-                        <rect x="17.5" y="3" width="4.5" height="18" rx="1" strokeWidth={2} />
-                    </svg>
-                    4열
-                </button>
-                <button
-                    type="button"
-                    onMouseDown={(e) => { e.preventDefault(); handleCarouselClick(); }}
-                    className={`${mediaButtonClass} text-[#4169E1]`}
-                    title="슬라이드 (이미지 2-4장 선택)"
-                >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <rect x="4" y="5" width="16" height="12" rx="2" strokeWidth={2} />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 20h8M9 9h.01M15 9h.01" />
-                    </svg>
-                    슬라이드
-                </button>
-                <button
-                    type="button"
-                    onMouseDown={(e) => { e.preventDefault(); handleVideoClick(); }}
-                    className={`${mediaButtonClass} text-[#3fb950]`}
-                    title="동영상 (자동재생)"
-                >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    동영상
-                </button>
-                <button
-                    type="button"
-                    onMouseDown={(e) => {
-                        e.preventDefault();
-                        const url = prompt('링크 URL 입력:');
-                        if (url) document.execCommand('createLink', false, url);
-                    }}
-                    className={`${mediaButtonClass} text-[#111111]`}
-                    title="링크"
-                >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
-                    링크
-                </button>
+                    <Icon d={icons.link} />
+                </ToolButton>
+                {openMenu === 'link' && (
+                    <MenuPanel className="w-[300px] p-3">
+                        <label className="block text-[11px] font-bold text-[#666666]">
+                            링크 주소
+                            <input
+                                autoFocus
+                                value={linkUrl}
+                                onChange={(e) => setLinkUrl(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        applyLink();
+                                    } else if (e.key === 'Escape') {
+                                        e.preventDefault();
+                                        setOpenMenu(null);
+                                        restoreSelection();
+                                    }
+                                }}
+                                placeholder="https://"
+                                className="mt-1 h-9 w-full rounded-lg border border-[#e5e5e5] px-3 text-sm font-medium text-[#111111] outline-none placeholder:text-[#aaaaaa] focus:border-[#4169E1]"
+                            />
+                        </label>
+                        <div className="mt-2 flex justify-end gap-2">
+                            {formats.link && (
+                                <button type="button" onClick={removeLink} className="h-8 rounded-lg px-3 text-xs font-bold text-[#ff3b30] hover:bg-[#fff5f5]">
+                                    링크 해제
+                                </button>
+                            )}
+                            <button type="button" onClick={applyLink} className="h-8 rounded-lg bg-[#4169E1] px-3 text-xs font-bold text-white hover:bg-[#3458c7]">
+                                적용
+                            </button>
+                        </div>
+                    </MenuPanel>
+                )}
+            </div>
+            <Divider />
+
+            {/* Media */}
+            <ToolButton label="이미지" onPress={handleImageClick}><Icon d={icons.image} /></ToolButton>
+            <div className="relative">
+                <ToolButton label="이미지 그리드" active={openMenu === 'grid'} onPress={() => toggleMenu('grid')}><Icon d={icons.grid} /></ToolButton>
+                {openMenu === 'grid' && (
+                    <MenuPanel className="w-48">
+                        <p className={menuHeadingClass}>이미지 그리드 · 여러 장 선택</p>
+                        {[2, 3, 4].map(columns => (
+                            <MenuItem key={columns} onPress={() => { setOpenMenu(null); restoreSelection(); handleGridClick(columns); }}>
+                                {columns}열 그리드
+                            </MenuItem>
+                        ))}
+                    </MenuPanel>
+                )}
+            </div>
+            <ToolButton label="슬라이드 (이미지 2~4장)" onPress={handleCarouselClick}><Icon d={icons.slides} /></ToolButton>
+            <ToolButton label="동영상 (자동재생)" onPress={handleVideoClick}><Icon d={icons.video} /></ToolButton>
+            <Divider />
+
+            {/* Paragraph style */}
+            <div className="relative">
+                <ToolButton label="줄 간격" active={openMenu === 'lineHeight'} onPress={() => toggleMenu('lineHeight')}><Icon d={icons.lineHeight} /></ToolButton>
+                {openMenu === 'lineHeight' && (
+                    <MenuPanel align="right" className="w-36">
+                        <p className={menuHeadingClass}>줄 간격</p>
+                        {['1.5', '1.6', '1.8', '2.0', '2.5'].map(value => (
+                            <MenuItem key={value} onPress={() => { setOpenMenu(null); restoreSelection(); applyLineHeight(value); notifyChange(); }}>
+                                {value}
+                            </MenuItem>
+                        ))}
+                    </MenuPanel>
+                )}
+            </div>
+            <div className="relative">
+                <ToolButton label="문단 색상" active={openMenu === 'color'} onPress={() => toggleMenu('color')}>
+                    <span className="flex flex-col items-center leading-none">
+                        <span className="text-[14px] font-bold">A</span>
+                        <span className="mt-0.5 h-[3px] w-4 rounded-full bg-[#4169E1]" />
+                    </span>
+                </ToolButton>
+                {openMenu === 'color' && (
+                    <MenuPanel align="right" className="w-[196px] p-3">
+                        <p className="pb-2 text-[11px] font-bold text-[#888888]">문단 색상</p>
+                        <div className="flex items-center gap-2">
+                            {editorColors.map(color => (
+                                <button
+                                    key={color}
+                                    type="button"
+                                    title={`색상 ${color}`}
+                                    aria-label={`색상 ${color}`}
+                                    onMouseDown={(e) => {
+                                        e.preventDefault();
+                                        setOpenMenu(null);
+                                        restoreSelection();
+                                        applyColorToBlock(color);
+                                        notifyChange();
+                                    }}
+                                    className="h-6 w-6 rounded-full border border-black/10 transition-transform hover:scale-110"
+                                    style={{ backgroundColor: color }}
+                                />
+                            ))}
+                            <input
+                                type="color"
+                                title="직접 선택"
+                                aria-label="직접 선택"
+                                onChange={(e) => {
+                                    restoreSelection();
+                                    applyColorToBlock(e.target.value);
+                                    notifyChange();
+                                }}
+                                className="h-6 w-6 cursor-pointer rounded-full border border-[#e5e5e5] bg-white p-0"
+                            />
+                        </div>
+                    </MenuPanel>
+                )}
             </div>
         </div>
     );

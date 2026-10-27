@@ -1,24 +1,98 @@
 import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { moveCarousel, setupCarousel } from '../utils/carousel';
+import { cleanPastedHtml } from '../utils/writingFormat';
 
 interface RichEditorProps {
     initialContent: string;
     onContentChange: (content: string) => void;
     className?: string;
     editorRef?: React.RefObject<HTMLDivElement | null>;
+    /** Called for real edits only (typing, toolbar commands, media changes), not for blur. */
+    onUserEdit?: () => void;
 }
+
+// Images inside grids and carousels keep their layout markup, so they only take alt text.
+const supportsCaption = (img: HTMLElement) => !img.closest('.image-grid, .image-carousel');
 
 export const RichEditor: React.FC<RichEditorProps> = ({
     initialContent,
     onContentChange,
     className = '',
-    editorRef: externalEditorRef
+    editorRef: externalEditorRef,
+    onUserEdit
 }) => {
     const fallbackEditorRef = useRef<HTMLDivElement>(null);
     const editorRef = externalEditorRef || fallbackEditorRef;
     const initializedRef = useRef(false);
     const hasUserEditedRef = useRef(false);
     const [selectedMedia, setSelectedMedia] = useState<HTMLElement | null>(null);
+    const [altDraft, setAltDraft] = useState('');
+    const [captionDraft, setCaptionDraft] = useState('');
+
+    const emitEdit = useCallback(() => {
+        hasUserEditedRef.current = true;
+        onUserEdit?.();
+        if (editorRef.current) onContentChange(editorRef.current.innerHTML);
+    }, [onContentChange, onUserEdit]);
+
+    useEffect(() => {
+        if (selectedMedia?.tagName !== 'IMG') return;
+        setAltDraft(selectedMedia.getAttribute('alt') || '');
+        setCaptionDraft(selectedMedia.closest('figure')?.querySelector(':scope > figcaption')?.textContent || '');
+    }, [selectedMedia]);
+
+    const applyAlt = (value: string) => {
+        if (!selectedMedia) return;
+        setAltDraft(value);
+        selectedMedia.setAttribute('alt', value);
+        emitEdit();
+    };
+
+    const applyCaption = (value: string) => {
+        const img = selectedMedia;
+        const root = editorRef.current;
+        if (!img || !root || !supportsCaption(img)) return;
+        setCaptionDraft(value);
+
+        let figure = img.closest('figure');
+        if (!value.trim()) {
+            if (figure) {
+                const paragraph = document.createElement('p');
+                figure.replaceWith(paragraph);
+                paragraph.appendChild(img);
+            }
+            emitEdit();
+            return;
+        }
+
+        if (!figure) {
+            figure = document.createElement('figure');
+            const parent = img.parentElement;
+            const isAloneInParagraph = parent && parent !== root && parent.tagName === 'P'
+                && !(parent.textContent || '').trim() && parent.querySelectorAll('img, video').length === 1;
+            if (isAloneInParagraph) {
+                parent.replaceWith(figure);
+            } else {
+                // A figure cannot live inside a paragraph, so place it after the image's top-level block.
+                if (!parent || parent === root) {
+                    img.replaceWith(figure);
+                } else {
+                    let block: HTMLElement = parent;
+                    while (block.parentElement && block.parentElement !== root) block = block.parentElement;
+                    block.parentNode?.insertBefore(figure, block.nextSibling);
+                }
+            }
+            figure.appendChild(img);
+        }
+
+        let caption = figure.querySelector(':scope > figcaption');
+        if (!caption) {
+            caption = document.createElement('figcaption');
+            figure.appendChild(caption);
+        }
+        caption.textContent = value;
+        emitEdit();
+    };
 
     // Set initial content only once on mount
     useEffect(() => {
@@ -41,7 +115,7 @@ export const RichEditor: React.FC<RichEditorProps> = ({
             if (selectedMedia && !selectedMedia.contains(e.target as Node)) {
                 // Check if click is on delete button
                 const target = e.target as HTMLElement;
-                if (!target.closest('.media-delete-btn')) {
+                if (!target.closest('.media-delete-btn, .media-panel')) {
                     setSelectedMedia(null);
                 }
             }
@@ -87,12 +161,7 @@ export const RichEditor: React.FC<RichEditorProps> = ({
         }
     }, [onContentChange]);
 
-    const handleInput = useCallback(() => {
-        hasUserEditedRef.current = true;
-        if (editorRef.current) {
-            onContentChange(editorRef.current.innerHTML);
-        }
-    }, [onContentChange]);
+    const handleInput = emitEdit;
 
     const handleEditorClick = (e: React.MouseEvent) => {
         const target = e.target as HTMLElement;
@@ -121,7 +190,7 @@ export const RichEditor: React.FC<RichEditorProps> = ({
             e.stopPropagation();
             target.classList.add('selected-media');
             setSelectedMedia(target);
-        } else if (!target.closest('.media-delete-btn')) {
+        } else if (!target.closest('.media-delete-btn, .media-panel')) {
             setSelectedMedia(null);
         }
     };
@@ -149,10 +218,7 @@ export const RichEditor: React.FC<RichEditorProps> = ({
         if (selectedMedia) {
             removeMediaElement(selectedMedia);
             setSelectedMedia(null);
-            // Trigger content change
-            if (editorRef.current) {
-                onContentChange(editorRef.current.innerHTML);
-            }
+            emitEdit();
         }
     };
 
@@ -165,7 +231,10 @@ export const RichEditor: React.FC<RichEditorProps> = ({
 
         return {
             top: mediaRect.top - editorRect.top + 8,
-            right: editorRect.right - mediaRect.right + 8
+            right: editorRect.right - mediaRect.right + 8,
+            panelTop: mediaRect.bottom - editorRect.top + 8,
+            panelLeft: mediaRect.left - editorRect.left,
+            panelWidth: Math.max(280, Math.min(mediaRect.width, 440))
         };
     };
 
@@ -176,9 +245,21 @@ export const RichEditor: React.FC<RichEditorProps> = ({
             <div
                 ref={editorRef}
                 contentEditable
+                role="textbox"
+                aria-label="본문 편집"
+                aria-multiline="true"
                 suppressContentEditableWarning
                 onBlur={handleBlur}
                 onInput={handleInput}
+                onPaste={(event) => {
+                    const html = event.clipboardData.getData('text/html');
+                    if (!html) return; // Keep native text and image paste behavior.
+                    const safeHtml = cleanPastedHtml(html);
+                    if (!safeHtml.trim()) return;
+                    event.preventDefault();
+                    document.execCommand('insertHTML', false, safeHtml);
+                    handleInput();
+                }}
                 onClick={handleEditorClick}
                 onKeyDown={(e) => {
                     const selection = window.getSelection();
@@ -222,7 +303,7 @@ export const RichEditor: React.FC<RichEditorProps> = ({
                             nextRange.collapse(true);
                             selection?.removeAllRanges();
                             selection?.addRange(nextRange);
-                            onContentChange(editorRef.current?.innerHTML || '');
+                            emitEdit();
                             return;
                         }
 
@@ -275,9 +356,7 @@ export const RichEditor: React.FC<RichEditorProps> = ({
                                     if (el.tagName === 'VIDEO' || el.tagName === 'IMG') {
                                         e.preventDefault();
                                         removeMediaElement(el);
-                                        if (editorRef.current) {
-                                            onContentChange(editorRef.current.innerHTML);
-                                        }
+                                        emitEdit();
                                         return;
                                     }
                                 }
@@ -289,9 +368,7 @@ export const RichEditor: React.FC<RichEditorProps> = ({
                                     if (el.tagName === 'VIDEO' || el.tagName === 'IMG') {
                                         e.preventDefault();
                                         removeMediaElement(el);
-                                        if (editorRef.current) {
-                                            onContentChange(editorRef.current.innerHTML);
-                                        }
+                                        emitEdit();
                                         return;
                                     }
                                 }
@@ -304,7 +381,7 @@ export const RichEditor: React.FC<RichEditorProps> = ({
                         document.execCommand('insertParagraph', false);
                     }
                 }}
-                className={`editor-prose w-full min-h-[620px] p-5 md:p-8 rounded-2xl border border-[#e5e5e5] bg-[#ffffff] focus:outline-none focus:border-[#4169E1] focus:ring-2 focus:ring-[#4169E1]/20 transition-all ${className}`}
+                className={`editor-prose w-full min-h-[620px] p-5 md:p-8 rounded-xl border border-[#e5e5e5] bg-[#ffffff] focus:outline-none focus:border-[#4169E1] focus:ring-2 focus:ring-[#4169E1]/20 transition-all ${className}`}
             />
 
             {/* Delete button overlay for selected media */}
@@ -326,6 +403,36 @@ export const RichEditor: React.FC<RichEditorProps> = ({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
+            )}
+
+            {/* Alt text and caption for the selected image */}
+            {selectedMedia?.tagName === 'IMG' && deleteButtonPos && (
+                <div
+                    className="media-panel absolute z-50 rounded-xl border border-[#e5e5e5] bg-white p-3 shadow-[0_12px_32px_rgba(17,17,17,0.12)]"
+                    style={{ top: deleteButtonPos.panelTop, left: deleteButtonPos.panelLeft, width: deleteButtonPos.panelWidth }}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <label className="block text-[11px] font-bold text-[#666666]">
+                        대체 텍스트
+                        <input
+                            value={altDraft}
+                            onChange={(e) => applyAlt(e.target.value)}
+                            placeholder="이미지를 설명하는 문장 (검색·접근성용)"
+                            className="mt-1 h-9 w-full rounded-lg border border-[#e5e5e5] px-3 text-sm font-medium text-[#111111] outline-none placeholder:text-[#aaaaaa] focus:border-[#4169E1]"
+                        />
+                    </label>
+                    {supportsCaption(selectedMedia) && (
+                        <label className="mt-2 block text-[11px] font-bold text-[#666666]">
+                            캡션
+                            <input
+                                value={captionDraft}
+                                onChange={(e) => applyCaption(e.target.value)}
+                                placeholder="이미지 아래에 표시할 설명 (선택)"
+                                className="mt-1 h-9 w-full rounded-lg border border-[#e5e5e5] px-3 text-sm font-medium text-[#111111] outline-none placeholder:text-[#aaaaaa] focus:border-[#4169E1]"
+                            />
+                        </label>
+                    )}
+                </div>
             )}
 
             {/* Selection highlight style */}
