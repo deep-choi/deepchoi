@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { moveCarousel, setupCarousel } from '../utils/carousel';
 import { cleanPastedHtml } from '../utils/writingFormat';
+import { sanitizeContent } from '../utils/contentProcessor';
 
 interface RichEditorProps {
     initialContent: string;
@@ -97,7 +98,7 @@ export const RichEditor: React.FC<RichEditorProps> = ({
     // Set initial content only once on mount
     useEffect(() => {
         if (editorRef.current && !initializedRef.current && !hasUserEditedRef.current && initialContent) {
-            editorRef.current.innerHTML = initialContent;
+            editorRef.current.innerHTML = sanitizeContent(initialContent);
             initializedRef.current = true;
         }
     }, [initialContent]);

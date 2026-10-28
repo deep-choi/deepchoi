@@ -402,6 +402,13 @@ export const sanitizeContent = (html: string): string => {
 
     removeUnsafeElementsAndAttributes(doc.body);
 
+    // Older posts may have an explicit 1.5 line height; display and resave it as 1.6.
+    doc.body.querySelectorAll<HTMLElement>('[style]').forEach(element => {
+        if (/^(?:1\.5(?:0+)?(?:em)?|150(?:\.0+)?%)$/i.test(element.style.lineHeight.trim())) {
+            element.style.lineHeight = '1.6';
+        }
+    });
+
     // Ensure all direct text nodes in body are wrapped in p tags
     const childNodes = Array.from(doc.body.childNodes);
     childNodes.forEach(node => {

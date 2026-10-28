@@ -872,7 +872,7 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
                 {openMenu === 'lineHeight' && (
                     <MenuPanel align="right" className="w-36">
                         <p className={menuHeadingClass}>줄 간격</p>
-                        {['1.5', '1.6', '1.8', '2.0', '2.5'].map(value => (
+                        {['1.6', '1.8', '2.0', '2.5'].map(value => (
                             <MenuItem key={value} onPress={() => { setOpenMenu(null); restoreSelection(); applyLineHeight(value); notifyChange(); }}>
                                 {value}
                             </MenuItem>

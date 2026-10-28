@@ -189,7 +189,7 @@ img {
 .prose h1 {
     font-size: 28px;
     font-weight: 600;
-    line-height: 1.5;
+    line-height: 1.6;
     color: #111111;
     margin-top: 16px;
     margin-bottom: 16px;
@@ -199,7 +199,7 @@ img {
 .prose h2 {
     font-size: 24px;
     font-weight: 600;
-    line-height: 1.5;
+    line-height: 1.6;
     color: #111111;
     margin-top: 16px;
     margin-bottom: 16px;
@@ -215,7 +215,7 @@ img {
 .prose h6 {
     font-size: 20px;
     font-weight: 600;
-    line-height: 1.5;
+    line-height: 1.6;
     color: #111111;
     margin-top: 16px;
     margin-bottom: 16px;
@@ -229,7 +229,7 @@ img {
 .dual-prose div,
 .prose div {
     font-size: 16px;
-    line-height: 1.5;
+    line-height: 1.6;
     color: #2b2b2b;
     margin-top: 0;
     margin-bottom: 0;
@@ -418,7 +418,7 @@ img {
 .editor-prose h1 {
     font-size: 28px;
     font-weight: 600;
-    line-height: 1.5;
+    line-height: 1.6;
     color: #111111;
     margin: 16px auto;
     max-width: 700px;
@@ -427,7 +427,7 @@ img {
 .editor-prose h2 {
     font-size: 24px;
     font-weight: 600;
-    line-height: 1.5;
+    line-height: 1.6;
     color: #111111;
     margin: 16px auto;
     max-width: 700px;
@@ -439,7 +439,7 @@ img {
 .editor-prose h6 {
     font-size: 20px;
     font-weight: 600;
-    line-height: 1.5;
+    line-height: 1.6;
     color: #111111;
     margin: 16px auto;
     max-width: 700px;
@@ -453,7 +453,7 @@ img {
 .editor-prose ol,
 .editor-prose pre {
     font-size: 16px;
-    line-height: 1.5;
+    line-height: 1.6;
     color: inherit;
 }
 
