@@ -7,6 +7,7 @@
     "dev": "concurrently \"npm run vite\" \"npm run pages\"",
     "vite": "vite --port 3000",
     "pages": "wrangler pages dev --proxy 3000",
+    "dev:live": "npm run build && node scripts/dev-live.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "sync:live": "node scripts/sync-live-data.mjs",
