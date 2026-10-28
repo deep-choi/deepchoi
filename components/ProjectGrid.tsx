@@ -6,6 +6,7 @@ import { ProjectCard } from './ProjectCard';
 import { categoryLabel, categoryService, findCategoryByQuery } from '../services/categoryService';
 import { useAuthUser } from '../hooks/useAuthUser';
 import { categoryIn, isListedIn } from '../utils/entryPlacement';
+import { groupTabClassName } from '../utils/tabStyles';
 
 
 export const ProjectGrid: React.FC<{ isPage?: boolean }> = ({ isPage = false }) => {
@@ -59,7 +60,7 @@ export const ProjectGrid: React.FC<{ isPage?: boolean }> = ({ isPage = false }) 
   return (
     <section id="projects" className={`${isPage ? 'pt-32 pb-24' : 'py-12 md:py-24'} bg-[#ffffff]`}>
       <div className="max-w-[1440px] mx-auto px-4 md:px-[20px]">
-        <div className="mb-4">
+        <div className="mb-8">
           <div className="flex flex-col gap-8">
             <div className="flex justify-between items-center">
               <h2 className="text-[24px] md:text-[28px] leading-none font-medium text-[#111111] tracking-tight">프로젝트</h2>
@@ -85,16 +86,14 @@ export const ProjectGrid: React.FC<{ isPage?: boolean }> = ({ isPage = false }) 
             {/* Divider */}
             {/* Divider Removed */}
 
-            {/* Pill Style Tabs */}
-            <div className="flex gap-2">
+            {/* Tabs share the Blog first-level style */}
+            <div className="-mx-4 flex gap-7 overflow-x-auto border-b border-[#ededed] px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:overflow-visible md:px-0">
               {tabs.map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`rounded-lg border px-4 py-2 text-[13px] font-medium transition-all ${activeTab === tab
-                    ? 'bg-[#4169E1] border-[#4169E1] text-white'
-                    : 'bg-white border-[#e5e5e5] text-[#666666] hover:border-[#4169E1] hover:text-[#111111]'
-                    }`}
+                  aria-pressed={activeTab === tab}
+                  className={groupTabClassName(activeTab === tab)}
                 >
                   {tab === '전체보기' ? tab : categoryLabel(tab)}
                 </button>

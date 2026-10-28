@@ -74,14 +74,17 @@ const Navbar: React.FC<{ isScrolled: boolean }> = ({ isScrolled }) => {
           {/* Right Side: Auth */}
           <div className="hidden md:flex items-center gap-3">
             {/* Auth Buttons */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-5">
               {isLoggedIn ? (
                 <>
-                  <span className="text-[14px] font-medium text-[#111111]">{currentUser?.name}님</span>
+                  <span className="text-[14px] font-medium text-[#86868b]">{currentUser?.name}님</span>
                   {currentUser?.role === 'admin' && (
-                    <Link to="/admin" className="rounded-full bg-[#111111] px-5 py-2.5 text-[14px] font-medium text-white transition-colors hover:bg-[#333333]">Admin</Link>
+                    <Link to="/admin" className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[#111111] transition-colors hover:text-[#4169E1]">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#4169E1]" aria-hidden="true" />
+                      Admin
+                    </Link>
                   )}
-                  <button onClick={handleLogout} className="rounded-full bg-[#f5f5f5] px-5 py-2.5 text-[14px] font-medium text-[#111111] transition-colors hover:bg-[#ededed]">로그아웃</button>
+                  <button onClick={handleLogout} className="text-[14px] font-medium text-[#86868b] transition-colors hover:text-[#111111]">로그아웃</button>
                 </>
               ) : (
                 <Link to="/login" className="rounded-full bg-[#f5f5f5] px-5 py-2.5 text-[14px] font-medium text-[#111111] transition-colors hover:bg-[#ededed]">로그인</Link>
@@ -133,7 +136,10 @@ const Navbar: React.FC<{ isScrolled: boolean }> = ({ isScrolled }) => {
                     <span className="text-sm font-semibold text-[#111111]">{currentUser?.name}님</span>
                   </div>
                   {currentUser?.role === 'admin' && (
-                    <Link to="/admin" onClick={closeMobileMenu} className="w-fit rounded-full bg-[#111111] px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[#333333]">Admin</Link>
+                    <Link to="/admin" onClick={closeMobileMenu} className="inline-flex w-fit items-center gap-1.5 text-[13px] font-semibold text-[#111111] transition-colors hover:text-[#4169E1]">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#4169E1]" aria-hidden="true" />
+                      Admin
+                    </Link>
                   )}
                   <button onClick={() => { handleLogout(); closeMobileMenu(); }} className="w-fit text-left text-[13px] font-medium text-[#86868b] transition-colors hover:text-[#111111]">로그아웃</button>
                 </>

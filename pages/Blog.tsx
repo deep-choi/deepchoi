@@ -6,14 +6,10 @@ import { ProjectCard } from '../components/ProjectCard';
 import { CategoryGroup, categoryLabel, categoryService, findCategoryByQuery, groupCategories, normalizeCategoryQuery } from '../services/categoryService';
 import { useAuthUser } from '../hooks/useAuthUser';
 import { categoryIn, isListedIn } from '../utils/entryPlacement';
+import { categoryChipClassName, groupTabClassName } from '../utils/tabStyles';
 
 const ALL = '전체보기';
 
-const tabClassName = (isActive: boolean, isSub = false) =>
-    `shrink-0 whitespace-nowrap rounded-lg border ${isSub ? 'px-3 py-1.5 text-[12px]' : 'px-4 py-2 text-[13px]'} font-medium transition-all ${isActive
-        ? (isSub ? 'bg-[#111111] border-[#111111] text-white' : 'bg-[#4169E1] border-[#4169E1] text-white')
-        : 'bg-white border-[#e5e5e5] text-[#666666] hover:border-[#4169E1] hover:text-[#111111]'
-    }`;
 
 export const Blog: React.FC = () => {
     const [posts, setPosts] = useState<Project[]>([]);
@@ -84,7 +80,7 @@ export const Blog: React.FC = () => {
         <section className="py-32 bg-[#ffffff] min-h-screen">
             <div className="max-w-[1440px] mx-auto px-4 md:px-[20px]">
                 {publicationNotice && <div role="status" className="mb-6 flex items-center justify-between gap-4 rounded-xl border border-[#b9d5c3] bg-[#f0faf3] px-4 py-3 text-sm text-[#245c36]"><span>{publicationNotice}</span><button type="button" onClick={() => setPublicationNotice(null)} aria-label="알림 닫기">닫기</button></div>}
-                <div className="mb-4">
+                <div className="mb-6">
                     <div className="flex flex-col gap-8">
                         <div className="flex items-center justify-between">
                             <h1 className="text-[24px] md:text-[28px] leading-none font-medium text-[#111111] tracking-tight">블로그</h1>
@@ -105,14 +101,14 @@ export const Blog: React.FC = () => {
                         {/* Divider Removed */}
 
                         {/* Pill Style Tabs */}
-                        <div className="flex flex-col gap-3">
-                            <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:overflow-visible md:px-0">
+                        <div className="flex flex-col gap-4">
+                            <div className="-mx-4 flex gap-7 overflow-x-auto border-b border-[#ededed] px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:overflow-visible md:px-0">
                                 {[ALL, ...groups.map(group => group.name)].map((groupName) => (
                                     <button
                                         key={groupName}
                                         onClick={() => selectGroup(groupName)}
                                         aria-pressed={activeGroup === groupName}
-                                        className={tabClassName(activeGroup === groupName)}
+                                        className={groupTabClassName(activeGroup === groupName)}
                                     >
                                         {groupName === ALL ? groupName : categoryLabel(groupName)}
                                     </button>
@@ -120,13 +116,13 @@ export const Blog: React.FC = () => {
                             </div>
 
                             {currentGroup && currentGroup.categories.length > 1 && (
-                                <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:overflow-visible md:px-0">
+                                <div className="-mx-4 flex gap-1 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:overflow-visible md:px-0">
                                     {['', ...currentGroup.categories].map((category) => (
                                         <button
                                             key={category || 'all'}
                                             onClick={() => setActiveCategory(category)}
                                             aria-pressed={activeCategory === category}
-                                            className={tabClassName(activeCategory === category, true)}
+                                            className={categoryChipClassName(activeCategory === category)}
                                         >
                                             {category ? categoryLabel(category) : '전체'}
                                         </button>
