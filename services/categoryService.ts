@@ -10,6 +10,9 @@ export interface CategoryRecord {
     entryCount: number;
 }
 
+/** Blog categories in this first-level group are listed on /news instead of /blog. */
+export const NEWS_GROUP = 'AI 소식';
+
 export interface CategoryGroup {
     name: string;
     categories: string[];

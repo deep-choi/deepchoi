@@ -46,6 +46,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
             urlEntry('/', today, 'weekly', '1.0'),
             urlEntry('/work', today, 'weekly', '0.9'),
             urlEntry('/blog', today, 'weekly', '0.8'),
+            urlEntry('/news', today, 'daily', '0.7'),
             urlEntry('/contact', today, 'monthly', '0.7'),
             ...results.map((project: any) => {
                 const path = `/post/${encodeURIComponent(project.slug || project.id)}`;

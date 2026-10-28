@@ -7,7 +7,7 @@ import { EntryEditor } from '../components/EntryEditor';
 import { PublicationReview } from '../components/PublicationReview';
 import { imageService } from '../services/imageService';
 import { normalizeEditorHtml } from '../utils/contentProcessor';
-import { categoryLabel, categoryService, CategoryRecord, EntryType } from '../services/categoryService';
+import { categoryLabel, categoryService, CategoryRecord, EntryType, NEWS_GROUP } from '../services/categoryService';
 import { useEntryEditor } from '../hooks/useEntryEditor';
 import { isListedIn, placementSummary } from '../utils/entryPlacement';
 
@@ -32,9 +32,12 @@ export const Editor: React.FC = () => {
     const [saving, setSaving] = useState(false);
     const [categories, setCategories] = useState<CategoryRecord[]>([]);
     const entryLabel = form.type === 'blog' ? '블로그 글' : '프로젝트';
+    // News categories are listed on /news, every other blog category on /blog.
+    const blogListPath = (category?: string) =>
+        categories.some(item => item.type === 'blog' && item.name === category && item.groupName === NEWS_GROUP) ? '/news' : '/blog';
     const cancelTarget = isEdit
         ? (id === 'about' ? '/about' : id === 'contact' ? '/contact' : `/post/${id}`)
-        : (form.type === 'blog' ? '/blog' : '/work');
+        : (form.type === 'blog' ? blogListPath(form.category) : '/work');
 
     useEffect(() => {
         let isMounted = true;
@@ -117,7 +120,7 @@ export const Editor: React.FC = () => {
             } else if (id === 'contact') {
                 navigate('/contact');
             } else if (projectData.type === 'blog') {
-                navigate('/blog', {
+                navigate(blogListPath(projectData.category), {
                     state: {
                         publicationNotice: projectData.isPrivate
                             ? '비공개로 저장했습니다. 관리자에게만 보입니다.'

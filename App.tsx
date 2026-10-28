@@ -67,6 +67,7 @@ const Navbar: React.FC<{ isScrolled: boolean }> = ({ isScrolled }) => {
             <div className="hidden md:flex gap-7 items-center">
               <Link to="/work" className="text-[15px] font-medium text-[#111111] hover:text-[#4169E1] transition-colors">Work</Link>
               <Link to="/blog" className="text-[15px] font-medium text-[#111111] hover:text-[#4169E1] transition-colors">Blog</Link>
+              <Link to="/news" className="text-[15px] font-medium text-[#111111] hover:text-[#4169E1] transition-colors">News</Link>
               <Link to="/contact" className="text-[15px] font-medium text-[#111111] hover:text-[#4169E1] transition-colors">Contact</Link>
             </div>
           </div>
@@ -125,6 +126,7 @@ const Navbar: React.FC<{ isScrolled: boolean }> = ({ isScrolled }) => {
             <nav className="flex flex-col items-start">
               <Link to="/work" onClick={closeMobileMenu} className="w-full border-b border-[#d8d8d8]/70 py-3.5 text-lg font-semibold">Work</Link>
               <Link to="/blog" onClick={closeMobileMenu} className="w-full border-b border-[#d8d8d8]/70 py-3.5 text-lg font-semibold">Blog</Link>
+              <Link to="/news" onClick={closeMobileMenu} className="w-full border-b border-[#d8d8d8]/70 py-3.5 text-lg font-semibold">News</Link>
               <Link to="/contact" onClick={closeMobileMenu} className="w-full border-b border-[#d8d8d8]/70 py-3.5 text-lg font-semibold">Contact</Link>
             </nav>
 
@@ -213,7 +215,7 @@ const Footer: React.FC = () => (
         <Link to="/blog" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">전체보기</Link>
         <Link to="/blog?group=학습 기록" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">학습 기록</Link>
         <Link to="/blog?group=작업 노트" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">작업 노트</Link>
-        <Link to="/blog?group=AI 소식" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">AI 소식</Link>
+        <Link to="/news" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">AI 소식</Link>
       </div>
 
       {/* Column 4: Connect */}
@@ -298,7 +300,8 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<Navigate to="/" replace />} />
           <Route path="/work" element={<Work />} />
-          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog" element={<Blog key="blog" />} />
+          <Route path="/news" element={<Blog key="news" section="news" />} />
           <Route path="/contact" element={<Contact />} />
 
           <Route path="/post/:id" element={<PostDetail />} />
