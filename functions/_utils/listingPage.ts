@@ -6,9 +6,6 @@ interface Env {
 
 const SITE_ORIGIN = 'https://deepchoi.com';
 
-/** Blog categories in this first-level group are listed on /news instead of /blog. */
-export const NEWS_GROUP = 'AI 소식';
-
 export interface ListingPage {
     path: '/blog' | '/news';
     title: string;
@@ -43,10 +40,10 @@ const buildFallback = (page: ListingPage, posts: any[]): string => {
 </main>`;
 };
 
-/** SQL condition: the post's blog category belongs to NEWS_GROUP. */
+/** SQL condition: the post's blog category is listed on /news. */
 const NEWS_POST_SQL = `EXISTS (
     SELECT 1 FROM Category c
-    WHERE c.type = 'blog' AND c.groupName = ?
+    WHERE c.type = 'blog' AND c.section = 'news'
         AND ((p.type = 'blog' AND c.name = p.category) OR (p.secondaryType = 'blog' AND c.name = p.secondaryCategory))
 )`;
 
@@ -61,7 +58,7 @@ export const renderListingPage = async (context: EventContext<Env, any, any>, pa
                 AND COALESCE(p.noIndex, 0) = 0 AND COALESCE(p.isPrivate, 0) = 0
                 AND ${page.news ? '' : 'NOT '}${NEWS_POST_SQL}
             ORDER BY p.date DESC
-        `).bind(NEWS_GROUP).all();
+        `).all();
 
         const response = await context.next();
         if (!response.headers.get('Content-Type')?.includes('text/html')) return response;

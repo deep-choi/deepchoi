@@ -7,11 +7,13 @@ export interface CategoryRecord {
     sortOrder: number;
     /** First-level group shown above categories, e.g. "학습 기록". */
     groupName?: string | null;
+    /** 'news' lists the blog category on /news instead of /blog. */
+    section?: 'news' | null;
     entryCount: number;
 }
 
-/** Blog categories in this first-level group are listed on /news instead of /blog. */
-export const NEWS_GROUP = 'AI 소식';
+export const isNewsCategory = (category: Pick<CategoryRecord, 'type' | 'section'>): boolean =>
+    category.type === 'blog' && category.section === 'news';
 
 export interface CategoryGroup {
     name: string;
@@ -97,18 +99,18 @@ export const categoryService = {
         }
     },
 
-    createCategory: async (name: string, type: EntryType, groupName?: string): Promise<void> => {
+    createCategory: async (name: string, type: EntryType, groupName?: string, section?: 'news' | null): Promise<void> => {
         const res = await fetch(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, type, groupName })
+            body: JSON.stringify({ name, type, groupName, section })
         });
         if (!res.ok) {
             throw new Error(await readError(res, '카테고리 생성에 실패했습니다.'));
         }
     },
 
-    updateCategory: async (id: string, payload: { name: string; type?: EntryType; sortOrder?: number; groupName?: string | null }): Promise<void> => {
+    updateCategory: async (id: string, payload: { name: string; type?: EntryType; sortOrder?: number; groupName?: string | null; section?: 'news' | null }): Promise<void> => {
         const res = await fetch(`${API_URL}/${encodeURIComponent(id)}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },

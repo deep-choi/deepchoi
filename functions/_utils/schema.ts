@@ -93,12 +93,20 @@ const ensureProjectSeoColumns = async (db: D1Database): Promise<void> => {
 
 const ensureCategoryGroupColumn = async (db: D1Database): Promise<void> => {
     const categoryColumns: any = await db.prepare('PRAGMA table_info(Category)').all();
-    const hasGroupName = categoryColumns.results?.some((column: any) => column.name === 'groupName');
-    if (!hasGroupName) {
+    const columnNames = new Set((categoryColumns.results || []).map((column: any) => column.name));
+    if (!columnNames.has('groupName')) {
         // First-level grouping shown above the categories, e.g. "학습 기록" > Python.
         await db.prepare('ALTER TABLE Category ADD COLUMN groupName TEXT').run();
     }
+    if (!columnNames.has('section')) {
+        // Which list a blog category belongs to: 'news' for /news, NULL for /blog.
+        await db.prepare('ALTER TABLE Category ADD COLUMN section TEXT').run();
+        // News used to be identified by this first-level group.
+        await db.prepare("UPDATE Category SET section = 'news' WHERE type = 'blog' AND groupName = 'AI 소식'").run();
+    }
 };
+
+export const normalizeSection = (value: unknown): 'news' | null => (value === 'news' ? 'news' : null);
 
 const ensurePageViewAnalyticsColumns = async (db: D1Database): Promise<void> => {
     const pageViewColumns: any = await db.prepare('PRAGMA table_info(PageView)').all();

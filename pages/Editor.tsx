@@ -7,7 +7,7 @@ import { EntryEditor } from '../components/EntryEditor';
 import { PublicationReview } from '../components/PublicationReview';
 import { imageService } from '../services/imageService';
 import { normalizeEditorHtml } from '../utils/contentProcessor';
-import { categoryLabel, categoryService, CategoryRecord, EntryType, NEWS_GROUP } from '../services/categoryService';
+import { categoryLabel, categoryService, CategoryRecord, EntryType, isNewsCategory } from '../services/categoryService';
 import { useEntryEditor } from '../hooks/useEntryEditor';
 import { isListedIn, placementSummary } from '../utils/entryPlacement';
 
@@ -34,7 +34,7 @@ export const Editor: React.FC = () => {
     const entryLabel = form.type === 'blog' ? '블로그 글' : '프로젝트';
     // News categories are listed on /news, every other blog category on /blog.
     const blogListPath = (category?: string) =>
-        categories.some(item => item.type === 'blog' && item.name === category && item.groupName === NEWS_GROUP) ? '/news' : '/blog';
+        categories.some(item => item.name === category && isNewsCategory(item)) ? '/news' : '/blog';
     const cancelTarget = isEdit
         ? (id === 'about' ? '/about' : id === 'contact' ? '/contact' : `/post/${id}`)
         : (form.type === 'blog' ? blogListPath(form.category) : '/work');

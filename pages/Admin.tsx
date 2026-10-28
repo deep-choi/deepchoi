@@ -53,6 +53,7 @@ interface AdminSummary {
         type: EntryType;
         sortOrder: number;
         groupName?: string | null;
+        section?: 'news' | null;
         entryCount: number;
     }>;
     analytics: {
@@ -142,6 +143,20 @@ type AdminCategory = AdminSummary['categories'][number];
 type AdminTab = 'overview' | 'visitors' | 'search' | 'order' | 'categories' | 'comments';
 
 const contentCategoryTypes = ['work', 'blog'] as const;
+
+// Where a category's entries are listed: Work, Blog, or News (a blog category shown on /news).
+type CategoryPlacement = 'work' | 'blog' | 'news';
+const placementOf = (category: { type: EntryType; section?: 'news' | null }): CategoryPlacement =>
+    category.type === 'work' ? 'work' : category.section === 'news' ? 'news' : 'blog';
+const placementPayload = (placement: CategoryPlacement): { type: EntryType; section: 'news' | null } => ({
+    type: placement === 'work' ? 'work' : 'blog',
+    section: placement === 'news' ? 'news' : null
+});
+const placementOptions: Array<{ value: CategoryPlacement; label: string }> = [
+    { value: 'work', label: 'Work' },
+    { value: 'blog', label: 'Blog' },
+    { value: 'news', label: 'News' }
+];
 const entryTypeLabels: Record<EntryType, string> = {
     work: 'Work',
     blog: 'Blog',
@@ -175,7 +190,7 @@ const adminTabs: Array<{ id: AdminTab; label: string; description: string; icon:
     {
         id: 'categories',
         label: '카테고리',
-        description: 'Work와 Blog 카테고리를 추가하고 순서를 정리합니다.',
+        description: 'Work, Blog, News 카테고리를 추가하고 순서를 정리합니다.',
         icon: 'M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3zM6 6h.008v.008H6V6z'
     },
     {
@@ -341,11 +356,11 @@ export const Admin: React.FC = () => {
     };
     const [visitRange, setVisitRange] = useState<VisitRange>('14');
     const [categoryName, setCategoryName] = useState('');
-    const [categoryType, setCategoryType] = useState<EntryType>('work');
+    const [categoryPlacement, setCategoryPlacement] = useState<CategoryPlacement>('work');
     const [categoryGroup, setCategoryGroup] = useState('');
     const [editingCategoryId, setEditingCategoryId] = useState('');
     const [editingCategoryName, setEditingCategoryName] = useState('');
-    const [editingCategoryType, setEditingCategoryType] = useState<EntryType>('work');
+    const [editingCategoryPlacement, setEditingCategoryPlacement] = useState<CategoryPlacement>('work');
     const [editingCategoryGroup, setEditingCategoryGroup] = useState('');
     const [actionError, setActionError] = useState('');
     const [isSavingCategory, setIsSavingCategory] = useState(false);
@@ -443,7 +458,8 @@ export const Admin: React.FC = () => {
         setIsSavingCategory(true);
         setActionError('');
         try {
-            await categoryService.createCategory(name, categoryType, categoryGroup.trim());
+            const { type, section } = placementPayload(categoryPlacement);
+            await categoryService.createCategory(name, type, categoryGroup.trim(), section);
             setCategoryName('');
             setCategoryGroup('');
             await refreshSummary();
@@ -463,13 +479,13 @@ export const Admin: React.FC = () => {
         try {
             await categoryService.updateCategory(category.id, {
                 name,
-                type: editingCategoryType,
+                ...placementPayload(editingCategoryPlacement),
                 sortOrder: category.sortOrder,
                 groupName: editingCategoryGroup.trim() || null
             });
             setEditingCategoryId('');
             setEditingCategoryName('');
-            setEditingCategoryType('work');
+            setEditingCategoryPlacement('work');
             setEditingCategoryGroup('');
             await refreshSummary();
         } catch (err) {
@@ -1336,12 +1352,11 @@ export const Admin: React.FC = () => {
                                         placeholder="1차 분류 (선택)"
                                     />
                                     <select
-                                        value={categoryType}
-                                        onChange={event => setCategoryType(event.target.value as EntryType)}
+                                        value={categoryPlacement}
+                                        onChange={event => setCategoryPlacement(event.target.value as CategoryPlacement)}
                                         className="h-10 rounded-lg border border-[#e5e5e5] px-3 text-sm font-bold text-[#111111] outline-none focus:border-[#4169E1]"
                                     >
-                                        <option value="work">Work</option>
-                                        <option value="blog">Blog</option>
+                                        {placementOptions.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
                                     </select>
                                     <button
                                         type="submit"
@@ -1386,14 +1401,21 @@ export const Admin: React.FC = () => {
                                                                         placeholder="1차 분류 (선택)"
                                                                     />
                                                                     <select
-                                                                        value={editingCategoryType}
-                                                                        onChange={event => setEditingCategoryType(event.target.value as EntryType)}
-                                                                        disabled={category.entryCount > 0}
-                                                                        className="h-10 rounded-lg border border-[#e5e5e5] px-3 text-sm font-bold text-[#111111] outline-none focus:border-[#4169E1] disabled:cursor-not-allowed disabled:bg-[#f5f5f5] disabled:text-[#888888]"
-                                                                        title={category.entryCount > 0 ? '연결된 콘텐츠가 있으면 타입을 바꿀 수 없습니다.' : undefined}
+                                                                        value={editingCategoryPlacement}
+                                                                        onChange={event => setEditingCategoryPlacement(event.target.value as CategoryPlacement)}
+                                                                        className="h-10 rounded-lg border border-[#e5e5e5] px-3 text-sm font-bold text-[#111111] outline-none focus:border-[#4169E1]"
+                                                                        title={category.entryCount > 0 ? '연결된 콘텐츠가 있으면 Work와 Blog·News 사이는 바꿀 수 없습니다.' : undefined}
                                                                     >
-                                                                        <option value="work">Work</option>
-                                                                        <option value="blog">Blog</option>
+                                                                        {placementOptions.map(option => (
+                                                                            <option
+                                                                                key={option.value}
+                                                                                value={option.value}
+                                                                                // Moving entries between Work and Blog changes their type; only Blog↔News is free.
+                                                                                disabled={category.entryCount > 0 && (option.value === 'work') !== (category.type === 'work')}
+                                                                            >
+                                                                                {option.label}
+                                                                            </option>
+                                                                        ))}
                                                                     </select>
                                                                     <button
                                                                         type="button"
@@ -1408,7 +1430,7 @@ export const Admin: React.FC = () => {
                                                                         onClick={() => {
                                                                             setEditingCategoryId('');
                                                                             setEditingCategoryName('');
-                                                                            setEditingCategoryType('work');
+                                                                            setEditingCategoryPlacement('work');
                                                                             setEditingCategoryGroup('');
                                                                         }}
                                                                         className="h-10 rounded-lg border border-[#e5e5e5] text-sm font-bold text-[#111111]"
@@ -1421,7 +1443,7 @@ export const Admin: React.FC = () => {
                                                                     <div className="min-w-0">
                                                                         <p className="truncate text-sm font-bold text-[#111111]">{categoryLabel(category.name)}</p>
                                                                         <p className="mt-1 text-xs font-medium uppercase text-[#666666]">
-                                                                            {entryTypeLabels[category.type]}{category.groupName ? ` · ${category.groupName}` : ''} · {category.entryCount}개 콘텐츠 · 순서 {index + 1}
+                                                                            {category.section === 'news' ? 'News' : entryTypeLabels[category.type]}{category.groupName ? ` · ${category.groupName}` : ''} · {category.entryCount}개 콘텐츠 · 순서 {index + 1}
                                                                         </p>
                                                                     </div>
                                                                     <div className="flex shrink-0 flex-wrap items-center gap-2">
@@ -1452,7 +1474,7 @@ export const Admin: React.FC = () => {
                                                                             onClick={() => {
                                                                                 setEditingCategoryId(category.id);
                                                                                 setEditingCategoryName(category.name);
-                                                                                setEditingCategoryType(category.type);
+                                                                                setEditingCategoryPlacement(placementOf(category));
                                                                                 setEditingCategoryGroup(category.groupName || '');
                                                                             }}
                                                                             className="h-9 rounded-lg border border-[#e5e5e5] px-3 text-xs font-bold text-[#111111]"

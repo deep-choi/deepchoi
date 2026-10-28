@@ -130,6 +130,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
                 c.type,
                 c.sortOrder,
                 c.groupName,
+                c.section,
                 COUNT(p.id) AS entryCount
             FROM Category c
             LEFT JOIN Project p

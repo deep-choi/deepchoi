@@ -4,7 +4,7 @@ interface Env {
 }
 
 import { requireAdmin } from '../../_utils/auth';
-import { ensureAdminDataSchema, isContentEntryType, normalizeEntryType, normalizeGroupName } from '../../_utils/schema';
+import { ensureAdminDataSchema, isContentEntryType, normalizeEntryType, normalizeGroupName, normalizeSection } from '../../_utils/schema';
 
 const getCategoryIdParam = (value: string | string[] | undefined): string => {
     const rawValue = Array.isArray(value) ? value[0] : value;
@@ -62,14 +62,15 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
         await context.env.DB.batch([
             context.env.DB.prepare(`
                 UPDATE Category
-                SET name = ?, type = ?, sortOrder = ?, groupName = ?, updatedAt = ?
+                SET name = ?, type = ?, sortOrder = ?, groupName = ?, section = ?, updatedAt = ?
                 WHERE id = ?
             `).bind(
                 name,
                 nextType,
                 Number(payload.sortOrder ?? category.sortOrder ?? 0),
-                // Reordering sends no group; keep the stored one.
+                // Reordering sends no group or section; keep the stored ones.
                 payload.groupName === undefined ? normalizeGroupName(category.groupName) : normalizeGroupName(payload.groupName),
+                nextType !== 'blog' ? null : normalizeSection(payload.section === undefined ? category.section : payload.section),
                 new Date().toISOString(),
                 id
             ),

@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Project } from '../types';
 import { projectService } from '../services/projectService';
 import { ProjectCard } from '../components/ProjectCard';
-import { CategoryGroup, categoryLabel, categoryService, findCategoryByQuery, groupCategories, NEWS_GROUP, normalizeCategoryQuery } from '../services/categoryService';
+import { CategoryGroup, categoryLabel, categoryService, findCategoryByQuery, groupCategories, isNewsCategory, normalizeCategoryQuery } from '../services/categoryService';
 import { useAuthUser } from '../hooks/useAuthUser';
 import { categoryIn, isListedIn } from '../utils/entryPlacement';
 import { categoryChipClassName, groupTabClassName } from '../utils/tabStyles';
@@ -13,8 +13,8 @@ const ALL = '전체보기';
 type BlogSection = 'blog' | 'news';
 
 /**
- * Blog posts are split into two lists by first-level group: the NEWS_GROUP categories
- * live on /news, everything else on /blog.
+ * Blog posts are split into two lists by category section: 'news' categories
+ * live on /news, everything else on /blog. Both use the same two-level tabs.
  */
 export const Blog: React.FC<{ section?: BlogSection }> = ({ section = 'blog' }) => {
     const isNews = section === 'news';
@@ -39,14 +39,15 @@ export const Blog: React.FC<{ section?: BlogSection }> = ({ section = 'blog' }) 
         ]).then(([data, categories]) => {
             if (!isMounted) return;
             const blogPosts = data.filter(p => isListedIn(p, 'blog'));
-            const knownNames = new Set(categories.map(category => category.name));
-            const unlisted = Array.from(new Set(blogPosts.map(post => categoryIn(post, 'blog')).filter(name => name && !knownNames.has(name))));
-            const allGroups = groupCategories([...categories, ...unlisted.map(name => ({ name, groupName: null }))]);
-            const newsCategories = allGroups.find(group => group.name === NEWS_GROUP)?.categories || [];
-            const isNewsPost = (post: Project) => newsCategories.includes(categoryIn(post, 'blog'));
+            const newsCategories = new Set(categories.filter(isNewsCategory).map(category => category.name));
+            const isNewsPost = (post: Project) => newsCategories.has(categoryIn(post, 'blog'));
+            const sectionPosts = blogPosts.filter(post => isNewsPost(post) === isNews);
+            const sectionCategories = categories.filter(category => isNewsCategory(category) === isNews);
 
-            setPosts(blogPosts.filter(post => isNewsPost(post) === isNews));
-            setGroups(allGroups.filter(group => (group.name === NEWS_GROUP) === isNews));
+            const knownNames = new Set(sectionCategories.map(category => category.name));
+            const unlisted = Array.from(new Set(sectionPosts.map(post => categoryIn(post, 'blog')).filter(name => name && !knownNames.has(name))));
+            setPosts(sectionPosts);
+            setGroups(groupCategories([...sectionCategories, ...unlisted.map(name => ({ name, groupName: null }))]));
             setIsLoading(false);
         });
 
@@ -70,10 +71,9 @@ export const Blog: React.FC<{ section?: BlogSection }> = ({ section = 'blog' }) 
         const matchedGroup = queryGroup
             ? groups.find(group => normalizeCategoryQuery(group.name) === normalizeCategoryQuery(queryGroup))
             : undefined;
-        // News has a single group, so it is always the active one.
-        setActiveGroup(isNews ? (groups[0]?.name || ALL) : (matchedGroup?.name || ALL));
+        setActiveGroup(matchedGroup?.name || ALL);
         setActiveCategory('');
-    }, [location.search, groups, isNews]);
+    }, [location.search, groups]);
 
     const currentGroup = groups.find(group => group.name === activeGroup);
     const filteredPosts = !currentGroup
@@ -113,7 +113,7 @@ export const Blog: React.FC<{ section?: BlogSection }> = ({ section = 'blog' }) 
 
                         {/* Pill Style Tabs */}
                         <div className="flex flex-col gap-4">
-                            {!isNews && <div className="-mx-4 flex gap-7 overflow-x-auto border-b border-[#ededed] px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:overflow-visible md:px-0">
+                            <div className="-mx-4 flex gap-7 overflow-x-auto border-b border-[#ededed] px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:overflow-visible md:px-0">
                                 {[ALL, ...groups.map(group => group.name)].map((groupName) => (
                                     <button
                                         key={groupName}
@@ -124,7 +124,7 @@ export const Blog: React.FC<{ section?: BlogSection }> = ({ section = 'blog' }) 
                                         {groupName === ALL ? groupName : categoryLabel(groupName)}
                                     </button>
                                 ))}
-                            </div>}
+                            </div>
 
                             {currentGroup && currentGroup.categories.length > 1 && (
                                 <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:overflow-visible md:px-0">
