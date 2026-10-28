@@ -116,7 +116,7 @@ export const Blog: React.FC = () => {
                             </div>
 
                             {currentGroup && currentGroup.categories.length > 1 && (
-                                <div className="-mx-4 flex gap-1 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:overflow-visible md:px-0">
+                                <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:overflow-visible md:px-0">
                                     {['', ...currentGroup.categories].map((category) => (
                                         <button
                                             key={category || 'all'}

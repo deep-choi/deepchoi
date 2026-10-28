@@ -6,7 +6,7 @@ export const groupTabClassName = (isActive: boolean) =>
     }`;
 
 export const categoryChipClassName = (isActive: boolean) =>
-    `shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-[13px] transition-colors ${isActive
+    `shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-[14px] transition-colors ${isActive
         ? 'bg-[#4169E1]/10 font-semibold text-[#4169E1]'
         : 'font-medium text-[#666666] hover:bg-[#f5f5f5] hover:text-[#111111]'
     }`;
