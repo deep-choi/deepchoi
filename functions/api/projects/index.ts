@@ -16,6 +16,7 @@ const normalizeProject = (project: any) => ({
     seoKeywords: JSON.parse(project.seoKeywords as string || '[]'),
     noIndex: Boolean(project.noIndex),
     isPrivate: Boolean(project.isPrivate),
+    pinOrder: project.pinOrder === null || project.pinOrder === undefined ? null : Number(project.pinOrder),
     author: JSON.parse(project.author as string || '{}')
 });
 
@@ -24,7 +25,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         await ensureAdminDataSchema(context.env.DB);
         const isAdmin = await isAdminRequest(context.request, context.env);
         const { results } = await context.env.DB.prepare(
-            `SELECT id, slug, title, subtitle, description, seoTitle, seoDescription, seoImage, seoKeywords, noIndex, tech, tags, imageUrl, category, type, secondaryType, secondaryCategory, isPrivate, date, author FROM Project${isAdmin ? '' : ' WHERE COALESCE(isPrivate, 0) = 0'}`
+            `SELECT id, slug, title, subtitle, description, seoTitle, seoDescription, seoImage, seoKeywords, noIndex, tech, tags, imageUrl, category, type, secondaryType, secondaryCategory, isPrivate, pinOrder, date, author FROM Project${isAdmin ? '' : ' WHERE COALESCE(isPrivate, 0) = 0'}`
         ).all();
         const projects = results.map(normalizeProject);
         // The admin list includes private entries, so it must never be cached or shared.

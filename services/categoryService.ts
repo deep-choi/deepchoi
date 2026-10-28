@@ -5,8 +5,33 @@ export interface CategoryRecord {
     name: string;
     type: EntryType;
     sortOrder: number;
+    /** First-level group shown above categories, e.g. "학습 기록". */
+    groupName?: string | null;
     entryCount: number;
 }
+
+export interface CategoryGroup {
+    name: string;
+    categories: string[];
+}
+
+/**
+ * Groups categories by their first-level name, in category order.
+ * A category without a group stands as its own group.
+ */
+export const groupCategories = (categories: Array<Pick<CategoryRecord, 'name' | 'groupName'>>): CategoryGroup[] => {
+    const groups: CategoryGroup[] = [];
+    for (const category of categories) {
+        const groupName = category.groupName?.trim() || category.name;
+        const group = groups.find(item => item.name === groupName);
+        if (group) {
+            group.categories.push(category.name);
+        } else {
+            groups.push({ name: groupName, categories: [category.name] });
+        }
+    }
+    return groups;
+};
 
 const API_URL = '/api/categories';
 
@@ -30,7 +55,8 @@ export const normalizeCategoryQuery = (value: string): string =>
 const categoryAliases: Record<string, string[]> = {
     'UI UX': ['uiux', 'ui/ux', 'ui-ux'],
     '바이브코딩': ['vibecoding', 'vibe-coding'],
-    AI: ['ai']
+    AI: ['ai'],
+    'AI / LLM': ['ai', 'llm']
 };
 
 export const categoryMatchesQuery = (categoryName: string, queryValue: string | null): boolean => {
@@ -68,18 +94,18 @@ export const categoryService = {
         }
     },
 
-    createCategory: async (name: string, type: EntryType): Promise<void> => {
+    createCategory: async (name: string, type: EntryType, groupName?: string): Promise<void> => {
         const res = await fetch(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, type })
+            body: JSON.stringify({ name, type, groupName })
         });
         if (!res.ok) {
             throw new Error(await readError(res, '카테고리 생성에 실패했습니다.'));
         }
     },
 
-    updateCategory: async (id: string, payload: { name: string; type?: EntryType; sortOrder?: number }): Promise<void> => {
+    updateCategory: async (id: string, payload: { name: string; type?: EntryType; sortOrder?: number; groupName?: string | null }): Promise<void> => {
         const res = await fetch(`${API_URL}/${encodeURIComponent(id)}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },

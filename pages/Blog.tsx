@@ -3,15 +3,25 @@ import { Link, useLocation } from 'react-router-dom';
 import { Project } from '../types';
 import { projectService } from '../services/projectService';
 import { ProjectCard } from '../components/ProjectCard';
-import { categoryLabel, categoryService, findCategoryByQuery } from '../services/categoryService';
+import { CategoryGroup, categoryLabel, categoryService, findCategoryByQuery, groupCategories, normalizeCategoryQuery } from '../services/categoryService';
 import { useAuthUser } from '../hooks/useAuthUser';
 import { categoryIn, isListedIn } from '../utils/entryPlacement';
+
+const ALL = '전체보기';
+
+const tabClassName = (isActive: boolean, isSub = false) =>
+    `shrink-0 whitespace-nowrap rounded-lg border ${isSub ? 'px-3 py-1.5 text-[12px]' : 'px-4 py-2 text-[13px]'} font-medium transition-all ${isActive
+        ? (isSub ? 'bg-[#111111] border-[#111111] text-white' : 'bg-[#4169E1] border-[#4169E1] text-white')
+        : 'bg-white border-[#e5e5e5] text-[#666666] hover:border-[#4169E1] hover:text-[#111111]'
+    }`;
 
 export const Blog: React.FC = () => {
     const [posts, setPosts] = useState<Project[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('전체보기');
-    const [tabs, setTabs] = useState<string[]>(['전체보기']);
+    const [groups, setGroups] = useState<CategoryGroup[]>([]);
+    const [activeGroup, setActiveGroup] = useState(ALL);
+    // Empty means every category in the active group.
+    const [activeCategory, setActiveCategory] = useState('');
     const location = useLocation();
     const [publicationNotice, setPublicationNotice] = useState<string | null>(() => (location.state as { publicationNotice?: string } | null)?.publicationNotice || null);
     const currentUser = useAuthUser();
@@ -28,11 +38,9 @@ export const Blog: React.FC = () => {
             if (!isMounted) return;
             const blogPosts = data.filter(p => isListedIn(p, 'blog'));
             setPosts(blogPosts);
-            const categoryNames = Array.from(new Set([
-                ...categories.map(category => category.name),
-                ...blogPosts.map(post => categoryIn(post, 'blog')).filter(Boolean)
-            ]));
-            setTabs(['전체보기', ...categoryNames]);
+            const knownNames = new Set(categories.map(category => category.name));
+            const unlisted = Array.from(new Set(blogPosts.map(post => categoryIn(post, 'blog')).filter(name => name && !knownNames.has(name))));
+            setGroups(groupCategories([...categories, ...unlisted.map(name => ({ name, groupName: null }))]));
             setIsLoading(false);
         });
 
@@ -42,19 +50,35 @@ export const Blog: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        const queryCategory = new URLSearchParams(location.search).get('category');
-        if (!queryCategory) {
-            setActiveTab('전체보기');
+        const params = new URLSearchParams(location.search);
+        const queryGroup = params.get('group');
+        const queryCategory = params.get('category');
+
+        const matchedCategory = findCategoryByQuery(groups.flatMap(group => group.categories), queryCategory);
+        if (matchedCategory) {
+            setActiveGroup(groups.find(group => group.categories.includes(matchedCategory))?.name || ALL);
+            setActiveCategory(matchedCategory);
             return;
         }
 
-        const matchedCategory = findCategoryByQuery(tabs.filter(tab => tab !== '전체보기'), queryCategory);
-        setActiveTab(matchedCategory || '전체보기');
-    }, [location.search, tabs]);
+        const matchedGroup = queryGroup
+            ? groups.find(group => normalizeCategoryQuery(group.name) === normalizeCategoryQuery(queryGroup))
+            : undefined;
+        setActiveGroup(matchedGroup?.name || ALL);
+        setActiveCategory('');
+    }, [location.search, groups]);
 
-    const filteredPosts = activeTab === '전체보기'
+    const currentGroup = groups.find(group => group.name === activeGroup);
+    const filteredPosts = !currentGroup
         ? posts
-        : posts.filter(p => categoryIn(p, 'blog') === activeTab);
+        : posts.filter(p => activeCategory
+            ? categoryIn(p, 'blog') === activeCategory
+            : currentGroup.categories.includes(categoryIn(p, 'blog')));
+
+    const selectGroup = (groupName: string) => {
+        setActiveGroup(groupName);
+        setActiveCategory('');
+    };
 
     return (
         <section className="py-32 bg-[#ffffff] min-h-screen">
@@ -81,20 +105,34 @@ export const Blog: React.FC = () => {
                         {/* Divider Removed */}
 
                         {/* Pill Style Tabs */}
-                        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:overflow-visible md:px-0">
-                            {tabs.map((tab) => (
-                                <button
-                                    key={tab}
-                                    onClick={() => setActiveTab(tab)}
-                                    aria-pressed={activeTab === tab}
-                                    className={`shrink-0 whitespace-nowrap rounded-lg border px-4 py-2 text-[13px] font-medium transition-all ${activeTab === tab
-                                        ? 'bg-[#4169E1] border-[#4169E1] text-white'
-                                        : 'bg-white border-[#e5e5e5] text-[#666666] hover:border-[#4169E1] hover:text-[#111111]'
-                                        }`}
-                                >
-                                    {tab === '전체보기' ? tab : categoryLabel(tab)}
-                                </button>
-                            ))}
+                        <div className="flex flex-col gap-3">
+                            <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:overflow-visible md:px-0">
+                                {[ALL, ...groups.map(group => group.name)].map((groupName) => (
+                                    <button
+                                        key={groupName}
+                                        onClick={() => selectGroup(groupName)}
+                                        aria-pressed={activeGroup === groupName}
+                                        className={tabClassName(activeGroup === groupName)}
+                                    >
+                                        {groupName === ALL ? groupName : categoryLabel(groupName)}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {currentGroup && currentGroup.categories.length > 1 && (
+                                <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:overflow-visible md:px-0">
+                                    {['', ...currentGroup.categories].map((category) => (
+                                        <button
+                                            key={category || 'all'}
+                                            onClick={() => setActiveCategory(category)}
+                                            aria-pressed={activeCategory === category}
+                                            className={tabClassName(activeCategory === category, true)}
+                                        >
+                                            {category ? categoryLabel(category) : '전체'}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

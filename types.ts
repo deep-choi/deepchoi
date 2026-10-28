@@ -34,6 +34,8 @@ export interface Project {
   secondaryCategory?: string | null;
   /** Visible to the admin only; hidden from lists, search engines and direct links. */
   isPrivate?: boolean;
+  /** Admin-chosen position at the top of lists; entries without one follow by date. */
+  pinOrder?: number | null;
   link?: string;
   date: string;
   content: string;

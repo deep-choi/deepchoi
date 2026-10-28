@@ -12,6 +12,11 @@ export const normalizeEntryType = (value?: string | null): 'work' | 'blog' | 'pa
 export const isContentEntryType = (value?: string | null): value is 'work' | 'blog' =>
     value === 'work' || value === 'blog';
 
+export const normalizeGroupName = (value: unknown): string | null => {
+    const name = String(value ?? '').trim();
+    return name || null;
+};
+
 export const categoryId = (type: string, name: string): string =>
     `${normalizeEntryType(type)}:${name.trim().toLowerCase().replace(/\s+/g, '-')}`;
 
@@ -74,13 +79,24 @@ const ensureProjectSeoColumns = async (db: D1Database): Promise<void> => {
         ['noIndex', 'INTEGER NOT NULL DEFAULT 0'],
         ['secondaryType', 'TEXT'],
         ['secondaryCategory', 'TEXT'],
-        ['isPrivate', 'INTEGER NOT NULL DEFAULT 0']
+        ['isPrivate', 'INTEGER NOT NULL DEFAULT 0'],
+        // Admin-chosen position at the top of lists; NULL entries follow by date.
+        ['pinOrder', 'INTEGER']
     ] as const;
 
     for (const [name, definition] of columnDefinitions) {
         if (!columnNames.has(name)) {
             await db.prepare(`ALTER TABLE Project ADD COLUMN ${name} ${definition}`).run();
         }
+    }
+};
+
+const ensureCategoryGroupColumn = async (db: D1Database): Promise<void> => {
+    const categoryColumns: any = await db.prepare('PRAGMA table_info(Category)').all();
+    const hasGroupName = categoryColumns.results?.some((column: any) => column.name === 'groupName');
+    if (!hasGroupName) {
+        // First-level grouping shown above the categories, e.g. "학습 기록" > Python.
+        await db.prepare('ALTER TABLE Category ADD COLUMN groupName TEXT').run();
     }
 };
 
@@ -163,6 +179,7 @@ export const ensureAdminDataSchema = async (db: D1Database): Promise<void> => {
     }
 
     await ensureProjectSeoColumns(db);
+    await ensureCategoryGroupColumn(db);
     await ensurePageViewAnalyticsColumns(db);
 
     await db.batch([

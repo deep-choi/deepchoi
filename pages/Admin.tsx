@@ -16,6 +16,9 @@ import {
     YAxis
 } from 'recharts';
 import { categoryLabel, categoryService, EntryType } from '../services/categoryService';
+import { projectService } from '../services/projectService';
+import { Project } from '../types';
+import { isListedIn } from '../utils/entryPlacement';
 import { commentService } from '../services/commentService';
 import { authService } from '../services/authService';
 import { PrivateBadge } from '../components/PrivateBadge';
@@ -49,6 +52,7 @@ interface AdminSummary {
         category: string;
         type: EntryType;
         sortOrder: number;
+        groupName?: string | null;
         entryCount: number;
     }>;
     analytics: {
@@ -135,7 +139,7 @@ interface SearchConsoleSummary {
 type ChartMetric = Record<string, string | number>;
 
 type AdminCategory = AdminSummary['categories'][number];
-type AdminTab = 'overview' | 'visitors' | 'search' | 'categories' | 'comments';
+type AdminTab = 'overview' | 'visitors' | 'search' | 'order' | 'categories' | 'comments';
 
 const contentCategoryTypes = ['work', 'blog'] as const;
 const entryTypeLabels: Record<EntryType, string> = {
@@ -161,6 +165,12 @@ const adminTabs: Array<{ id: AdminTab; label: string; description: string; icon:
         label: '검색 성과',
         description: 'Google 검색어와 검색 유입 페이지입니다.',
         icon: 'M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z'
+    },
+    {
+        id: 'order',
+        label: '상단 순서',
+        description: '홈과 Work 목록 맨 위에 보일 작업과 순서를 정합니다.',
+        icon: 'M3 4.5h14.25M3 9h9.75M3 13.5h9.75m4.5-4.5v12m0 0l-3.75-3.75M17.25 21L21 17.25'
     },
     {
         id: 'categories',
@@ -332,11 +342,18 @@ export const Admin: React.FC = () => {
     const [visitRange, setVisitRange] = useState<VisitRange>('14');
     const [categoryName, setCategoryName] = useState('');
     const [categoryType, setCategoryType] = useState<EntryType>('work');
+    const [categoryGroup, setCategoryGroup] = useState('');
     const [editingCategoryId, setEditingCategoryId] = useState('');
     const [editingCategoryName, setEditingCategoryName] = useState('');
     const [editingCategoryType, setEditingCategoryType] = useState<EntryType>('work');
+    const [editingCategoryGroup, setEditingCategoryGroup] = useState('');
     const [actionError, setActionError] = useState('');
     const [isSavingCategory, setIsSavingCategory] = useState(false);
+    const [workEntries, setWorkEntries] = useState<Project[]>([]);
+    const [topOrderIds, setTopOrderIds] = useState<string[]>([]);
+    const [isTopOrderDirty, setIsTopOrderDirty] = useState(false);
+    const [isSavingTopOrder, setIsSavingTopOrder] = useState(false);
+    const [topOrderMessage, setTopOrderMessage] = useState('');
 
     const loadSummary = async (range: VisitRange = visitRange): Promise<AdminSummary> => {
         const res = await fetch(`/api/admin/summary?range=${encodeURIComponent(range)}`);
@@ -414,6 +431,10 @@ export const Admin: React.FC = () => {
         return groups;
     }, [summary?.categories]);
 
+    const categoryGroupNames = useMemo(() => (
+        Array.from(new Set((summary?.categories || []).map(category => category.groupName?.trim()).filter(Boolean))) as string[]
+    ), [summary?.categories]);
+
     const handleCreateCategory = async (event: React.FormEvent) => {
         event.preventDefault();
         const name = categoryName.trim();
@@ -422,8 +443,9 @@ export const Admin: React.FC = () => {
         setIsSavingCategory(true);
         setActionError('');
         try {
-            await categoryService.createCategory(name, categoryType);
+            await categoryService.createCategory(name, categoryType, categoryGroup.trim());
             setCategoryName('');
+            setCategoryGroup('');
             await refreshSummary();
         } catch (err) {
             setActionError(err instanceof Error ? err.message : '카테고리 생성에 실패했습니다.');
@@ -442,11 +464,13 @@ export const Admin: React.FC = () => {
             await categoryService.updateCategory(category.id, {
                 name,
                 type: editingCategoryType,
-                sortOrder: category.sortOrder
+                sortOrder: category.sortOrder,
+                groupName: editingCategoryGroup.trim() || null
             });
             setEditingCategoryId('');
             setEditingCategoryName('');
             setEditingCategoryType('work');
+            setEditingCategoryGroup('');
             await refreshSummary();
         } catch (err) {
             setActionError(err instanceof Error ? err.message : '카테고리 수정에 실패했습니다.');
@@ -498,6 +522,52 @@ export const Admin: React.FC = () => {
             setActionError(err instanceof Error ? err.message : '카테고리 삭제에 실패했습니다.');
         } finally {
             setIsSavingCategory(false);
+        }
+    };
+
+    useEffect(() => {
+        if (activeTab !== 'order') return;
+        let isMounted = true;
+
+        projectService.getAllProjects().then(projects => {
+            if (!isMounted) return;
+            const entries = projects.filter(project => isListedIn(project, 'work'));
+            setWorkEntries(entries);
+            // getAllProjects already puts ordered entries first, in order.
+            setTopOrderIds(entries.filter(project => project.pinOrder !== null && project.pinOrder !== undefined).map(project => project.id));
+            setIsTopOrderDirty(false);
+        });
+
+        return () => {
+            isMounted = false;
+        };
+    }, [activeTab]);
+
+    const updateTopOrder = (ids: string[]) => {
+        setTopOrderIds(ids);
+        setIsTopOrderDirty(true);
+        setTopOrderMessage('');
+    };
+
+    const moveTopOrder = (index: number, direction: -1 | 1) => {
+        const target = index + direction;
+        if (target < 0 || target >= topOrderIds.length) return;
+        const reordered = [...topOrderIds];
+        [reordered[index], reordered[target]] = [reordered[target], reordered[index]];
+        updateTopOrder(reordered);
+    };
+
+    const handleSaveTopOrder = async () => {
+        setIsSavingTopOrder(true);
+        setTopOrderMessage('');
+        try {
+            await projectService.saveTopOrder(topOrderIds);
+            setIsTopOrderDirty(false);
+            setTopOrderMessage('저장했습니다.');
+        } catch (err) {
+            setTopOrderMessage(err instanceof Error ? err.message : '상단 순서 저장에 실패했습니다.');
+        } finally {
+            setIsSavingTopOrder(false);
         }
     };
 
@@ -1125,6 +1195,116 @@ export const Admin: React.FC = () => {
                     </>
                 )}
 
+                {activeTab === 'order' && (
+                    <section className="grid gap-6 xl:grid-cols-2">
+                        <Panel
+                            title="상단 순서"
+                            action={(
+                                <div className="flex items-center gap-3">
+                                    {topOrderMessage && <span className="text-xs font-bold text-[#666666]">{topOrderMessage}</span>}
+                                    <button
+                                        type="button"
+                                        onClick={handleSaveTopOrder}
+                                        disabled={!isTopOrderDirty || isSavingTopOrder}
+                                        className="h-9 rounded-lg bg-[#4169E1] px-4 text-xs font-bold text-white disabled:cursor-not-allowed disabled:bg-[#d1d1d1]"
+                                    >
+                                        {isSavingTopOrder ? '저장 중' : '저장'}
+                                    </button>
+                                </div>
+                            )}
+                        >
+                            <p className="border-b border-[#f0f0f0] px-5 py-3 text-xs font-medium text-[#666666]">
+                                여기 있는 작업이 홈과 Work 목록 맨 위에 이 순서대로 보입니다. 나머지는 날짜순으로 이어집니다.
+                            </p>
+                            <div className="divide-y divide-[#f0f0f0]">
+                                {topOrderIds.length === 0 ? (
+                                    <EmptyState text="오른쪽 목록에서 상단에 올릴 작업을 추가하세요." />
+                                ) : (
+                                    topOrderIds.map((id, index) => {
+                                        const entry = workEntries.find(item => item.id === id);
+                                        if (!entry) return null;
+                                        return (
+                                            <div key={id} className="flex items-center justify-between gap-3 px-5 py-4">
+                                                <div className="flex min-w-0 items-center gap-3">
+                                                    <span className="w-5 shrink-0 text-sm font-bold text-[#4169E1]">{index + 1}</span>
+                                                    <div className="min-w-0">
+                                                        <p className="flex items-center gap-2 truncate text-sm font-bold text-[#111111]">
+                                                            {entry.title}
+                                                            {entry.isPrivate && <PrivateBadge />}
+                                                        </p>
+                                                        <p className="mt-1 text-xs font-medium text-[#666666]">{categoryLabel(entry.category)} · {entry.date}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex shrink-0 items-center gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => moveTopOrder(index, -1)}
+                                                        disabled={index === 0}
+                                                        className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#e5e5e5] text-[#111111] disabled:cursor-not-allowed disabled:opacity-35"
+                                                        aria-label={`${entry.title} 위로 이동`}
+                                                    >
+                                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                                                        </svg>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => moveTopOrder(index, 1)}
+                                                        disabled={index === topOrderIds.length - 1}
+                                                        className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#e5e5e5] text-[#111111] disabled:cursor-not-allowed disabled:opacity-35"
+                                                        aria-label={`${entry.title} 아래로 이동`}
+                                                    >
+                                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                        </svg>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => updateTopOrder(topOrderIds.filter(item => item !== id))}
+                                                        className="h-9 rounded-lg border border-[#e5e5e5] px-3 text-xs font-bold text-[#111111]"
+                                                    >
+                                                        빼기
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                )}
+                            </div>
+                        </Panel>
+
+                        <Panel title="나머지 작업 (날짜순)">
+                            <div className="divide-y divide-[#f0f0f0]">
+                                {workEntries.filter(entry => !topOrderIds.includes(entry.id)).length === 0 ? (
+                                    <EmptyState text="모든 작업이 상단 순서에 있습니다." />
+                                ) : (
+                                    workEntries
+                                        .filter(entry => !topOrderIds.includes(entry.id))
+                                        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                                        .map(entry => (
+                                            <div key={entry.id} className="flex items-center justify-between gap-3 px-5 py-4">
+                                                <div className="min-w-0">
+                                                    <p className="flex items-center gap-2 truncate text-sm font-bold text-[#111111]">
+                                                        {entry.title}
+                                                        {entry.isPrivate && <PrivateBadge />}
+                                                    </p>
+                                                    <p className="mt-1 text-xs font-medium text-[#666666]">{categoryLabel(entry.category)} · {entry.date}</p>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => updateTopOrder([...topOrderIds, entry.id])}
+                                                    className="h-9 shrink-0 rounded-lg border border-[#4169E1]/40 px-3 text-xs font-bold text-[#4169E1]"
+                                                >
+                                                    상단에 추가
+                                                </button>
+                                            </div>
+                                        ))
+                                )}
+                            </div>
+                        </Panel>
+                    </section>
+                )}
+
                 {activeTab === 'categories' && (
                     <>
                         <section className="grid gap-3 sm:grid-cols-3">
@@ -1138,12 +1318,22 @@ export const Admin: React.FC = () => {
                                 title="카테고리 관리"
                                 action={isSavingCategory ? <span className="text-xs font-bold text-[#666666]">저장 중</span> : undefined}
                             >
-                                <form onSubmit={handleCreateCategory} className="grid gap-2 border-b border-[#e5e5e5] p-5 sm:grid-cols-[1fr_140px_90px]">
+                                <datalist id="category-group-names">
+                                    {categoryGroupNames.map(name => <option key={name} value={name} />)}
+                                </datalist>
+                                <form onSubmit={handleCreateCategory} className="grid gap-2 border-b border-[#e5e5e5] p-5 sm:grid-cols-[1fr_160px_140px_90px]">
                                     <input
                                         value={categoryName}
                                         onChange={event => setCategoryName(event.target.value)}
                                         className="h-10 rounded-lg border border-[#e5e5e5] px-3 text-sm font-bold text-[#111111] outline-none focus:border-[#4169E1] focus:ring-2 focus:ring-[#4169E1]/20"
                                         placeholder="새 카테고리"
+                                    />
+                                    <input
+                                        value={categoryGroup}
+                                        onChange={event => setCategoryGroup(event.target.value)}
+                                        list="category-group-names"
+                                        className="h-10 rounded-lg border border-[#e5e5e5] px-3 text-sm font-bold text-[#111111] outline-none focus:border-[#4169E1] focus:ring-2 focus:ring-[#4169E1]/20"
+                                        placeholder="1차 분류 (선택)"
                                     />
                                     <select
                                         value={categoryType}
@@ -1182,11 +1372,18 @@ export const Admin: React.FC = () => {
                                                     categoriesByType[type].map((category, index) => (
                                                         <div key={category.id} className="px-5 py-4">
                                                             {editingCategoryId === category.id ? (
-                                                                <div className="grid gap-2 lg:grid-cols-[1fr_140px_80px_80px]">
+                                                                <div className="grid gap-2 lg:grid-cols-[1fr_160px_140px_80px_80px]">
                                                                     <input
                                                                         value={editingCategoryName}
                                                                         onChange={event => setEditingCategoryName(event.target.value)}
                                                                         className="h-10 rounded-lg border border-[#e5e5e5] px-3 text-sm font-bold text-[#111111] outline-none focus:border-[#4169E1]"
+                                                                    />
+                                                                    <input
+                                                                        value={editingCategoryGroup}
+                                                                        onChange={event => setEditingCategoryGroup(event.target.value)}
+                                                                        list="category-group-names"
+                                                                        className="h-10 rounded-lg border border-[#e5e5e5] px-3 text-sm font-bold text-[#111111] outline-none focus:border-[#4169E1]"
+                                                                        placeholder="1차 분류 (선택)"
                                                                     />
                                                                     <select
                                                                         value={editingCategoryType}
@@ -1212,6 +1409,7 @@ export const Admin: React.FC = () => {
                                                                             setEditingCategoryId('');
                                                                             setEditingCategoryName('');
                                                                             setEditingCategoryType('work');
+                                                                            setEditingCategoryGroup('');
                                                                         }}
                                                                         className="h-10 rounded-lg border border-[#e5e5e5] text-sm font-bold text-[#111111]"
                                                                     >
@@ -1223,7 +1421,7 @@ export const Admin: React.FC = () => {
                                                                     <div className="min-w-0">
                                                                         <p className="truncate text-sm font-bold text-[#111111]">{categoryLabel(category.name)}</p>
                                                                         <p className="mt-1 text-xs font-medium uppercase text-[#666666]">
-                                                                            {entryTypeLabels[category.type]} · {category.entryCount}개 콘텐츠 · 순서 {index + 1}
+                                                                            {entryTypeLabels[category.type]}{category.groupName ? ` · ${category.groupName}` : ''} · {category.entryCount}개 콘텐츠 · 순서 {index + 1}
                                                                         </p>
                                                                     </div>
                                                                     <div className="flex shrink-0 flex-wrap items-center gap-2">
@@ -1255,6 +1453,7 @@ export const Admin: React.FC = () => {
                                                                                 setEditingCategoryId(category.id);
                                                                                 setEditingCategoryName(category.name);
                                                                                 setEditingCategoryType(category.type);
+                                                                                setEditingCategoryGroup(category.groupName || '');
                                                                             }}
                                                                             className="h-9 rounded-lg border border-[#e5e5e5] px-3 text-xs font-bold text-[#111111]"
                                                                         >

@@ -4,8 +4,16 @@ import { authService } from './authService';
 
 const API_URL = '/api/projects';
 
+const hasPinOrder = (project: Project): boolean =>
+    project.pinOrder !== null && project.pinOrder !== undefined;
+
+/** Admin-ordered entries first, then everything else newest first. */
 const sortByNewest = (projects: Project[]): Project[] =>
-    [...projects].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    [...projects].sort((a, b) => {
+        if (hasPinOrder(a) && hasPinOrder(b)) return Number(a.pinOrder) - Number(b.pinOrder);
+        if (hasPinOrder(a) !== hasPinOrder(b)) return hasPinOrder(a) ? -1 : 1;
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
 
 const getStaticProjects = async (): Promise<Project[]> => {
     const { PROJECTS } = await import('../data/projects');
@@ -101,6 +109,19 @@ export const projectService = {
         } catch (err) {
             console.error(err);
             throw err;
+        }
+    },
+
+    /** Saves which entries sit at the top, in this order; all others fall back to date order. */
+    saveTopOrder: async (ids: string[]): Promise<void> => {
+        const res = await fetch(`${API_URL}/order`, {
+            method: 'PUT',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids })
+        });
+        if (!res.ok) {
+            await throwProjectResponseError(res, '상단 순서 저장에 실패했습니다.');
         }
     },
 

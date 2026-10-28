@@ -4,7 +4,7 @@ interface Env {
 }
 
 import { requireAdmin } from '../../_utils/auth';
-import { categoryId, ensureAdminDataSchema, isContentEntryType, normalizeEntryType, projectInCategorySql } from '../../_utils/schema';
+import { categoryId, ensureAdminDataSchema, isContentEntryType, normalizeEntryType, normalizeGroupName, projectInCategorySql } from '../../_utils/schema';
 
 const categorySelect = `
     SELECT
@@ -12,6 +12,7 @@ const categorySelect = `
         c.name,
         c.type,
         c.sortOrder,
+        c.groupName,
         c.createdAt,
         c.updatedAt,
         COUNT(p.id) AS entryCount
@@ -81,13 +82,14 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         }
 
         await context.env.DB.prepare(`
-            INSERT INTO Category (id, name, type, sortOrder, createdAt, updatedAt)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO Category (id, name, type, sortOrder, groupName, createdAt, updatedAt)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         `).bind(
             id,
             name,
             type,
             Number(payload.sortOrder ?? nextSortOrder?.sortOrder ?? 0),
+            normalizeGroupName(payload.groupName),
             now,
             now
         ).run();
