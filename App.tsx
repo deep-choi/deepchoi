@@ -205,15 +205,16 @@ const Footer: React.FC = () => (
       <div className="flex flex-col">
         <h4 className="text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-6">Blog</h4>
         <Link to="/blog" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">전체보기</Link>
-        <Link to="/blog?category=AI" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">AI</Link>
-        <Link to="/blog?category=UI%20UX" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">UI UX</Link>
+        <Link to="/blog?group=학습 기록" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">학습 기록</Link>
+        <Link to="/blog?group=작업 노트" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">작업 노트</Link>
+        <Link to="/blog?group=AI 소식" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">AI 소식</Link>
       </div>
 
       {/* Column 4: Connect */}
       <div className="flex flex-col">
         <h4 className="text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-6">Connect</h4>
-        <a href="mailto:contact@example.com" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">Email</a>
-        <a href="https://github.com" target="_blank" rel="noreferrer" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">GitHub</a>
+        <a href="mailto:cryingonion77@gmail.com" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">Email</a>
+        <a href="https://github.com/deep-choi" target="_blank" rel="noreferrer" className="text-[14px] text-[#111111] mb-3 hover:text-[#666666] hover:underline transition-all w-fit">GitHub</a>
       </div>
     </div>
   </footer>
