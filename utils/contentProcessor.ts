@@ -1,3 +1,5 @@
+import { normalizeBodyHeadings } from './bodyHeadings';
+
 const DANGEROUS_TAGS = ['SCRIPT', 'STYLE', 'IFRAME', 'OBJECT', 'EMBED'];
 
 const BLOCK_TAGS = new Set([
@@ -401,6 +403,7 @@ export const sanitizeContent = (html: string): string => {
     const doc = parser.parseFromString(html, 'text/html');
 
     removeUnsafeElementsAndAttributes(doc.body);
+    normalizeBodyHeadings(doc.body);
 
     // Older posts may have an explicit 1.5 line height; display and resave it as 1.6.
     doc.body.querySelectorAll<HTMLElement>('[style]').forEach(element => {

@@ -97,7 +97,7 @@ export const Blog: React.FC<{ section?: BlogSection }> = ({ section = 'blog' }) 
                             <h1 className="text-[24px] md:text-[28px] leading-none font-medium text-[#111111] tracking-tight">{isNews ? 'AI 소식' : '블로그'}</h1>
                             {isAdmin && (
                                 <Link
-                                    to="/admin/create?type=blog"
+                                    to={isNews ? '/admin/create?type=news' : '/admin/create?type=blog'}
                                     className="inline-flex h-10 items-center gap-2 rounded-full bg-[#4169E1] px-4 text-[13px] font-semibold text-white shadow-sm shadow-[#4169E1]/20 transition-all hover:bg-[#3458c7] active:scale-95"
                                 >
                                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">

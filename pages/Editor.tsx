@@ -9,7 +9,7 @@ import { imageService } from '../services/imageService';
 import { normalizeEditorHtml } from '../utils/contentProcessor';
 import { categoryLabel, categoryService, CategoryRecord, EntryType, isNewsCategory } from '../services/categoryService';
 import { useEntryEditor } from '../hooks/useEntryEditor';
-import { isListedIn, placementSummary } from '../utils/entryPlacement';
+import { categoriesForPlacement, isListedIn, placementSummary, primaryPlacementOf } from '../utils/entryPlacement';
 
 const localDate = () => {
     const now = new Date();
@@ -22,7 +22,8 @@ export const Editor: React.FC = () => {
     const location = useLocation();
     const [searchParams] = useSearchParams();
     const isEdit = !!id;
-    const requestedType = searchParams.get('type') === 'blog' ? 'blog' : 'work';
+    const requestedPlacement = searchParams.get('type') === 'news' ? 'news' : searchParams.get('type') === 'blog' ? 'blog' : 'work';
+    const requestedType = requestedPlacement === 'work' ? 'work' : 'blog';
 
     const editor = useEntryEditor(isEdit ? `entry:${id}` : 'new');
     const { form, load, patch, clearDraft, editorRef } = editor;
@@ -31,7 +32,7 @@ export const Editor: React.FC = () => {
     const [reviewOpen, setReviewOpen] = useState(false);
     const [saving, setSaving] = useState(false);
     const [categories, setCategories] = useState<CategoryRecord[]>([]);
-    const entryLabel = form.type === 'blog' ? '블로그 글' : '프로젝트';
+    const entryLabel = primaryPlacementOf(form, categories) === 'news' ? '뉴스 글' : form.type === 'blog' ? '블로그 글' : '프로젝트';
     // News categories are listed on /news, every other blog category on /blog.
     const blogListPath = (category?: string) =>
         categories.some(item => item.name === category && isNewsCategory(item)) ? '/news' : '/blog';
@@ -66,20 +67,22 @@ export const Editor: React.FC = () => {
             tech: [],
             tags: [],
             imageUrl: '',
-            category: requestedType === 'blog' ? 'AI' : 'UI UX',
+            category: '',
             type: requestedType,
             date: localDate(),
             content: '',
         });
-    }, [isEdit, id, requestedType, load]);
+    }, [isEdit, id, requestedType, requestedPlacement, load]);
 
     useEffect(() => {
         if (isEdit || isStaticPage || categories.length === 0 || !form.type) return;
         const typeCategories = categories.filter(category => category.type === (form.type as EntryType));
         if (typeCategories.length > 0 && !typeCategories.some(category => category.name === form.category)) {
-            patch(prev => ({ ...prev, category: typeCategories[0].name }));
+            const placement = form.type === 'work' ? 'work' : requestedPlacement === 'news' ? 'news' : 'blog';
+            const defaultCategory = categoriesForPlacement(categories, placement)[0]?.name;
+            if (defaultCategory) patch(prev => ({ ...prev, category: defaultCategory }));
         }
-    }, [categories, form.category, form.type, isEdit, isStaticPage, patch]);
+    }, [categories, form.category, form.type, isEdit, isStaticPage, requestedPlacement, patch]);
 
     const handleSave = () => {
         // The review confirms what goes public; a private entry skips it.
@@ -124,7 +127,9 @@ export const Editor: React.FC = () => {
                     state: {
                         publicationNotice: projectData.isPrivate
                             ? '비공개로 저장했습니다. 관리자에게만 보입니다.'
-                            : isEdit ? '블로그 글을 저장했습니다.' : '블로그 글을 게시했습니다.'
+                            : blogListPath(projectData.category) === '/news'
+                                ? isEdit ? '뉴스 글을 저장했습니다.' : '뉴스 글을 게시했습니다.'
+                                : isEdit ? '블로그 글을 저장했습니다.' : '블로그 글을 게시했습니다.'
                     }
                 });
             } else if (projectData.type === 'work') {
@@ -170,7 +175,7 @@ export const Editor: React.FC = () => {
                 onImageUpload={handleImageUpload}
                 onCoverUpload={handleThumbnailUpload}
             />
-            {reviewOpen && <PublicationReview title={form.title || ''} category={placementSummary(form, categoryLabel)} date={form.date || ''} editing={isEdit} saving={saving} onCancel={() => setReviewOpen(false)} onConfirm={() => void saveProject()} />}
+            {reviewOpen && <PublicationReview title={form.title || ''} category={placementSummary(form, categoryLabel, categories)} date={form.date || ''} editing={isEdit} saving={saving} onCancel={() => setReviewOpen(false)} onConfirm={() => void saveProject()} />}
         </>
     );
 };

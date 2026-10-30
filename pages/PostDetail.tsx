@@ -1,6 +1,7 @@
 
 import React, { useEffect, useLayoutEffect, useState, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { ImageLightbox } from '../components/ImageLightbox';
 import { useParams, useNavigate } from 'react-router-dom';
 import { isProjectAuthenticationError, projectService } from '../services/projectService';
 import { Project } from '../types';
@@ -51,11 +52,7 @@ export const PostDetail: React.FC = () => {
     const isAdmin = currentUser?.role === 'admin';
 
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
-    const [zoomLevel, setZoomLevel] = useState(1);
-    const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
-    const [isDragging, setIsDragging] = useState(false);
-    const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-    const clickStartPosRef = useRef({ x: 0, y: 0 });
+    const closeImage = useCallback(() => setSelectedImage(null), []);
 
     // Comments Logic
     const [comments, setComments] = useState<Comment[]>([]);
@@ -102,13 +99,6 @@ export const PostDetail: React.FC = () => {
     }, [project]);
 
     useEffect(() => {
-        if (!selectedImage) {
-            setZoomLevel(1);
-            setPanPosition({ x: 0, y: 0 });
-        }
-    }, [selectedImage]);
-
-    useEffect(() => {
         if (isEditing) return;
 
         const root = contentDisplayRef.current;
@@ -139,46 +129,6 @@ export const PostDetail: React.FC = () => {
             pre.appendChild(button);
         });
     }, [project?.content, isEditing]);
-
-    const handleMouseDown = (e: React.MouseEvent) => {
-        clickStartPosRef.current = { x: e.clientX, y: e.clientY };
-        e.preventDefault();
-        setIsDragging(true);
-        setDragStart({ x: e.clientX - panPosition.x, y: e.clientY - panPosition.y });
-    };
-
-    const handleMouseMove = (e: React.MouseEvent) => {
-        if (isDragging) {
-            e.preventDefault();
-            setPanPosition({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
-        }
-    };
-
-    const handleMouseUp = () => {
-        setIsDragging(false);
-    };
-
-    // Touch event handlers for mobile
-    const handleTouchStart = (e: React.TouchEvent) => {
-        if (e.touches.length === 1) {
-            const touch = e.touches[0];
-            clickStartPosRef.current = { x: touch.clientX, y: touch.clientY };
-            setIsDragging(true);
-            setDragStart({ x: touch.clientX - panPosition.x, y: touch.clientY - panPosition.y });
-        }
-    };
-
-    const handleTouchMove = (e: React.TouchEvent) => {
-        if (isDragging && e.touches.length === 1) {
-            e.preventDefault();
-            const touch = e.touches[0];
-            setPanPosition({ x: touch.clientX - dragStart.x, y: touch.clientY - dragStart.y });
-        }
-    };
-
-    const handleTouchEnd = () => {
-        setIsDragging(false);
-    };
 
     const handleCommentAdded = useCallback((comment: Comment) => {
         setComments(prev => [comment, ...prev]);
@@ -361,7 +311,7 @@ export const PostDetail: React.FC = () => {
                     onImageUpload={handleImageUpload}
                     onCoverUpload={handleImageUpload}
                 />
-                {reviewOpen && <PublicationReview title={editor.form.title || ''} category={placementSummary(editor.form, categoryLabel)} date={editor.form.date || ''} editing saving={saving} onCancel={() => setReviewOpen(false)} onConfirm={() => void saveProject()} />}
+                {reviewOpen && <PublicationReview title={editor.form.title || ''} category={placementSummary(editor.form, categoryLabel, categories)} date={editor.form.date || ''} editing saving={saving} onCancel={() => setReviewOpen(false)} onConfirm={() => void saveProject()} />}
             </>
         );
     }
@@ -375,72 +325,7 @@ export const PostDetail: React.FC = () => {
                 </div>
             )}
             {saveNotice && !isEditing && <div role="status" className="mx-auto mb-6 flex max-w-[800px] items-center justify-between rounded-xl border border-[#b9d5c3] bg-[#f0faf3] px-4 py-3 text-sm text-[#245c36]"><span>{saveNotice}</span><button type="button" onClick={() => setSaveNotice('')} aria-label="알림 닫기">닫기</button></div>}
-            {/* Image Lightbox Modal */}
-            {selectedImage && createPortal(
-                <div
-                    className="fixed inset-0 bg-black/95 z-[100] flex items-center justify-center overflow-hidden"
-                    onClick={() => setSelectedImage(null)}
-                >
-                    <div
-                        className="relative w-full h-full flex items-start justify-center pt-10"
-                        style={{
-                            cursor: isDragging ? 'grabbing' : 'grab',
-                            touchAction: 'none'
-                        }}
-                        onMouseDown={handleMouseDown}
-                        onMouseMove={handleMouseMove}
-                        onMouseUp={handleMouseUp}
-                        onMouseLeave={handleMouseUp}
-                        onTouchStart={handleTouchStart}
-                        onTouchMove={handleTouchMove}
-                        onTouchEnd={handleTouchEnd}
-                    >
-                        <img
-                            src={selectedImage}
-                            alt="Zoomed view"
-                            className="max-w-[80vw] w-auto h-auto rounded-[8px] object-contain transition-transform duration-200 ease-out select-none md:rounded-[16px]"
-                            style={{
-                                transform: `scale(${zoomLevel}) translate(${panPosition.x / zoomLevel}px, ${panPosition.y / zoomLevel}px)`,
-                                transformOrigin: 'top center'
-                            }}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                // Click to zoom disabled, only drag allowed
-                            }}
-                            draggable={false}
-                        />
-                    </div>
-
-                    {/* Zoom Controls */}
-                    <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-4 rounded-full border border-white/15 bg-[#111111]/90 px-6 py-3 shadow-[0_18px_50px_rgba(0,0,0,0.45)] backdrop-blur-md z-[110]" onClick={e => e.stopPropagation()}>
-                        <button
-                            onClick={() => {
-                                const newZoom = Math.max(1, zoomLevel / 2);
-                                setZoomLevel(newZoom);
-                                if (newZoom <= 1.5) setPanPosition({ x: 0, y: 0 })
-                            }}
-                            className="rounded-full p-1 text-white transition-colors hover:bg-white/15"
-                        >
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" /></svg>
-                        </button>
-                        <span className="text-white font-medium min-w-[4ch] text-center">{Math.round(zoomLevel * 100)}%</span>
-                        <button
-                            onClick={() => setZoomLevel(Math.min(4, zoomLevel * 2))}
-                            className="rounded-full p-1 text-white transition-colors hover:bg-white/15"
-                        >
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                        </button>
-                    </div>
-
-                    <button
-                        onClick={() => setSelectedImage(null)}
-                        className="absolute top-5 right-5 w-10 h-10 bg-white/10 text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-colors z-[110]"
-                    >
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
-                </div>,
-                document.body
-            )}
+            {selectedImage && <ImageLightbox key={selectedImage} src={selectedImage} onClose={closeImage} />}
 
             {/* Custom Delete Confirmation Modal */}
             {isDeleteModalOpen && createPortal(

@@ -15,7 +15,7 @@ export const cleanPastedHtml = (html: string): string => {
             Array.from(node.childNodes).forEach(child => copy(child, parent));
             return;
         }
-        const element = document.createElement(node.tagName.toLowerCase());
+        const element = document.createElement(/^H[1-6]$/.test(node.tagName) ? 'h3' : node.tagName.toLowerCase());
         if (node.tagName === 'A') {
             const href = node.getAttribute('href')?.trim() || '';
             if (/^(https?:|mailto:|\/|#)/i.test(href) && !href.startsWith('//')) element.setAttribute('href', href);

@@ -548,15 +548,14 @@ img {
     height: 46px;
     align-items: center;
     justify-content: center;
-    border: 1px solid rgba(255, 255, 255, 0.16);
+    border: 0;
     border-radius: 999px;
-    background: rgba(17, 17, 17, 0.82);
+    background: #4169E1;
     color: #ffffff;
     font-size: 0;
     font-weight: 300;
     line-height: 0;
     transform: translateY(-50%);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
     cursor: pointer;
     user-select: none;
     transition: background-color 160ms ease, transform 160ms ease, opacity 160ms ease;
@@ -574,7 +573,7 @@ img {
 
 .dual-prose .image-carousel-nav:hover,
 .editor-prose .image-carousel-nav:hover {
-    background: rgba(17, 17, 17, 0.94);
+    background: #3458c7;
     transform: translateY(-50%) scale(1.04);
 }
 
@@ -632,13 +631,11 @@ img {
     gap: 10px;
     margin: 0 !important;
     padding: 8px 12px;
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    border: 0;
     border-radius: 999px;
-    background: rgba(17, 17, 17, 0.78);
+    background: #4169E1;
     color: #ffffff;
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.24);
     transform: translateX(-50%);
-    backdrop-filter: blur(12px);
     pointer-events: none;
 }
 
@@ -668,7 +665,7 @@ img {
     width: 5px;
     height: 5px;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.42);
+    background: rgba(255, 255, 255, 0.5);
     transition: width 180ms ease, background-color 180ms ease, opacity 180ms ease;
 }
 

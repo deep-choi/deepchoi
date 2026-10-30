@@ -696,8 +696,6 @@ export const MarkdownToolbar: React.FC<MarkdownToolbarProps> = ({ onImageUpload,
     const editorColors = ['#111111', '#2b2b2b', '#666666', '#4169E1', '#3fb950'];
     const blockOptions = [
         { tag: 'P', label: '본문', text: '본문' },
-        { tag: 'H1', label: '제목 1', text: 'H1' },
-        { tag: 'H2', label: '제목 2', text: 'H2' },
         { tag: 'H3', label: '제목 3', text: 'H3' }
     ];
     const menuHeadingClass = 'px-3 pb-1 pt-1.5 text-[11px] font-bold text-[#888888]';

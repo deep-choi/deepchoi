@@ -6,7 +6,7 @@ import { categoryLabel, CategoryRecord, EntryType } from '../services/categorySe
 import { linkifyHtml, normalizeEditorHtml } from '../utils/contentProcessor';
 import { setupCarousel } from '../utils/carousel';
 import { useSuspendSmoothScroll } from './SmoothScroll';
-import { ContentType, secondaryTypeOf } from '../utils/entryPlacement';
+import { categoriesForPlacement, EditorPlacement, placementForCategory, placementLabel, primaryPlacementOf, secondaryTypeOf, toggleEditorPlacement } from '../utils/entryPlacement';
 import { lockIconPath } from './PrivateBadge';
 
 const globeIconPath = 'M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418';
@@ -117,28 +117,14 @@ export const EntryEditor: React.FC<EntryEditorProps> = ({
     onSaveRef.current = onSave;
     useSuspendSmoothScroll();
 
-    const entryType: ContentType = form.type === 'blog' ? 'blog' : 'work';
+    const entryType = primaryPlacementOf(form, categories);
     const secondaryType = secondaryTypeOf(form);
     // The primary type always comes first; it decides the URL, SEO type and editor label.
-    const placements: ContentType[] = secondaryType ? [entryType, secondaryType] : [entryType];
-    const typeName = (type: ContentType) => (type === 'work' ? 'Work' : 'Blog');
-    const categoryOptionsFor = (type: ContentType) => categories.filter(category => category.type === type);
-    const firstCategoryOf = (type: ContentType) => categoryOptionsFor(type)[0]?.name || (type === 'blog' ? 'AI' : 'UI UX');
-
-    const togglePlacement = (type: ContentType) => update(prev => {
-        const primary: ContentType = prev.type === 'blog' ? 'blog' : 'work';
-        const secondary = secondaryTypeOf(prev);
-        if (type !== primary && type !== secondary) {
-            return { ...prev, secondaryType: type, secondaryCategory: firstCategoryOf(type) };
-        }
-        if (type === secondary) {
-            return { ...prev, secondaryType: null, secondaryCategory: null };
-        }
-        // Removing the primary type promotes the secondary one.
-        return secondary
-            ? { ...prev, type: secondary, category: prev.secondaryCategory || firstCategoryOf(secondary), secondaryType: null, secondaryCategory: null }
-            : prev;
-    });
+    const placements: EditorPlacement[] = secondaryType ? [entryType, placementForCategory(secondaryType, form.secondaryCategory || '', categories)] : [entryType];
+    const typeName = placementLabel;
+    const categoryOptionsFor = (type: EditorPlacement) => categoriesForPlacement(categories, type);
+    const firstCategoryOf = (type: EditorPlacement) => categoryOptionsFor(type)[0]?.name || '';
+    const togglePlacement = (type: EditorPlacement) => update(prev => toggleEditorPlacement(prev, type, categories));
 
     const swapPrimary = () => update(prev => {
         const secondary = secondaryTypeOf(prev);
@@ -404,10 +390,10 @@ export const EntryEditor: React.FC<EntryEditorProps> = ({
                                         >
                                             기본 {typeName(entryType)} · 바꾸기
                                         </button>
-                                    ) : '둘 다 선택 가능'}
+                                    ) : 'Work와 함께 게시 가능'}
                                 />
-                                <div className="grid h-11 grid-cols-2 gap-1 rounded-lg border border-[#e5e5e5] bg-[#fafafa] p-1" role="group" aria-label="게시 위치">
-                                    {(['work', 'blog'] as ContentType[]).map(type => {
+                                <div className="grid h-11 grid-cols-3 gap-1 rounded-lg border border-[#e5e5e5] bg-[#fafafa] p-1" role="group" aria-label="게시 위치">
+                                    {(['work', 'blog', 'news'] as EditorPlacement[]).map(type => {
                                         const selected = placements.includes(type);
                                         return (
                                             <button
@@ -415,6 +401,7 @@ export const EntryEditor: React.FC<EntryEditorProps> = ({
                                                 type="button"
                                                 role="checkbox"
                                                 aria-checked={selected}
+                                                disabled={!selected && categoryOptionsFor(type).length === 0}
                                                 onClick={() => {
                                                     if (selected && placements.length === 1) return; // keep at least one
                                                     togglePlacement(type);
@@ -427,9 +414,6 @@ export const EntryEditor: React.FC<EntryEditorProps> = ({
                                                     )}
                                                 </span>
                                                 {typeName(type)}
-                                                {secondaryType && type === entryType && (
-                                                    <span className="rounded bg-[#eef2ff] px-1 text-[10px] font-bold text-[#4169E1]">기본</span>
-                                                )}
                                             </button>
                                         );
                                     })}
