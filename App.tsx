@@ -3,18 +3,52 @@ import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation, Navigate, useNavigate } from 'react-router-dom';
 import { Home } from './pages/Home';
 import { PostDetail } from './pages/PostDetail';
-import { Editor } from './pages/Editor';
-import { Login } from './pages/Login';
-import { Signup } from './pages/Signup';
 import { Work } from './pages/Work';
 import { Blog } from './pages/Blog';
 import { Contact } from './pages/Contact';
-import { Admin } from './pages/Admin';
 import { authService } from './services/authService';
 import { useAuthUser } from './hooks/useAuthUser';
 import { analyticsService } from './services/analyticsService';
 import { SmoothScroll } from './components/SmoothScroll';
 import { FloatingContact } from './components/FloatingContact';
+import { applyPageSeo } from './utils/seo';
+
+const Editor = React.lazy(() => import('./pages/Editor').then((module) => ({ default: module.Editor })));
+const Login = React.lazy(() => import('./pages/Login').then((module) => ({ default: module.Login })));
+const Signup = React.lazy(() => import('./pages/Signup').then((module) => ({ default: module.Signup })));
+const Admin = React.lazy(() => import('./pages/Admin').then((module) => ({ default: module.Admin })));
+
+const RouteFallback: React.FC = () => (
+  <div className="min-h-[420px] pt-32 flex items-center justify-center">
+    <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#4169E1] border-t-transparent"></div>
+  </div>
+);
+
+const NotFound: React.FC = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    applyPageSeo({
+      title: '페이지를 찾을 수 없습니다 | Deepchoi',
+      description: '요청하신 페이지를 찾을 수 없습니다.',
+      path: location.pathname,
+      noIndex: true,
+    });
+  }, [location.pathname]);
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center space-y-4 px-4 text-center">
+      <h1 className="text-2xl font-bold tracking-tight text-[#111111]">페이지를 찾을 수 없습니다</h1>
+      <p className="text-[#666666] text-base">주소가 잘못되었거나 이동된 페이지입니다.</p>
+      <Link
+        to="/"
+        className="px-6 py-2.5 bg-[#4169E1] text-white rounded-full text-sm font-semibold hover:bg-[#3458c7] transition-all"
+      >
+        홈으로 이동
+      </Link>
+    </div>
+  );
+};
 
 const Navbar: React.FC<{ isScrolled: boolean }> = ({ isScrolled }) => {
   const currentUser = useAuthUser();
@@ -296,59 +330,62 @@ export default function App() {
     <BrowserRouter>
       <AnalyticsTracker />
       <Layout>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<Navigate to="/" replace />} />
-          <Route path="/work" element={<Work />} />
-          <Route path="/blog" element={<Blog key="blog" />} />
-          <Route path="/news" element={<Blog key="news" section="news" />} />
-          <Route path="/contact" element={<Contact />} />
+        <React.Suspense fallback={<RouteFallback />}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<Navigate to="/" replace />} />
+            <Route path="/work" element={<Work />} />
+            <Route path="/blog" element={<Blog key="blog" />} />
+            <Route path="/news" element={<Blog key="news" section="news" />} />
+            <Route path="/contact" element={<Contact />} />
 
-          <Route path="/post/:id" element={<PostDetail />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+            <Route path="/post/:id" element={<PostDetail />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
 
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute>
-                <Admin />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/create"
-            element={
-              <ProtectedRoute>
-                <Editor />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/edit/about"
-            element={
-              <ProtectedRoute>
-                <Navigate to="/" replace />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/edit/contact"
-            element={
-              <ProtectedRoute>
-                <Navigate to="/contact?edit=1" replace />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/edit/:id"
-            element={
-              <ProtectedRoute>
-                <Editor />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <Admin />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/create"
+              element={
+                <ProtectedRoute>
+                  <Editor />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/edit/about"
+              element={
+                <ProtectedRoute>
+                  <Navigate to="/" replace />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/edit/contact"
+              element={
+                <ProtectedRoute>
+                  <Navigate to="/contact?edit=1" replace />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/edit/:id"
+              element={
+                <ProtectedRoute>
+                  <Editor />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </React.Suspense>
       </Layout>
       <style>{`
         body { 

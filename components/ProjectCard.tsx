@@ -25,9 +25,9 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, index }) => {
                     <img
                         src={project.imageUrl}
                         alt={project.title}
-                        loading="lazy"
+                        loading={index <= 3 ? 'eager' : 'lazy'}
                         decoding="async"
-                        className="w-full h-full object-cover transition-all duration-[1.5s] ease-[cubic-bezier(0.2,0,0,1)] group-hover:scale-110 opacity-0"
+                        className={`w-full h-full object-cover transition-all duration-[1.5s] ease-[cubic-bezier(0.2,0,0,1)] group-hover:scale-110 ${index <= 3 ? '' : 'opacity-0'}`}
                         onLoad={(e) => e.currentTarget.classList.remove('opacity-0')}
                     />
                     <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>

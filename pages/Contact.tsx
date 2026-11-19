@@ -8,6 +8,7 @@ import { imageService } from '../services/imageService';
 import { linkifyHtml, normalizeEditorHtml } from '../utils/contentProcessor';
 import { moveCarousel, setupCarousel } from '../utils/carousel';
 import { useAuthUser } from '../hooks/useAuthUser';
+import { applyPageSeo } from '../utils/seo';
 
 export const Contact: React.FC = () => {
     const [project, setProject] = useState<Project | null>(null);
@@ -21,6 +22,16 @@ export const Contact: React.FC = () => {
     const navigate = useNavigate();
     const currentUser = useAuthUser();
     const isAdmin = currentUser?.role === 'admin';
+
+    useEffect(() => {
+        const heading = String(project?.title || 'Contact').trim();
+        const subtitle = String(project?.subtitle || '').trim();
+        applyPageSeo({
+            title: `${heading} | Deepchoi`,
+            description: subtitle || 'Deepchoi에게 프로젝트 문의 및 협업을 제안할 수 있는 연락처 페이지입니다.',
+            path: '/contact'
+        });
+    }, [project?.title, project?.subtitle]);
 
     useEffect(() => {
         setIsLoading(true);

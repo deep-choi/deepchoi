@@ -2,8 +2,17 @@ import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
 import { useGoogleLogin } from '@react-oauth/google';
+import { applyPageSeo } from '../utils/seo';
 
 export const Login: React.FC = () => {
+    React.useEffect(() => {
+        applyPageSeo({
+            title: '로그인 | Deepchoi',
+            description: 'Deepchoi 관리자 로그인 페이지입니다.',
+            path: '/login',
+            noIndex: true
+        });
+    }, []);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState(false);

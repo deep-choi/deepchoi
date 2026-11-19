@@ -2,8 +2,17 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
+import { applyPageSeo } from '../utils/seo';
 
 export const Signup: React.FC = () => {
+    React.useEffect(() => {
+        applyPageSeo({
+            title: '회원가입 | Deepchoi',
+            description: 'Deepchoi 회원가입 페이지입니다.',
+            path: '/signup',
+            noIndex: true
+        });
+    }, []);
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');

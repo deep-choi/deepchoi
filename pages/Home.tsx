@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { projectService } from '../services/projectService';
 import { Project } from '../types';
 import { ScrollReveal } from '../components/ScrollReveal';
-import { getProjectPath } from '../utils/seo';
+import { getProjectPath, applyDefaultSeo } from '../utils/seo';
 import { isListedIn } from '../utils/entryPlacement';
 
 const HeroParticleField = React.lazy(() =>
@@ -181,6 +181,10 @@ const WorkShowcase: React.FC = () => {
 };
 
 export const Home: React.FC = () => {
+    useEffect(() => {
+        applyDefaultSeo();
+    }, []);
+
     return (
         <main className="relative bg-[#ffffff]">
             <Hero />

@@ -22,6 +22,7 @@ import { isListedIn } from '../utils/entryPlacement';
 import { commentService } from '../services/commentService';
 import { authService } from '../services/authService';
 import { PrivateBadge } from '../components/PrivateBadge';
+import { applyPageSeo } from '../utils/seo';
 
 interface AdminSummary {
     user: {
@@ -351,6 +352,15 @@ export const Admin: React.FC = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const tabParam = searchParams.get('tab');
     const activeTab: AdminTab = adminTabs.find(tab => tab.id === tabParam)?.id ?? 'overview';
+
+    useEffect(() => {
+        applyPageSeo({
+            title: '관리자 | Deepchoi',
+            description: 'Deepchoi 관리자 대시보드입니다.',
+            path: '/admin',
+            noIndex: true
+        });
+    }, []);
     const setActiveTab = (tab: AdminTab) => {
         setSearchParams(tab === 'overview' ? {} : { tab }, { replace: true });
     };

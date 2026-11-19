@@ -7,6 +7,7 @@ import { CategoryGroup, categoryLabel, categoryService, findCategoryByQuery, gro
 import { useAuthUser } from '../hooks/useAuthUser';
 import { categoryIn, isListedIn } from '../utils/entryPlacement';
 import { categoryChipClassName, groupTabClassName } from '../utils/tabStyles';
+import { applyPageSeo } from '../utils/seo';
 
 const ALL = '전체보기';
 
@@ -28,6 +29,20 @@ export const Blog: React.FC<{ section?: BlogSection }> = ({ section = 'blog' }) 
     const [publicationNotice, setPublicationNotice] = useState<string | null>(() => (location.state as { publicationNotice?: string } | null)?.publicationNotice || null);
     const currentUser = useAuthUser();
     const isAdmin = currentUser?.role === 'admin';
+
+    useEffect(() => {
+        applyPageSeo(isNews
+            ? {
+                title: 'Deepchoi AI 소식 | 새 AI 모델과 업계 소식',
+                description: '새 AI 모델 출시와 업계 소식을 정리하는 Deepchoi의 AI 뉴스 모음입니다.',
+                path: '/news'
+            }
+            : {
+                title: 'Deepchoi 블로그 | AI, 개발, UI/UX 기록',
+                description: 'AI, Python, 프론트엔드와 UI/UX 구현 과정을 정리하는 Deepchoi 기술 블로그입니다.',
+                path: '/blog'
+            });
+    }, [isNews]);
 
     useEffect(() => {
         let isMounted = true;

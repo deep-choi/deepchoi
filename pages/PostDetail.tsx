@@ -6,9 +6,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { isProjectAuthenticationError, projectService } from '../services/projectService';
 import { Project } from '../types';
 import { commentService, Comment } from '../services/commentService';
-import { EntryEditor } from '../components/EntryEditor';
 import { useEntryEditor } from '../hooks/useEntryEditor';
-import { PublicationReview } from '../components/PublicationReview';
 import { imageService } from '../services/imageService';
 import { linkifyHtml, normalizeEditorHtml } from '../utils/contentProcessor';
 import { CommentInput } from '../components/CommentInput';
@@ -16,8 +14,44 @@ import { moveCarousel, setupCarousel } from '../utils/carousel';
 import { categoryLabel, categoryService, CategoryRecord } from '../services/categoryService';
 import { isListedIn, placementSummary } from '../utils/entryPlacement';
 import { PrivateBadge } from '../components/PrivateBadge';
-import { applyDefaultSeo, applyProjectSeo } from '../utils/seo';
+import { applyPageSeo, applyProjectSeo } from '../utils/seo';
 import { useAuthUser } from '../hooks/useAuthUser';
+
+const EntryEditor = React.lazy(() =>
+    import('../components/EntryEditor').then((module) => ({ default: module.EntryEditor }))
+);
+const PublicationReview = React.lazy(() =>
+    import('../components/PublicationReview').then((module) => ({ default: module.PublicationReview }))
+);
+
+let initialProjectCache: Project | null | undefined;
+let initialHydrationConsumed = false;
+
+const readInitialProjectFromDom = (): Project | null => {
+    if (typeof document === 'undefined') return null;
+    if (initialProjectCache !== undefined) return initialProjectCache;
+
+    const script = document.getElementById('__INITIAL_PROJECT__');
+    if (!script?.textContent) {
+        initialProjectCache = null;
+        return null;
+    }
+
+    try {
+        initialProjectCache = JSON.parse(script.textContent) as Project;
+    } catch {
+        initialProjectCache = null;
+    }
+    script.remove();
+    return initialProjectCache;
+};
+
+const getInitialProjectForRoute = (routeId?: string): Project | undefined => {
+    if (!routeId || initialHydrationConsumed) return undefined;
+    const candidate = readInitialProjectFromDom();
+    if (!candidate) return undefined;
+    return candidate.id === routeId || candidate.slug === routeId ? candidate : undefined;
+};
 
 const dismissInitialPostLoader = () => {
     const loader = document.getElementById('post-initial-loader');
@@ -37,8 +71,10 @@ const dismissInitialPostLoader = () => {
 export const PostDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const [project, setProject] = useState<Project | undefined>(undefined);
-    const [isLoading, setIsLoading] = useState(true);
+    const initialMatched = getInitialProjectForRoute(id);
+    const hydratedRouteRef = useRef<string | null>(initialMatched ? (id ?? null) : null);
+    const [project, setProject] = useState<Project | undefined>(initialMatched);
+    const [isLoading, setIsLoading] = useState(!initialMatched);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -69,19 +105,39 @@ export const PostDetail: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        if (id) {
-            setIsLoading(true);
-            // Fetch Project
-            projectService.getProjectById(id).then(data => {
-                setProject(data);
-                setIsLoading(false);
-                if (data) {
-                    commentService.getComments(data.id).then(setComments);
-                } else {
-                    setComments([]);
-                }
+        if (!id) return;
+
+        let isMounted = true;
+
+        if (hydratedRouteRef.current === id && project) {
+            initialHydrationConsumed = true;
+            hydratedRouteRef.current = null;
+            commentService.getComments(project.id).then(data => {
+                if (isMounted) setComments(data);
             });
+            return () => {
+                isMounted = false;
+            };
         }
+
+        initialHydrationConsumed = true;
+        setIsLoading(true);
+        projectService.getProjectById(id).then(data => {
+            if (!isMounted) return;
+            setProject(data);
+            setIsLoading(false);
+            if (data) {
+                commentService.getComments(data.id).then(commentList => {
+                    if (isMounted) setComments(commentList);
+                });
+            } else {
+                setComments([]);
+            }
+        });
+
+        return () => {
+            isMounted = false;
+        };
     }, [id]);
 
     useLayoutEffect(() => {
@@ -95,8 +151,15 @@ export const PostDetail: React.FC = () => {
             return;
         }
 
-        applyDefaultSeo();
-    }, [project]);
+        if (!isLoading) {
+            applyPageSeo({
+                title: '페이지를 찾을 수 없습니다 | Deepchoi',
+                description: '요청하신 게시글을 찾을 수 없습니다.',
+                path: `/post/${encodeURIComponent(id || '')}`,
+                noIndex: true
+            });
+        }
+    }, [project, isLoading, id]);
 
     useEffect(() => {
         if (isEditing) return;
@@ -296,7 +359,13 @@ export const PostDetail: React.FC = () => {
 
     if (isEditing) {
         return (
-            <>
+            <React.Suspense
+                fallback={
+                    <div className="min-h-screen flex items-center justify-center">
+                        <div className="w-8 h-8 border-4 border-[#4169E1] border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                }
+            >
                 <EntryEditor
                     state={editor}
                     heading="포스트 편집"
@@ -312,7 +381,7 @@ export const PostDetail: React.FC = () => {
                     onCoverUpload={handleImageUpload}
                 />
                 {reviewOpen && <PublicationReview title={editor.form.title || ''} category={placementSummary(editor.form, categoryLabel, categories)} date={editor.form.date || ''} editing saving={saving} onCancel={() => setReviewOpen(false)} onConfirm={() => void saveProject()} />}
-            </>
+            </React.Suspense>
         );
     }
 
@@ -432,10 +501,10 @@ export const PostDetail: React.FC = () => {
                         <img
                             src={project.imageUrl}
                             alt={project.title}
-                            loading="lazy"
+                            loading="eager"
+                            fetchPriority="high"
                             decoding="async"
-                            className="w-full h-auto object-cover transition-opacity duration-1000 opacity-0 hover:scale-[1.01] transition-transform duration-300"
-                            onLoad={(e) => e.currentTarget.classList.remove('opacity-0')}
+                            className="w-full h-auto object-cover hover:scale-[1.01] transition-transform duration-300"
                         />
                     </div>
                 )}

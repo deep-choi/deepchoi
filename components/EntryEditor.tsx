@@ -504,6 +504,83 @@ export const EntryEditor: React.FC<EntryEditorProps> = ({
                             onUserEdit={markEdited}
                         />
                     </section>
+
+                    {!isStaticPage && (
+                        <details className="rounded-xl border border-[#e5e5e5] bg-[#fafafa] px-5 py-4">
+                            <summary className="cursor-pointer select-none text-sm font-bold text-[#111111]">
+                                검색 노출 설정 (SEO · 선택)
+                            </summary>
+                            <div className="mt-4 space-y-4 border-t border-[#e5e5e5] pt-4">
+                                {form.slug && (
+                                    <div className="text-xs font-medium text-[#666666]">
+                                        고정 주소: <code className="rounded bg-white px-2 py-0.5 text-[#111111]">/post/{form.slug}</code>
+                                    </div>
+                                )}
+                                <div>
+                                    <FieldLabel
+                                        label="검색 제목 (SEO Title)"
+                                        htmlFor="entry-seo-title"
+                                        right={`${(form.seoTitle || '').length}/70 · 비워두면 자동 생성`}
+                                    />
+                                    <input
+                                        id="entry-seo-title"
+                                        value={form.seoTitle || ''}
+                                        maxLength={70}
+                                        onChange={e => update(prev => ({ ...prev, seoTitle: e.target.value }))}
+                                        className={`${inputClass} h-10 px-3 text-sm font-medium`}
+                                        placeholder={form.title ? `${form.title} | Deepchoi` : '제목 | Deepchoi'}
+                                    />
+                                </div>
+                                <div>
+                                    <FieldLabel
+                                        label="검색 요약 (Meta Description)"
+                                        htmlFor="entry-seo-description"
+                                        right={`${(form.seoDescription || '').length}/160 · 비워두면 본문/설명에서 자동 추출`}
+                                    />
+                                    <textarea
+                                        id="entry-seo-description"
+                                        value={form.seoDescription || ''}
+                                        maxLength={160}
+                                        rows={2}
+                                        onChange={e => update(prev => ({ ...prev, seoDescription: e.target.value }))}
+                                        className={`${inputClass} resize-none px-3 py-2 text-sm leading-relaxed`}
+                                        placeholder="검색 결과와 링크 미리보기에 표시할 설명"
+                                    />
+                                </div>
+                                <div>
+                                    <FieldLabel
+                                        label="공유 미리보기 이미지 (OG Image)"
+                                        htmlFor="entry-seo-image"
+                                        right={form.imageUrl && form.seoImage !== form.imageUrl ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => update(prev => ({ ...prev, seoImage: prev.imageUrl || '' }))}
+                                                className="font-bold text-[#4169E1] hover:underline"
+                                            >
+                                                커버 이미지와 맞추기
+                                            </button>
+                                        ) : '커버 이미지와 자동 동기화'}
+                                    />
+                                    <input
+                                        id="entry-seo-image"
+                                        value={form.seoImage || ''}
+                                        onChange={e => update(prev => ({ ...prev, seoImage: e.target.value }))}
+                                        className={`${inputClass} h-10 px-3 text-sm font-medium`}
+                                        placeholder={form.imageUrl || 'https://deepchoi.com/social/portfolio-og.png'}
+                                    />
+                                </div>
+                                <label className="flex cursor-pointer items-center gap-2.5 text-sm font-bold text-[#111111]">
+                                    <input
+                                        type="checkbox"
+                                        checked={Boolean(form.noIndex)}
+                                        onChange={e => update(prev => ({ ...prev, noIndex: e.target.checked }))}
+                                        className="h-4 w-4 rounded border-[#cccccc] accent-[#4169E1]"
+                                    />
+                                    검색엔진 노출 제외 (noindex · 사이트맵에서도 빠집니다)
+                                </label>
+                            </div>
+                        </details>
+                    )}
                 </div>
             </div>
         </div>
